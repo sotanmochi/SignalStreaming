@@ -7,6 +7,13 @@
       "dependencies": {},
       "hash": "a9e8c39d86c91a193be2dd24bb564a1d130d7c2d"
     },
+    "com.neuecc.messagepack": {
+      "version": "https://github.com/MessagePack-CSharp/MessagePack-CSharp.git?path=src/MessagePack.UnityClient/Assets/Scripts/MessagePack#v2.5.140",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "eefc9079d12c476f95a12ccb4c1a18bf0f9aa03c"
+    },
     "com.unity.burst": {
       "version": "1.8.12",
       "depth": 1,
