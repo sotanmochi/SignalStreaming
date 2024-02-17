@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.github-glitchenzo.nugetforunity": {
+      "version": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity#v4.0.2",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "a9e8c39d86c91a193be2dd24bb564a1d130d7c2d"
+    },
     "com.unity.burst": {
       "version": "1.8.12",
       "depth": 1,
@@ -154,20 +161,8 @@
       },
       "url": "https://packages.unity.com"
     },
-    "jp.sotanmochi.signalstreaming": {
-      "version": "file:SignalStreaming",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "jp.sotanmochi.signalstreaming.collections": {
       "version": "file:SignalStreaming.Collections",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
-    "jp.sotanmochi.signalstreaming.infrastructure": {
-      "version": "file:SignalStreaming.Infrastructure",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
