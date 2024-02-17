@@ -14,6 +14,12 @@
       "dependencies": {},
       "hash": "eefc9079d12c476f95a12ccb4c1a18bf0f9aa03c"
     },
+    "com.nxrighthere.enet-csharp": {
+      "version": "file:../../ThirdParty/ENet-CSharp",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.burst": {
       "version": "1.8.12",
       "depth": 1,
