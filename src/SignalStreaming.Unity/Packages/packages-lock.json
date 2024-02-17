@@ -154,6 +154,24 @@
       },
       "url": "https://packages.unity.com"
     },
+    "jp.sotanmochi.signalstreaming": {
+      "version": "file:SignalStreaming",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "jp.sotanmochi.signalstreaming.collections": {
+      "version": "file:SignalStreaming.Collections",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "jp.sotanmochi.signalstreaming.infrastructure": {
+      "version": "file:SignalStreaming.Infrastructure",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
