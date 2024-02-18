@@ -5,6 +5,15 @@
         <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="ENet-CSharp" Version="2.4.8" />
+        <ProjectReference Include="..\SignalStreaming\SignalStreaming.csproj" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <DefineConstants>ENET_CSHARP</DefineConstants>
+    </PropertyGroup>
+
     <!-- Copy files for Unity -->
     <PropertyGroup>
         <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming.Infrastructure\Runtime\</DestinationRoot>

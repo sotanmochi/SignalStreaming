@@ -5,6 +5,10 @@
         <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="MessagePack" Version="2.5.140" />
+    </ItemGroup>
+
     <!-- Copy files for Unity -->
     <PropertyGroup>
         <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming\Runtime\</DestinationRoot>
