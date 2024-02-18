@@ -1,0 +1,23 @@
+{
+    "name": "SignalStreaming.Infrastructure.ENet",
+    "rootNamespace": "SignalStreaming.Infrastructure.ENet",
+    "references": [
+        "SignalStreaming",
+        "ENet-CSharp"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.nxrighthere.enet-csharp",
+            "expression": "",
+            "define": "ENET_CSHARP"
+        }
+    ],
+    "noEngineReferences": false
+}

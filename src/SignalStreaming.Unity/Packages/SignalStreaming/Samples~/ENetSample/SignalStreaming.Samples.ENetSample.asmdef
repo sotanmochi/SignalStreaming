@@ -1,0 +1,20 @@
+{
+    "name": "SignalStreaming.Samples.ENetSample",
+    "rootNamespace": "SignalStreaming.Samples.ENetSample",
+    "references": [
+        "SignalStreaming",
+        "SignalStreaming.Infrastructure.ENet",
+        "SignalStreaming.MessagePackGenerated",
+        "MessagePack",
+        "Ulid"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
