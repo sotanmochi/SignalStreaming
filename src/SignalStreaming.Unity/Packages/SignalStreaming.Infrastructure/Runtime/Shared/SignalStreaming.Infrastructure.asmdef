@@ -1,0 +1,17 @@
+{
+    "name": "SignalStreaming.Infrastructure",
+    "rootNamespace": "SignalStreaming.Infrastructure",
+    "references": [
+        "SignalStreaming",
+        "SignalStreaming.Infrastructure.ENet"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
