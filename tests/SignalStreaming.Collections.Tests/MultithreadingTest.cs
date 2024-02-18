@@ -8,7 +8,15 @@ namespace SignalStreaming.Collections.Tests
     public class MultithreadingTest
     {
         [Theory]
+        [InlineData(4, 100)]
+        [InlineData(4, 1000)]
+        [InlineData(4, 10000)]
+        [InlineData(4, 100000)]
         [InlineData(4, 1000000)]
+        [InlineData(12, 100)]
+        [InlineData(12, 1000)]
+        [InlineData(12, 10000)]
+        [InlineData(12, 100000)]
         [InlineData(12, 1000000)]
         public void ConcurrentRingBufferTest(uint numberOfThreads, uint numberOfItems)
         {
@@ -35,7 +43,6 @@ namespace SignalStreaming.Collections.Tests
                 if (index % 2 == 0)
                 {
                     // Enqueue
-                    var enqueueIndex = index / 2;
                     for (uint n = 1; n <= numberOfItems; n++)
                     {
                         while (!ringBuffer.TryEnqueue(n))
@@ -48,7 +55,6 @@ namespace SignalStreaming.Collections.Tests
                 else
                 {
                     // Dequeue
-                    var dequeueIndex = index / 2;
                     for (uint n = 1; n <= numberOfItems; n++)
                     {
                         ulong value;
