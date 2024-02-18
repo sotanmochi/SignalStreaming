@@ -29,7 +29,7 @@ namespace SignalStreaming.Collections
 
         public ConcurrentRingBuffer(int capacity)
         {
-			// Buffer size must be a power of two.
+            // Buffer size must be a power of two.
             var bufferSize = (capacity < 2) ? 2 : (int)Math.Pow(2, (int)Math.Ceiling(Math.Log(capacity, 2)));
 
             _bufferMask = bufferSize - 1;
