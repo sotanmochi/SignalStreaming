@@ -3,16 +3,22 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net8.0</TargetFrameworks>
         <Configurations>Debug;Release</Configurations>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ENet-CSharp" Version="2.4.8" />
         <ProjectReference Include="..\SignalStreaming\SignalStreaming.csproj" />
-        <ProjectReference Include="..\SignalStreaming.Infrastructure.ENet\SignalStreaming.Infrastructure.ENet.csproj" />
+        <ProjectReference Include="..\SignalStreaming.Collections\SignalStreaming.Collections.csproj" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <DefineConstants>ENET_CSHARP</DefineConstants>
+    </PropertyGroup>
 
     <!-- Copy files for Unity -->
     <PropertyGroup>
-        <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming.Infrastructure\Runtime\</DestinationRoot>
+        <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming.Infrastructure\Runtime\ENet</DestinationRoot>
     </PropertyGroup>
     <ItemGroup>
         <TargetFiles Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*" />
