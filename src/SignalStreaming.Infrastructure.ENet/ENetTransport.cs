@@ -1,13 +1,14 @@
 #if ENET_CSHARP
 
 using System;
+using System.Buffers;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using SignalStreaming.Collections;
 using ENet;
-using Event = ENet.Event;
-using EventType = ENet.EventType;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
 namespace SignalStreaming.Infrastructure.ENet
@@ -17,13 +18,20 @@ namespace SignalStreaming.Infrastructure.ENet
     /// </summary>
     public sealed class ENetTransport : ISignalTransport
     {
+        struct BufferSpan
+        {
+            public int BufferHead;
+            public int BufferLength;
+        }
+
         static readonly double TimestampsToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
 
         readonly Thread _receiverLoopThread;
         readonly CancellationTokenSource _receiverLoopCts;
         readonly int _targetFrameTimeMilliseconds;
 
-        byte[] _buffer; // TODO: Ring buffer and dequeue thread
+        readonly ConcurrentQueue<BufferSpan> _bufferSpans = new();
+        readonly ConcurrentRingBuffer<byte> _signalBuffer;
 
         string _serverAddress;
         ushort _serverPort;
@@ -38,13 +46,13 @@ namespace SignalStreaming.Infrastructure.ENet
 
         public event Action OnConnected;
         public event Action OnDisconnected;
-        public event Action<ArraySegment<byte>> OnDataReceived;
+        public event Action<ReadOnlySequence<byte>> OnIncomingSignalDequeued;
 
         public bool IsConnected => _connected;
 
         public ENetTransport(bool useAnotherThread, int targetFrameRate, bool isBackground)
         {
-            _buffer = new byte[1024 * 4];
+            _signalBuffer = new ConcurrentRingBuffer<byte>(1024 * 4 * 4096); // 16MB
 
             Library.Initialize();
             _address = new Address();
@@ -63,8 +71,6 @@ namespace SignalStreaming.Infrastructure.ENet
                 };
 
                 _receiverLoopThread.Start();
-
-                // TODO: Dequeue thread
             }
         }
 
@@ -148,7 +154,34 @@ namespace SignalStreaming.Infrastructure.ENet
             _peer.Send(channelID: 0, ref packet);            
         }
 
-        // TODO: Ring buffer and dequeue thread
+        public void DequeueIncomingSignals()
+        {
+            var bufferSpan = default(BufferSpan);
+            var signalCount = _bufferSpans.Count;
+
+            while (signalCount > 0)
+            {
+                if (_bufferSpans.TryDequeue(out bufferSpan))
+                {
+                    // var bufferHead = bufferSpan.BufferHead;
+                    var bufferLength = bufferSpan.BufferLength;
+
+                    try
+                    {
+                        OnIncomingSignalDequeued?.Invoke(_signalBuffer.Slice(0, bufferLength));
+                    }
+                    catch (Exception e)
+                    {
+                        DebugLogger.LogError(e);
+                    }
+                    finally
+                    {
+                        _signalBuffer.Clear(bufferLength);
+                        signalCount--;
+                    }
+                }
+            }
+        }
 
         public void PollEvent()
         {
@@ -181,17 +214,32 @@ namespace SignalStreaming.Infrastructure.ENet
                         // _connectionTcs?.SetResult(false); // REVIEW
                         break;
                     case EventType.Receive:
-                        var length = netEvent.Packet.Length;
-                        var buffer = (length <= _buffer.Length) ? _buffer : /* Temporary buffer */ new byte[length];
-                        Marshal.Copy(netEvent.Packet.Data, buffer, 0, length);
-                        netEvent.Packet.Dispose();
-                        // TODO: Ring buffer and dequeue thread
-                        OnDataReceived?.Invoke(new ArraySegment<byte>(buffer, 0, length));
+                        HandleReceiveEvent(netEvent);
                         break;
                 }
             }
 
             _client.Flush();
+        }
+
+        unsafe void HandleReceiveEvent(Event netEvent)
+        {
+            var pointer = netEvent.Packet.Data.ToPointer();
+            var length = netEvent.Packet.Length;
+
+            var spinner = new SpinWait();
+            while (!_signalBuffer.TryBulkEnqueue(new ReadOnlySpan<byte>(pointer, length)))
+            {
+                spinner.SpinOnce();
+            }
+
+            _bufferSpans.Enqueue(new BufferSpan
+            {
+                BufferHead = _signalBuffer.EnqueuePosition,
+                BufferLength = length,
+            });
+
+            netEvent.Packet.Dispose();
         }
 
         void ReceiverLoop()
@@ -200,7 +248,14 @@ namespace SignalStreaming.Infrastructure.ENet
             {
                 var begin = Stopwatch.GetTimestamp();
 
-                PollEvent();
+                try
+                {
+                    PollEvent();
+                }
+                catch (Exception e)
+                {
+                    DebugLogger.LogError(e);
+                }
 
                 var end = Stopwatch.GetTimestamp();
                 var elapsedTicks = (end - begin) * TimestampsToTicks;
