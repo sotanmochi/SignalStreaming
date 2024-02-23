@@ -17,6 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F00A4C06
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalStreaming.Collections.Tests", "tests\SignalStreaming.Collections.Tests\SignalStreaming.Collections.Tests.csproj", "{D0F7CB41-487E-4D8A-A1BE-EC76901B3E59}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{36CD816E-52E8-4EF1-A484-4BFF89C52423}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppClient", "sandbox\ConsoleAppClient\ConsoleAppClient.csproj", "{7ED8A03F-856D-42A0-97A8-74E7328DC4B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +50,10 @@ Global
 		{D0F7CB41-487E-4D8A-A1BE-EC76901B3E59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0F7CB41-487E-4D8A-A1BE-EC76901B3E59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0F7CB41-487E-4D8A-A1BE-EC76901B3E59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ED8A03F-856D-42A0-97A8-74E7328DC4B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ED8A03F-856D-42A0-97A8-74E7328DC4B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ED8A03F-856D-42A0-97A8-74E7328DC4B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ED8A03F-856D-42A0-97A8-74E7328DC4B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{143A88D1-7692-4DE2-8F09-0D2B4ECDA02D} = {88E89F10-5D80-4602-8186-A4CAB3614720}
@@ -53,5 +61,6 @@ Global
 		{DE0CC9DE-4B37-4AF4-A1AA-1CA32D5CBCDE} = {88E89F10-5D80-4602-8186-A4CAB3614720}
 		{C8276933-ACB9-4EE8-8679-C95808ACBAD7} = {88E89F10-5D80-4602-8186-A4CAB3614720}
 		{D0F7CB41-487E-4D8A-A1BE-EC76901B3E59} = {F00A4C06-AB0D-4D9E-A697-F9F08453581F}
+		{7ED8A03F-856D-42A0-97A8-74E7328DC4B7} = {36CD816E-52E8-4EF1-A484-4BFF89C52423}
 	EndGlobalSection
 EndGlobal
