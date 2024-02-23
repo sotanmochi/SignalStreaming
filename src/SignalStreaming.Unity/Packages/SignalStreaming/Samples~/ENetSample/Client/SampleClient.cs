@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using MessagePack;
 using SignalStreaming.Infrastructure.ENet;
 using UnityEngine;
@@ -17,11 +18,12 @@ namespace SignalStreaming.Samples.ENetSample
 
         void Awake()
         {
-            _transport = new ENetTransport(useAnotherThread: true, targetFrameRate: 60, isBackground: true);
+            // _transport = new ENetTransport(useAnotherThread: true, targetFrameRate: 60, isBackground: true);
+            _transport = new ENetTransport(useAnotherThread: false, targetFrameRate: 60, isBackground: true);
 
             _transport.OnConnected += () => Debug.Log($"[{nameof(SampleClient)}] TransportConnected");
             _transport.OnDisconnected += () => Debug.Log($"[{nameof(SampleClient)}] TransportDisconnected");
-            _transport.OnDataReceived += (payload) => Debug.Log($"[{nameof(SampleClient)}] TransportDataReceived - Payload.Length: {payload.Count}");
+            _transport.OnIncomingSignalDequeued += (payload) => Debug.Log($"[{nameof(SampleClient)}] TransportDataReceived - Payload.Length: {payload.Length}");
 
             _connectParameters = new ENetConnectParameters()
             {
@@ -33,7 +35,7 @@ namespace SignalStreaming.Samples.ENetSample
             _streamingClient = new SignalStreamingClient(_transport);
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;
-            _streamingClient.OnDataReceived += OnDataReceived;
+            _streamingClient.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
         }
 
         async void Start()
@@ -53,7 +55,7 @@ namespace SignalStreaming.Samples.ENetSample
         {
             _streamingClient.OnConnected -= OnConnected;
             _streamingClient.OnDisconnected -= OnDisconnected;
-            _streamingClient.OnDataReceived -= OnDataReceived;
+            _streamingClient.OnIncomingSignalDequeued -= OnIncomingSignalDequeued;
 
             _streamingClient.Dispose();
             _transport.Dispose();
@@ -69,7 +71,7 @@ namespace SignalStreaming.Samples.ENetSample
             Debug.Log($"[{nameof(SampleClient)}] Disconnected - Reason: {reason}");
         }
 
-        void OnDataReceived(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlyMemory<byte> payload)
+        void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload)
         {
             var originDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(originTimestamp).ToString("MM/dd/yyyy hh:mm:ss.fff tt");
             var transmitDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(transmitTimestamp).ToString("MM/dd/yyyy hh:mm:ss.fff tt");
