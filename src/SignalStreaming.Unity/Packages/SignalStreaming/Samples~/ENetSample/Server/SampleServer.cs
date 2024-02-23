@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using MessagePack;
 using SignalStreaming.Infrastructure.ENet;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace SignalStreaming.Samples.ENetSample
             _streamingHub.OnClientConnectionRequested += OnClientConnectionRequested;
             _streamingHub.OnClientConnected += OnConnected;
             _streamingHub.OnClientDisconnected += OnDisconnected;
-            _streamingHub.OnDataReceived += OnDataReceived;
+            _streamingHub.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
             _streamingHub.OnGroupJoinRequestReceived += OnGroupJoinRequestReceived;
             _streamingHub.OnGroupLeaveRequestReceived += OnGroupLeaveRequestReceived;
         }
@@ -37,6 +38,7 @@ namespace SignalStreaming.Samples.ENetSample
         void Update()
         {
             _transportHub.PollEvent();
+            _transportHub.DequeueIncomingSignals();
         }
 
         void OnDestroy()
@@ -44,7 +46,7 @@ namespace SignalStreaming.Samples.ENetSample
             _streamingHub.OnClientConnectionRequested -= OnClientConnectionRequested;
             _streamingHub.OnClientConnected -= OnConnected;
             _streamingHub.OnClientDisconnected -= OnDisconnected;
-            _streamingHub.OnDataReceived -= OnDataReceived;
+            _streamingHub.OnIncomingSignalDequeued -= OnIncomingSignalDequeued;
             _streamingHub.OnGroupJoinRequestReceived -= OnGroupJoinRequestReceived;
             _streamingHub.OnGroupLeaveRequestReceived -= OnGroupLeaveRequestReceived;
 
@@ -125,26 +127,29 @@ namespace SignalStreaming.Samples.ENetSample
             }
         }
 
-        void OnDataReceived(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, ReadOnlyMemory<byte> payload)
+        void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, ReadOnlySequence<byte> payload)
         {
+            UnityEngine.Profiling.Profiler.BeginSample("SampleServer.OnIncomingSignalDequeued");
             // Debug.Log($"[{nameof(SampleServer)}] Data received from Client[{senderClientId}]. " +
             //     $"Message ID: {messageId}, Payload.Length: {payload.Length}");
 
             if (messageId == 0)
             {
                 var message = MessagePackSerializer.Deserialize<string>(payload);
-                // Debug.Log($"<color=lime>[{nameof(SampleServer)}] Received message: {message}</color>");
+                Debug.Log($"<color=lime>[{nameof(SampleServer)}] Received message: {message}</color>");
             }
 
             if (sendOptions.StreamingType == StreamingType.All)
             {
                 if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
                 {
+                    UnityEngine.Profiling.Profiler.EndSample();
                     return;
                 }
 
                 _streamingHub.Broadcast(groupId, messageId, payload, sendOptions.Reliable, senderClientId, originTimestamp);
             }
+            UnityEngine.Profiling.Profiler.EndSample();
         }
     }
 }
