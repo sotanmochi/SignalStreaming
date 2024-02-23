@@ -383,7 +383,7 @@ namespace SignalStreaming.Infrastructure.ENet
             }
         }
 
-        void PollEvent()
+        public void PollEvent()
         {
             var polled = false;
 
