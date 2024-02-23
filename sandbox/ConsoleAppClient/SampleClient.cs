@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,13 +9,13 @@ using SignalStreaming.Infrastructure.ENet;
 
 namespace SignalStreamingSamples.ConsoleAppClient
 {
-    public class SampleClient : IStartable, ITickable
+    public class SampleClient : IDisposable, IStartable, ITickable
     {
         public const uint MAX_CLIENT_COUNT = 4096;
         public uint[] ReceivedMessageCountByClientId = new uint[MAX_CLIENT_COUNT];
         public float[] AveragePayloadSizeByClientId = new float[MAX_CLIENT_COUNT];
-        public int[] MaxPayloadSizeByClientId = new int[MAX_CLIENT_COUNT];
-        public int[] TotalPayloadSizeByClientId = new int[MAX_CLIENT_COUNT];
+        public long[] MaxPayloadSizeByClientId = new long[MAX_CLIENT_COUNT];
+        public long[] TotalPayloadSizeByClientId = new long[MAX_CLIENT_COUNT];
 
         readonly string _connectionKey;
         readonly string _serverAddress;
@@ -37,12 +38,12 @@ namespace SignalStreamingSamples.ConsoleAppClient
             _transport = new ENetTransport(useAnotherThread: false, targetFrameRate: 60, isBackground: true);
             _transport.OnConnected += () => Console.WriteLine($"[{nameof(ConsoleAppClient)}] TransportConnected");
             _transport.OnDisconnected += () => Console.WriteLine($"[{nameof(ConsoleAppClient)}] TransportDisconnected");
-            _transport.OnDataReceived += (payload) => Console.WriteLine($"[{nameof(ConsoleAppClient)}] TransportDataReceived - Payload.Length: {payload.Count} @Thread: {Environment.CurrentManagedThreadId}");
+            _transport.OnIncomingSignalDequeued += (payload) => Console.WriteLine($"[{nameof(ConsoleAppClient)}] TransportDataReceived - Payload.Length: {payload.Length} @Thread: {Environment.CurrentManagedThreadId}");
 
             _streamingClient = new SignalStreamingClient(_transport);
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;
-            _streamingClient.OnDataReceived += OnDataReceived;
+            _streamingClient.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
             _streamingClient.OnGroupJoinResponseReceived += OnGroupJoinResponseReceived;
             _streamingClient.OnGroupLeaveResponseReceived += OnGroupLeaveResponseReceived;
         }
@@ -60,11 +61,12 @@ namespace SignalStreamingSamples.ConsoleAppClient
 
         public void Tick()
         {
+            _transport.PollEvent();
+            _transport.DequeueIncomingSignals();
             FrameCount++;
             // Log($"[{nameof(ConsoleAppClient)}] Tick (Thread: {Thread.CurrentThread.ManagedThreadId})");
-            // _streamingClient.Send(messageId: 0, data: "Hello, world!", new SendOptions(StreamingType.All, reliable: true));
-            _streamingClient.Send(messageId: 0, data: "Hello, world!", new SendOptions(StreamingType.All, reliable: false));
-            _transport.PollEvent();
+            _streamingClient.Send(messageId: 0, data: "Hello, world!", new SendOptions(StreamingType.All, reliable: true));
+            // _streamingClient.Send(messageId: 0, data: "Hello, world!", new SendOptions(StreamingType.All, reliable: false));
         }
 
         async void StartAsync()
@@ -119,19 +121,26 @@ namespace SignalStreamingSamples.ConsoleAppClient
             Log($"[{nameof(ConsoleAppClient)}] ConnectionId : {response.ConnectionId}");
         }
 
-        void OnDataReceived(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlyMemory<byte> payload)
+        void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload)
         {
-            var originDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(originTimestamp).ToString("MM/dd/yyyy hh:mm:ss.fff tt");
-            var transmitDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(transmitTimestamp).ToString("MM/dd/yyyy hh:mm:ss.fff tt");
-
-            if (messageId == 0)
+            try
             {
-                ReceivedMessageCountByClientId[senderClientId]++;
-                TotalPayloadSizeByClientId[senderClientId] += payload.Length;
-                AveragePayloadSizeByClientId[senderClientId] = TotalPayloadSizeByClientId[senderClientId] / ReceivedMessageCountByClientId[senderClientId];
-                MaxPayloadSizeByClientId[senderClientId] = Math.Max(MaxPayloadSizeByClientId[senderClientId], payload.Length);
+                var originDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(originTimestamp).ToString("MM/dd/yyyy hh:mm:ss.fff tt");
+                var transmitDateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(transmitTimestamp).ToString("MM/dd/yyyy hh:mm:ss.fff tt");
 
-                var text = MessagePackSerializer.Deserialize<string>(payload);
+                if (messageId == 0)
+                {
+                    ReceivedMessageCountByClientId[senderClientId]++;
+                    TotalPayloadSizeByClientId[senderClientId] += payload.Length;
+                    AveragePayloadSizeByClientId[senderClientId] = TotalPayloadSizeByClientId[senderClientId] / ReceivedMessageCountByClientId[senderClientId];
+                    MaxPayloadSizeByClientId[senderClientId] = Math.Max(MaxPayloadSizeByClientId[senderClientId], payload.Length);
+
+                    var text = MessagePackSerializer.Deserialize<string>(payload);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"[ERROR] [{nameof(ConsoleAppClient)}.{nameof(OnIncomingSignalDequeued)}] {ex}");
             }
         }
 
