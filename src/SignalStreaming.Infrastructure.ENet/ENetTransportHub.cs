@@ -143,7 +143,10 @@ namespace SignalStreaming.Infrastructure.ENet
             {
                 // Requests a disconnection from a peer,
                 // but only after all queued outgoing packets are sent.
-                client.Peer.DisconnectLater(0);
+                if (client.Peer.IsSet)
+                {
+                    client.Peer.DisconnectLater(0);
+                }
             }
         }
 
@@ -153,7 +156,10 @@ namespace SignalStreaming.Infrastructure.ENet
             {
                 // Requests a disconnection from a peer,
                 // but only after all queued outgoing packets are sent.
-                client.Peer.DisconnectLater(0);
+                if (client.Peer.IsSet)
+                {
+                    client.Peer.DisconnectLater(0);
+                }
             }
         }
 
