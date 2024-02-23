@@ -24,7 +24,7 @@ namespace SignalStreaming
         bool _joining;
         TaskCompletionSource<bool> _joinTcs;
 
-        public event ISignalStreamingClient.OnDataReceivedEventHandler OnDataReceived;
+        public event ISignalStreamingClient.OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
         public event Action<uint> OnConnected;
         public event Action<string> OnDisconnected;
         public event Action<GroupJoinResponse> OnGroupJoinResponseReceived;
@@ -39,14 +39,14 @@ namespace SignalStreaming
         {
             _transport = transport;
             _transport.OnDisconnected += OnTransportDisconnected;
-            _transport.OnDataReceived += OnTransportDataReceived;
+            _transport.OnIncomingSignalDequeued += OnTransportIncomingSignalDequeued;
         }
 
         public void Dispose()
         {
             DisconnectAsync();
             _transport.OnDisconnected -= OnTransportDisconnected;
-            _transport.OnDataReceived -= OnTransportDataReceived;
+            _transport.OnIncomingSignalDequeued -= OnTransportIncomingSignalDequeued;
             _transport = null;
         }
 
@@ -126,7 +126,7 @@ namespace SignalStreaming
         {
             if (!_connected) return;
             var originTimestamp = TimestampProvider.GetCurrentTimestamp();
-            var payload = Serialize(messageId, senderClientId: _clientId, originTimestamp, sendOptions, rawMessageBuffer);
+            var payload = Serialize(messageId, senderClientId: _clientId, originTimestamp, sendOptions, rawMessageBuffer);            
             _transport.Send(payload, sendOptions, destinationClientIds);
         }
 
@@ -152,9 +152,9 @@ namespace SignalStreaming
             _clientId = 0;
         }
 
-        void OnTransportDataReceived(ArraySegment<byte> data)
+        void OnTransportIncomingSignalDequeued(ReadOnlySequence<byte> signalBytes)
         {
-            var reader = new MessagePackReader(data);
+            var reader = new MessagePackReader(signalBytes);
 
             var arrayLength = reader.ReadArrayHeader();
             if (arrayLength != 6)
@@ -174,31 +174,31 @@ namespace SignalStreaming
             }
             else if (messageId == (int)MessageType.ClientConnectionResponse)
             {
-                var payloadOffset = data.Offset + (int)reader.Consumed;
-                var payloadCount = data.Count - (int)reader.Consumed;
-                var payload = new ReadOnlyMemory<byte>(data.Array, payloadOffset, payloadCount);
+                var payloadOffset = (int)reader.Consumed;
+                var payloadLength = signalBytes.Length - (int)reader.Consumed;
+                var payload = signalBytes.Slice(payloadOffset, payloadLength);
                 HandleConnectionResponse(payload);
             }
             else if (messageId == (int)MessageType.GroupJoinResponse)
             {
-                var payloadOffset = data.Offset + (int)reader.Consumed;
-                var payloadCount = data.Count - (int)reader.Consumed;
-                var payload = new ReadOnlyMemory<byte>(data.Array, payloadOffset, payloadCount);
+                var payloadOffset = (int)reader.Consumed;
+                var payloadLength = signalBytes.Length - (int)reader.Consumed;
+                var payload = signalBytes.Slice(payloadOffset, payloadLength);
                 HandleGroupJoinResponse(payload);
             }
             else if (messageId == (int)MessageType.GroupLeaveResponse)
             {
-                var payloadOffset = data.Offset + (int)reader.Consumed;
-                var payloadCount = data.Count - (int)reader.Consumed;
-                var payload = new ReadOnlyMemory<byte>(data.Array, payloadOffset, payloadCount);
+                var payloadOffset = (int)reader.Consumed;
+                var payloadLength = signalBytes.Length - (int)reader.Consumed;
+                var payload = signalBytes.Slice(payloadOffset, payloadLength);
                 HandleGroupLeaveResponse(payload);
             }
             else
             {
-                var payloadOffset = data.Offset + (int)reader.Consumed;
-                var payloadCount = data.Count - (int)reader.Consumed;
-                var payload = new ReadOnlyMemory<byte>(data.Array, payloadOffset, payloadCount);
-                OnDataReceived?.Invoke(messageId, senderClientId, originTimestamp, transmitTimestamp, payload);
+                var payloadOffset = (int)reader.Consumed;
+                var payloadLength = signalBytes.Length - (int)reader.Consumed;
+                var payload = signalBytes.Slice(payloadOffset, payloadLength);
+                OnIncomingSignalDequeued?.Invoke(messageId, senderClientId, originTimestamp, transmitTimestamp, payload);
             }
         }
 
@@ -221,7 +221,7 @@ namespace SignalStreaming
             _transport.Send(data, sendOptions);
         }
 
-        void HandleConnectionResponse(ReadOnlyMemory<byte> data)
+        void HandleConnectionResponse(ReadOnlySequence<byte> data)
         {
             var response = MessagePackSerializer.Deserialize<ClientConnectionResponse>(data);
             DebugLogger.Log($"<color=cyan>[{nameof(SignalStreamingClient)}] Connection result: {response.Message}</color>");
@@ -241,7 +241,7 @@ namespace SignalStreaming
             }
         }
 
-        void HandleGroupJoinResponse(ReadOnlyMemory<byte> data)
+        void HandleGroupJoinResponse(ReadOnlySequence<byte> data)
         {
             var response = MessagePackSerializer.Deserialize<GroupJoinResponse>(data);
 
@@ -257,7 +257,7 @@ namespace SignalStreaming
             }
         }
 
-        void HandleGroupLeaveResponse(ReadOnlyMemory<byte> data)
+        void HandleGroupLeaveResponse(ReadOnlySequence<byte> data)
         {
             var response = MessagePackSerializer.Deserialize<GroupLeaveResponse>(data);
             if (response.RequestApproved)

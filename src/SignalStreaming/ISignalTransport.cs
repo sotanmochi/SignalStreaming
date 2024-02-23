@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,10 +9,11 @@ namespace SignalStreaming
     {
         event Action OnConnected;
         event Action OnDisconnected;
-        event Action<ArraySegment<byte>> OnDataReceived;
+        event Action<ReadOnlySequence<byte>> OnIncomingSignalDequeued;
 
         bool IsConnected { get; }
 
+        void DequeueIncomingSignals();
         void PollEvent();
 
         Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters;

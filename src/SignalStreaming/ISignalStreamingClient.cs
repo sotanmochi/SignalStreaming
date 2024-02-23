@@ -10,12 +10,12 @@ namespace SignalStreaming
         /// <summary>
         /// Some message IDs are reserved by the core module of SignalStreaming (ID: 250 ~ 255).
         /// </summary>
-        public delegate void OnDataReceivedEventHandler(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlyMemory<byte> payload);
+        public delegate void OnIncomingSignalDequeuedEventHandler(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload);
 
         /// <summary>
         /// Some message IDs are reserved by the core module of SignalStreaming (ID: 250 ~ 255).
         /// </summary>
-        event OnDataReceivedEventHandler OnDataReceived;
+        event OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
 
         event Action<uint> OnConnected;
         event Action<string> OnDisconnected;
