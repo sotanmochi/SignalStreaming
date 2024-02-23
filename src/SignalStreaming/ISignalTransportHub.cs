@@ -1,20 +1,21 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace SignalStreaming
 {
     public interface ISignalTransportHub : IDisposable
     {
-        public delegate void OnDataReceivedEventHandler(uint senderClientId, ArraySegment<byte> data);
+        public delegate void OnIncomingSignalDequeuedEventHandler(uint senderClientId, ReadOnlySequence<byte> span);
 
         event Action<uint> OnConnected;
         event Action<uint> OnDisconnected;
-        event OnDataReceivedEventHandler OnDataReceived;
+        event OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
 
         void Start();
         void Shutdown();
 
-        void PollEvent();
+        void DequeueIncomingSignals();
 
         void Disconnect(uint clientId);
         void DisconnectAll();
