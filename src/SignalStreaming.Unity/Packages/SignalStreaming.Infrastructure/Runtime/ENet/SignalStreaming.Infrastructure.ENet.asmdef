@@ -3,11 +3,12 @@
     "rootNamespace": "SignalStreaming.Infrastructure.ENet",
     "references": [
         "SignalStreaming",
+        "SignalStreaming.Collections",
         "ENet-CSharp"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

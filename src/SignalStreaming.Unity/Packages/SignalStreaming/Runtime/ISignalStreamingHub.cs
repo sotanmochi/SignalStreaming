@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 
 namespace SignalStreaming
@@ -13,7 +14,7 @@ namespace SignalStreaming
         /// <summary>
         /// Some message IDs are reserved by the core module of SignalStreaming (ID: 250 ~ 255).
         /// </summary>
-        public delegate void OnDataReceivedEventHandler(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, ReadOnlyMemory<byte> payload);
+        public delegate void OnIncomingSignalDequeuedEventHandler(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, ReadOnlySequence<byte> payload);
 
         /// <summary>
         /// 
@@ -23,7 +24,7 @@ namespace SignalStreaming
         /// <summary>
         /// Some message IDs are reserved by the core module of SignalStreaming (ID: 250 ~ 255).
         /// </summary>
-        event OnDataReceivedEventHandler OnDataReceived;
+        event OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
 
         event Action<uint> OnClientConnected;
         event Action<uint> OnClientDisconnected;

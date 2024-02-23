@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MessagePack;
@@ -11,7 +12,7 @@ namespace SignalStreaming
         ISignalTransportHub _transportHub;
 
         public event ISignalStreamingHub.ConnectionRequestHandler OnClientConnectionRequested;
-        public event ISignalStreamingHub.OnDataReceivedEventHandler OnDataReceived;
+        public event ISignalStreamingHub.OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
         public event Action<uint> OnClientConnected;
         public event Action<uint> OnClientDisconnected;
         public event Action<uint, GroupJoinRequest> OnGroupJoinRequestReceived;
@@ -22,14 +23,14 @@ namespace SignalStreaming
             _transportHub = transportHub;
             _transportHub.OnConnected += OnTransportConnected;
             _transportHub.OnDisconnected += OnTransportDisconnected;
-            _transportHub.OnDataReceived += OnDataReceivedInternal;
+            _transportHub.OnIncomingSignalDequeued += OnIncomingSignalDequeuedInternal;
         }
 
         public void Dispose()
         {
             _transportHub.OnConnected -= OnTransportConnected;
             _transportHub.OnDisconnected -= OnTransportDisconnected;
-            _transportHub.OnDataReceived -= OnDataReceivedInternal;
+            _transportHub.OnIncomingSignalDequeued -= OnIncomingSignalDequeuedInternal;
             _transportHub = null;
         }
 
@@ -107,7 +108,7 @@ namespace SignalStreaming
             OnClientDisconnected?.Invoke(clientId);
         }
 
-        void OnDataReceivedInternal(uint clientId, ArraySegment<byte> data)
+        void OnIncomingSignalDequeuedInternal(uint clientId, ReadOnlySequence<byte> data)
         {
             var reader = new MessagePackReader(data);
 
@@ -122,10 +123,10 @@ namespace SignalStreaming
             var originTimestamp = reader.ReadInt64();
             var sendOptions = MessagePackSerializer.Deserialize<SendOptions>(ref reader);
 
-            var payloadOffset = data.Offset + (int)reader.Consumed;
-            var payloadCount = data.Count - (int)reader.Consumed;
-            var payload = new ReadOnlyMemory<byte>(data.Array, payloadOffset, payloadCount);
-
+            var payloadOffset = (int)reader.Consumed;
+            var payloadLength = data.Length - (int)reader.Consumed;
+            var payload = data.Slice(payloadOffset, payloadLength);
+            
             if (messageId == (int)MessageType.ClientConnectionRequest)
             {
                 var connectionRequest = MessagePackSerializer.Deserialize<ClientConnectionRequest>(payload);
@@ -165,7 +166,7 @@ namespace SignalStreaming
             }
             else
             {
-                OnDataReceived?.Invoke(messageId, senderClientId, originTimestamp, sendOptions, payload);
+                OnIncomingSignalDequeued?.Invoke(messageId, senderClientId, originTimestamp, sendOptions, payload);
             }
         }
 
