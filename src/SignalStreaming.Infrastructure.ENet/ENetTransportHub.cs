@@ -366,9 +366,19 @@ namespace SignalStreaming.Infrastructure.ENet
                     var bufferLength = bufferSpan.BufferLength;
                     var clientId = bufferSpan.TransportClientId;
 
-                    OnIncomingSignalDequeued?.Invoke(clientId, _signalBuffer.Slice(0, bufferLength));
-                    _signalBuffer.Clear(bufferLength);
-                    signalCount--;
+                    try
+                    {
+                        OnIncomingSignalDequeued?.Invoke(clientId, _signalBuffer.Slice(0, bufferLength));
+                    }
+                    catch (Exception e)
+                    {
+                        DebugLogger.LogError(e);
+                    }
+                    finally
+                    {
+                        _signalBuffer.Clear(bufferLength);
+                        signalCount--;
+                    }
                 }
             }
         }
