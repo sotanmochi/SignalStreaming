@@ -34,8 +34,8 @@ namespace SignalStreamingSamples.ConsoleAppClient
             _connectionKey = connectionKey;
             _groupId = groupId;
 
-            // _transport = new ENetTransport(useAnotherThread: true, targetFrameRate: 60, isBackground: true);
-            _transport = new ENetTransport(useAnotherThread: false, targetFrameRate: 60, isBackground: true);
+            _transport = new ENetTransport(useAnotherThread: true, targetFrameRate: 60, isBackground: true);
+            // _transport = new ENetTransport(useAnotherThread: false, targetFrameRate: 60, isBackground: true);
             _transport.OnConnected += () => Console.WriteLine($"[{nameof(ConsoleAppClient)}] TransportConnected");
             _transport.OnDisconnected += () => Console.WriteLine($"[{nameof(ConsoleAppClient)}] TransportDisconnected");
             _transport.OnIncomingSignalDequeued += (payload) => Console.WriteLine($"[{nameof(ConsoleAppClient)}] TransportDataReceived - Payload.Length: {payload.Length} @Thread: {Environment.CurrentManagedThreadId}");
@@ -61,12 +61,11 @@ namespace SignalStreamingSamples.ConsoleAppClient
 
         public void Tick()
         {
-            _transport.PollEvent();
             _transport.DequeueIncomingSignals();
             FrameCount++;
             // Log($"[{nameof(ConsoleAppClient)}] Tick (Thread: {Thread.CurrentThread.ManagedThreadId})");
-            _streamingClient.Send(messageId: 0, data: "Hello, world!", new SendOptions(StreamingType.All, reliable: true));
-            // _streamingClient.Send(messageId: 0, data: "Hello, world!", new SendOptions(StreamingType.All, reliable: false));
+            _streamingClient.Send(messageId: 0, data: $"Hello, world! - {FrameCount}", new SendOptions(StreamingType.All, reliable: true));
+            // _streamingClient.Send(messageId: 0, data: $"Hello, world! - {FrameCount}", new SendOptions(StreamingType.All, reliable: false));
         }
 
         async void StartAsync()
