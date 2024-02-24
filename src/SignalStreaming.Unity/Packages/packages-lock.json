@@ -181,6 +181,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.yasirkula.ingamedebugconsole": {
+      "version": "https://github.com/yasirkula/UnityIngameDebugConsole.git#v1.6.6",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "afe348bd6997af9dd78ab628f8bf5868bc7563ab"
+    },
     "jp.sotanmochi.signalstreaming": {
       "version": "file:SignalStreaming",
       "depth": 0,
