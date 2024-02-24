@@ -90,11 +90,13 @@ namespace SignalStreamingSamples.ConsoleAppClient
                 OnTick();
 
                 var end = Stopwatch.GetTimestamp();
-                var elapsed = (end - begin) * TimestampsToTicks;
-                var sleepTime = _targetFrameTimeMilliseconds - (int)(elapsed * 1000);
-                if (sleepTime > 0)
+                var elapsedTicks = (end - begin) * TimestampsToTicks;
+                var elapsedMilliseconds = (long)elapsedTicks / TimeSpan.TicksPerMillisecond;
+
+                var waitForNextFrameMilliseconds = (int)(_targetFrameTimeMilliseconds - elapsedMilliseconds);
+                if (waitForNextFrameMilliseconds > 0)
                 {
-                    Thread.Sleep(sleepTime);
+                    Thread.Sleep(waitForNextFrameMilliseconds);
                 }
             }
         }
