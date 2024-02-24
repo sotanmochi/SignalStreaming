@@ -56,42 +56,38 @@ namespace SignalStreaming
         {
             var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
             var serializedMessage = Serialize(messageId, senderClientId, originTimestamp, transmitTimestamp, data);
-            _transportHub.Send(destinationClientId, serializedMessage, reliable);
+            _transportHub.EnqueueOutgoingSignal(destinationClientId, serializedMessage, reliable);
         }
 
         public void Send(int messageId, uint senderClientId, long originTimestamp, ReadOnlyMemory<byte> rawMessagePackBlock, bool reliable, uint destinationClientId)
         {
             var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
             var serializedMessage = Serialize(messageId, senderClientId, originTimestamp, transmitTimestamp, rawMessagePackBlock);
-            _transportHub.Send(destinationClientId, serializedMessage, reliable);
+            _transportHub.EnqueueOutgoingSignal(destinationClientId, serializedMessage, reliable);
         }
 
         public void Broadcast<T>(string groupId, int messageId, T data, bool reliable, uint senderClientId, long originTimestamp)
         {
             var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
             var serializedMessage = Serialize(messageId, senderClientId, originTimestamp, transmitTimestamp, data);
-            _transportHub.Broadcast(groupId, serializedMessage, reliable);
+            _transportHub.EnqueueOutgoingSignal(groupId, serializedMessage, reliable);
         }
 
         public void Broadcast(string groupId, int messageId, ReadOnlyMemory<byte> rawMessagePackBlock, bool reliable, uint senderClientId, long originTimestamp)
         {
             var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
             var serializedMessage = Serialize(messageId, senderClientId, originTimestamp, transmitTimestamp, rawMessagePackBlock);
-            _transportHub.Broadcast(groupId, serializedMessage, reliable);
+            _transportHub.EnqueueOutgoingSignal(groupId, serializedMessage, reliable);
         }
 
         public void Broadcast<T>(int messageId, uint senderClientId, long originTimestamp, T data, bool reliable, IReadOnlyList<uint> destinationClientIds)
         {
-            var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
-            var serializedMessage = Serialize(messageId, senderClientId, originTimestamp, transmitTimestamp, data);
-            _transportHub.Broadcast(destinationClientIds, serializedMessage, reliable);
+            throw new NotImplementedException();
         }
 
         public void Broadcast(int messageId, uint senderClientId, long originTimestamp, ReadOnlyMemory<byte> rawMessagePackBlock, bool reliable, IReadOnlyList<uint> destinationClientIds)
         {
-            var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
-            var serializedMessage = Serialize(messageId, senderClientId, originTimestamp, transmitTimestamp, rawMessagePackBlock);
-            _transportHub.Broadcast(destinationClientIds, serializedMessage, reliable);
+            throw new NotImplementedException();
         }
 
         void OnTransportConnected(uint clientId)

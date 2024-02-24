@@ -17,8 +17,8 @@ namespace SignalStreaming.Samples.ENetSample
 
         void Awake()
         {
-            // _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 60, isBackground: true);
-            _transportHub = new ENetTransportHub(_port, useAnotherThread: false, targetFrameRate: 60, isBackground: true);
+            _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 60, isBackground: true);
+            // _transportHub = new ENetTransportHub(_port, useAnotherThread: false, targetFrameRate: 60, isBackground: true);
             _streamingHub = new SignalStreamingHub(_transportHub);
 
             _streamingHub.OnClientConnectionRequested += OnClientConnectionRequested;
@@ -37,7 +37,6 @@ namespace SignalStreaming.Samples.ENetSample
 
         void Update()
         {
-            _transportHub.PollEvent();
             _transportHub.DequeueIncomingSignals();
         }
 
