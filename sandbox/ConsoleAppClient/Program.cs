@@ -8,7 +8,7 @@ namespace SignalStreamingSamples.ConsoleAppClient
     {
         static async Task Main(string[] args)
         {
-            var looper = new Looper(targetFrameRate: 60);
+            var looper = new Looper(targetFrameRate: 120);
 
             // Register event handlers
             AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
