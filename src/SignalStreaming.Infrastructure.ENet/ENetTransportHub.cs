@@ -31,11 +31,18 @@ namespace SignalStreaming.Infrastructure.ENet
             }
         }
 
-        struct BufferSpan
+        struct IncomingSignalDequeueRequest
         {
-            public int BufferHead;
             public int BufferLength;
-            public uint TransportClientId;
+            public uint SourceClientId;
+        }
+
+        struct OutgoingSignalDispatchRequest
+        {
+            public int BufferLength;
+            public bool Reliable;
+            public uint DestinationClientId;
+            public string GroupId;
         }
 
         static readonly double TimestampsToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
@@ -43,17 +50,21 @@ namespace SignalStreaming.Infrastructure.ENet
         readonly int _maxClients = 4000;
         readonly int _maxGroups = 500;
         readonly int _maxClientsPerGroup;
+        readonly int _maxSignalSize = 1024 * 4; // 4KB
 
         readonly ConcurrentDictionary<string, ENetGroup> _activeGroups = new();
         readonly ENetGroup[] _groups;
         readonly ENetClient[] _connectedClients;
 
-        readonly Thread _receiverThread;
-        readonly CancellationTokenSource _receiverLoopCts;
+        readonly Thread _transportThread;
+        readonly CancellationTokenSource _transportThreadLoopCts;
         readonly int _targetFrameTimeMilliseconds;
 
-        readonly ConcurrentQueue<BufferSpan> _bufferSpans = new();
-        readonly ConcurrentRingBuffer<byte> _signalBuffer;
+        readonly ConcurrentQueue<IncomingSignalDequeueRequest> _incomingSignalDequeueRequests = new();
+        readonly ConcurrentQueue<OutgoingSignalDispatchRequest> _outgoingSignalDispatchRequests = new();
+        readonly ConcurrentRingBuffer<byte> _incomingSignalsBuffer;
+        readonly ConcurrentRingBuffer<byte> _outgoingSignalsBuffer;
+        readonly byte[] _signalDispatcherBuffer;
 
         Host _server;
  
@@ -91,18 +102,20 @@ namespace SignalStreaming.Infrastructure.ENet
                 };
             }
 
-            _signalBuffer = new ConcurrentRingBuffer<byte>(1024 * 4 * 4096); // 16MB
+            _incomingSignalsBuffer = new ConcurrentRingBuffer<byte>(1024 * 4 * 4096); // 16MB
+            _outgoingSignalsBuffer = new ConcurrentRingBuffer<byte>(1024 * 4 * 4096); // 16MB
+            _signalDispatcherBuffer = new byte[_maxSignalSize];
 
             Library.Initialize();
             _server = new Host();
             _server.Create(new Address(){ Port = port }, _maxClients);
 
-            if (useAnotherThread)
+            // if (useAnotherThread)
             {
                 _targetFrameTimeMilliseconds = (int)(1000 / (double)targetFrameRate);
 
-                _receiverLoopCts = new CancellationTokenSource();
-                _receiverThread = new Thread(RunReceiverLoop)
+                _transportThreadLoopCts = new CancellationTokenSource();
+                _transportThread = new Thread(RunTransportThreadLoop)
                 {
                     Name = $"{nameof(ENetTransportHub)}",
                     IsBackground = isBackground,
@@ -118,7 +131,7 @@ namespace SignalStreaming.Infrastructure.ENet
 
         public void Start()
         {
-            _receiverThread?.Start();
+            _transportThread?.Start();
         }
 
         public void Shutdown()
@@ -127,8 +140,8 @@ namespace SignalStreaming.Infrastructure.ENet
 
             DisconnectAll();
 
-            _receiverLoopCts?.Cancel();
-            _receiverLoopCts?.Dispose();
+            _transportThreadLoopCts?.Cancel();
+            _transportThreadLoopCts?.Dispose();
 
             _server.Flush();
             _server.Dispose();
@@ -354,21 +367,18 @@ namespace SignalStreaming.Infrastructure.ENet
 
         public void DequeueIncomingSignals()
         {
-            var spinner = new SpinWait();
-            var bufferSpan = default(BufferSpan);
-            var signalCount = _bufferSpans.Count;
+            var signalCount = _incomingSignalDequeueRequests.Count;
 
             while (signalCount > 0)
             {
-                if (_bufferSpans.TryDequeue(out bufferSpan))
+                if (_incomingSignalDequeueRequests.TryDequeue(out var dequeueRequest))
                 {
-                    // var bufferHead = bufferSpan.BufferHead;
-                    var bufferLength = bufferSpan.BufferLength;
-                    var clientId = bufferSpan.TransportClientId;
+                    var bufferLength = dequeueRequest.BufferLength;
+                    var sourceClientId = dequeueRequest.SourceClientId;
 
                     try
                     {
-                        OnIncomingSignalDequeued?.Invoke(clientId, _signalBuffer.Slice(0, bufferLength));
+                        OnIncomingSignalDequeued?.Invoke(sourceClientId, _incomingSignalsBuffer.Slice(0, bufferLength));
                     }
                     catch (Exception e)
                     {
@@ -376,14 +386,52 @@ namespace SignalStreaming.Infrastructure.ENet
                     }
                     finally
                     {
-                        _signalBuffer.Clear(bufferLength);
+                        _incomingSignalsBuffer.Clear(bufferLength);
                         signalCount--;
                     }
                 }
             }
         }
 
-        public void PollEvent()
+        public void EnqueueOutgoingSignal(uint destinationClientId, ReadOnlySpan<byte> data, bool reliable)
+        {
+            var dispatchRequest = new OutgoingSignalDispatchRequest
+            {
+                BufferLength = data.Length,
+                Reliable = reliable,
+                DestinationClientId = destinationClientId,
+                GroupId = "",
+            };
+
+            var spinner = new SpinWait();
+            while (!_outgoingSignalsBuffer.TryBulkEnqueue(data))
+            {
+                spinner.SpinOnce();
+            }
+
+            _outgoingSignalDispatchRequests.Enqueue(dispatchRequest);
+        }
+
+        public void EnqueueOutgoingSignal(string groupId, ReadOnlySpan<byte> data, bool reliable)
+        {
+            var dispatchRequest = new OutgoingSignalDispatchRequest
+            {
+                BufferLength = data.Length,
+                Reliable = reliable,
+                DestinationClientId = 0,
+                GroupId = groupId,
+            };
+
+            var spinner = new SpinWait();
+            while (!_outgoingSignalsBuffer.TryBulkEnqueue(data))
+            {
+                spinner.SpinOnce();
+            }
+
+            _outgoingSignalDispatchRequests.Enqueue(dispatchRequest);
+        }
+
+        void PollEvent()
         {
             var polled = false;
 
@@ -422,36 +470,82 @@ namespace SignalStreaming.Infrastructure.ENet
             _server.Flush();
         }
 
+        void DispatchOutgoingSignals()
+        {
+            var signalCount = _outgoingSignalDispatchRequests.Count;
+
+            while (signalCount > 0)
+            {
+                if (_outgoingSignalDispatchRequests.TryDequeue(out var dispatchRequest))
+                {
+                    var bufferLength = dispatchRequest.BufferLength;
+                    var reliable = dispatchRequest.Reliable;
+
+                    var flags = reliable
+                        ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
+                        : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+
+                    var packet = default(Packet);
+                    _outgoingSignalsBuffer.TryBulkDequeue(new Span<byte>(_signalDispatcherBuffer, 0, bufferLength));
+                    packet.Create(_signalDispatcherBuffer, bufferLength, flags);
+
+                    var destinationClientId = dispatchRequest.DestinationClientId;
+                    var groupId = dispatchRequest.GroupId;
+
+                    if (destinationClientId > 0)
+                    {
+                        var peer = _connectedClients[destinationClientId].Peer;
+                        if (peer.IsSet)
+                        {
+                            peer.Send(channelID: 0, ref packet);
+                        }
+                    }
+                    else if (_activeGroups.TryGetValue(groupId, out var enetGroup))
+                    {
+                        _server.Broadcast(channelID: 0, ref packet, enetGroup.Clients);
+                    }
+                    else
+                    {
+                        _server.Broadcast(channelID: 0, ref packet);
+                    }
+
+                    signalCount--;
+                }
+            }
+        }
+
         void HandleReceiveEvent(Event netEvent)
         {
             var pointer = netEvent.Packet.Data.ToPointer();
             var length = netEvent.Packet.Length;
 
             var spinner = new SpinWait();
-            while (!_signalBuffer.TryBulkEnqueue(new ReadOnlySpan<byte>(pointer, length)))
+            while (!_incomingSignalsBuffer.TryBulkEnqueue(new ReadOnlySpan<byte>(pointer, length)))
             {
                 spinner.SpinOnce();
             }
 
-            _bufferSpans.Enqueue(new BufferSpan
+            _incomingSignalDequeueRequests.Enqueue(new IncomingSignalDequeueRequest
             {
-                BufferHead = _signalBuffer.EnqueuePosition,
                 BufferLength = length,
-                TransportClientId = GetClientId(netEvent.Peer),
+                SourceClientId = GetClientId(netEvent.Peer),
             });
 
             netEvent.Packet.Dispose();
         }
 
-        void RunReceiverLoop()
+        void RunTransportThreadLoop()
         {
-            while (!_receiverLoopCts.IsCancellationRequested)
+            DebugLogger.Log($"[{nameof(ENetTransportHub)}] Transport thread loop started. @Thread[{Thread.CurrentThread.ManagedThreadId}]");
+
+            while (!_transportThreadLoopCts.IsCancellationRequested)
             {
                 var begin = Stopwatch.GetTimestamp();
 
                 try
                 {
                     PollEvent();
+                    DispatchOutgoingSignals();
                 }
                 catch (Exception e)
                 {
@@ -468,6 +562,8 @@ namespace SignalStreaming.Infrastructure.ENet
                     Thread.Sleep(waitForNextFrameMilliseconds);
                 }
             }
+
+            DebugLogger.Log($"[{nameof(ENetTransportHub)}] Transport thread loop exited. @Thread[{Thread.CurrentThread.ManagedThreadId}]");
         }
 
         uint GetClientId(Peer peer) => peer.ID + 1;

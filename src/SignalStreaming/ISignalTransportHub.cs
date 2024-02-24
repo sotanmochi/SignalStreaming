@@ -15,8 +15,6 @@ namespace SignalStreaming
         void Start();
         void Shutdown();
 
-        void DequeueIncomingSignals();
-        void PollEvent();
 
         void Disconnect(uint clientId);
         void DisconnectAll();
@@ -27,6 +25,10 @@ namespace SignalStreaming
         bool TryRemoveGroup(string groupId);
         bool TryAddClientToGroup(uint clientId, string groupId);
         bool TryRemoveClientFromGroup(uint clientId, string groupId);
+
+        void DequeueIncomingSignals();
+        void EnqueueOutgoingSignal(uint destinationClientId, ReadOnlySpan<byte> data, bool reliable);
+        void EnqueueOutgoingSignal(string groupId, ReadOnlySpan<byte> data, bool reliable);
 
         void Send(uint destinationClientId, ArraySegment<byte> data, bool reliable);
         void Broadcast(string groupId, ArraySegment<byte> data, bool reliable);
