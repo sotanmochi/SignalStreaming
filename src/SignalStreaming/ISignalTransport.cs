@@ -13,11 +13,11 @@ namespace SignalStreaming
 
         bool IsConnected { get; }
 
-        void DequeueIncomingSignals();
-        void PollEvent();
-
         Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters;
         Task DisconnectAsync(CancellationToken cancellationToken = default);
+
+        void DequeueIncomingSignals();
+        void EnqueueOutgoingSignal(ReadOnlySpan<byte> data, SendOptions sendOptions);
 
         void Send(ArraySegment<byte> data, SendOptions sendOptions, uint[] destinationClientIds = null);
     }

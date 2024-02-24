@@ -98,7 +98,7 @@ namespace SignalStreaming
                 var payload = Serialize(messageId: (int)MessageType.GroupJoinRequest, message: request,
                     sendOptions: sendOptions, senderClientId: _clientId, originTimestamp: originTimestamp);
 
-                _transport.Send(payload, sendOptions, null);
+                _transport.EnqueueOutgoingSignal(payload, sendOptions);
             }
             catch (Exception e)
             {
@@ -118,8 +118,7 @@ namespace SignalStreaming
 
             var payload = Serialize(messageId: (int)MessageType.GroupLeaveRequest, message: request,
                 sendOptions: sendOptions, senderClientId: _clientId, originTimestamp: originTimestamp);
-
-            _transport.Send(payload, sendOptions, null);
+            _transport.EnqueueOutgoingSignal(payload, sendOptions);
         }
 
         public void Send(int messageId, ReadOnlySequence<byte> rawMessageBuffer, SendOptions sendOptions, uint[] destinationClientIds = null)
@@ -127,7 +126,7 @@ namespace SignalStreaming
             if (!_connected) return;
             var originTimestamp = TimestampProvider.GetCurrentTimestamp();
             var payload = Serialize(messageId, senderClientId: _clientId, originTimestamp, sendOptions, rawMessageBuffer);            
-            _transport.Send(payload, sendOptions, destinationClientIds);
+            _transport.EnqueueOutgoingSignal(payload, sendOptions);
         }
 
         public void Send<T>(int messageId, T data, SendOptions sendOptions, uint[] destinationClientIds = null)
@@ -135,7 +134,7 @@ namespace SignalStreaming
             if (!_connected) return;
             var originTimestamp = TimestampProvider.GetCurrentTimestamp();
             var payload = Serialize(messageId, senderClientId: _clientId, originTimestamp, sendOptions, data);
-            _transport.Send(payload, sendOptions, destinationClientIds);
+            _transport.EnqueueOutgoingSignal(payload, sendOptions);
         }
 
         void OnTransportDisconnected()
@@ -218,7 +217,7 @@ namespace SignalStreaming
 
             var connectionRequest = new ClientConnectionRequest(_connectionRequestData);
             var data = Serialize((int)MessageType.ClientConnectionRequest, clientId, originTimestamp, sendOptions, connectionRequest);
-            _transport.Send(data, sendOptions);
+            _transport.EnqueueOutgoingSignal(data, sendOptions);
         }
 
         void HandleConnectionResponse(ReadOnlySequence<byte> data)
