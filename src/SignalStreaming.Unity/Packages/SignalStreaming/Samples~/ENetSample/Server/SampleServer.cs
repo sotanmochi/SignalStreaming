@@ -1,8 +1,11 @@
 using System;
 using System.Buffers;
+using System.Diagnostics;
 using MessagePack;
 using SignalStreaming.Infrastructure.ENet;
 using UnityEngine;
+using Text = UnityEngine.UI.Text;
+using Debug = UnityEngine.Debug;
 
 namespace SignalStreaming.Samples.ENetSample
 {
@@ -11,13 +14,26 @@ namespace SignalStreaming.Samples.ENetSample
         [SerializeField] ushort _port = 3333;
         [SerializeField] string _connectionKey = "SignalStreaming";
         [SerializeField] string _groupId = "01HP8DMTNKAVNQDWCBMG9NWG8S";
+        [SerializeField] Text _receivedSignalCountText;
+        [SerializeField] Text _signalsPerSecondText;
+        [SerializeField] Text _latestReceivedMessageText;
+        [SerializeField] Text _senderClientIdText;
+
+        uint _receivedSignalCount;
+        float _receivedSignalsPerSecond;
+        uint _previousMeasuredSignalCount;
+        long _previousMeasuredTimeMilliseconds;
+        Stopwatch _stopwatch = new();
 
         ISignalStreamingHub _streamingHub;
         ISignalTransportHub _transportHub;
 
         void Awake()
         {
-            _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 60, isBackground: true);
+            Application.targetFrameRate = 60;
+            _stopwatch.Start();
+
+            _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 120, isBackground: true);
             // _transportHub = new ENetTransportHub(_port, useAnotherThread: false, targetFrameRate: 60, isBackground: true);
             _streamingHub = new SignalStreamingHub(_transportHub);
 
@@ -27,6 +43,8 @@ namespace SignalStreaming.Samples.ENetSample
             _streamingHub.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
             _streamingHub.OnGroupJoinRequestReceived += OnGroupJoinRequestReceived;
             _streamingHub.OnGroupLeaveRequestReceived += OnGroupLeaveRequestReceived;
+
+            _receivedSignalCountText.text = $"{_receivedSignalCount}";
         }
 
         void Start()
@@ -37,6 +55,18 @@ namespace SignalStreaming.Samples.ENetSample
 
         void Update()
         {
+            var currentTimeMilliseconds = _stopwatch.ElapsedMilliseconds;
+            if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
+            {
+                var deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
+                _receivedSignalsPerSecond = (_receivedSignalCount - _previousMeasuredSignalCount) / deltaTime;
+
+                _previousMeasuredSignalCount = _receivedSignalCount;
+                _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
+
+                _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
+            }
+
             _transportHub.DequeueIncomingSignals();
         }
 
@@ -129,13 +159,15 @@ namespace SignalStreaming.Samples.ENetSample
         void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, ReadOnlySequence<byte> payload)
         {
             UnityEngine.Profiling.Profiler.BeginSample("SampleServer.OnIncomingSignalDequeued");
-            // Debug.Log($"[{nameof(SampleServer)}] Data received from Client[{senderClientId}]. " +
-            //     $"Message ID: {messageId}, Payload.Length: {payload.Length}");
+
+            _receivedSignalCount++;
+            _receivedSignalCountText.text = $"{_receivedSignalCount}";
 
             if (messageId == 0)
             {
                 var message = MessagePackSerializer.Deserialize<string>(payload);
-                Debug.Log($"<color=lime>[{nameof(SampleServer)}] Received message: {message}</color>");
+                _latestReceivedMessageText.text = message;
+                _senderClientIdText.text = senderClientId.ToString();
             }
 
             if (sendOptions.StreamingType == StreamingType.All)
