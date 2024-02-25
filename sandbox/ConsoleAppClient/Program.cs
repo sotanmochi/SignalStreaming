@@ -59,10 +59,10 @@ namespace SignalStreamingSamples.ConsoleAppClient
             Log($"[{nameof(ConsoleAppClient)}] Main @Thread: {Thread.CurrentThread.ManagedThreadId}");
 
             var client = new SampleClient(serverAddress, port, groupId, connectionKey);
-            var metricsExporter = new MetricsExporter(client);
+            // var metricsExporter = new MetricsExporter(client);
 
             looper.Register(client);
-            looper.Register(metricsExporter);
+            // looper.Register(metricsExporter);
 
             var cts = new CancellationTokenSource();
             looper.StartLoop(cts.Token);
