@@ -109,7 +109,7 @@ namespace SignalStreaming
             var reader = new MessagePackReader(data);
 
             var arrayLength = reader.ReadArrayHeader();
-            if (arrayLength != 5)
+            if (arrayLength != 6)
             {
                 throw new InvalidOperationException($"[{nameof(SignalStreamingHub)}] Invalid data format.");
             }
@@ -117,7 +117,9 @@ namespace SignalStreaming
             var messageId = reader.ReadInt32();
             var senderClientId = reader.ReadUInt32();
             var originTimestamp = reader.ReadInt64();
-            var sendOptions = MessagePackSerializer.Deserialize<SendOptions>(ref reader);
+            var streamingType = reader.ReadInt64();
+            var reliable = reader.ReadBoolean();
+            var sendOptions = new SendOptions((StreamingType)streamingType, reliable);
 
             var payloadOffset = (int)reader.Consumed;
             var payloadLength = data.Length - (int)reader.Consumed;
@@ -166,20 +168,21 @@ namespace SignalStreaming
             }
         }
 
-        byte[] Serialize(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlyMemory<byte> rawMessagePackBlock)
-        {
-            using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
-            var writer = new MessagePackWriter(bufferWriter);
-            writer.WriteArrayHeader(6);
-            writer.Write(messageId);
-            writer.Write(senderClientId);
-            writer.Write(originTimestamp);
-            writer.Write(transmitTimestamp);
-            // writer.Write(0);
-            writer.WriteRaw(rawMessagePackBlock.Span); // NOTE
-            writer.Flush();
-            return bufferWriter.WrittenSpan.ToArray();
-        }
+        // TODO: Fix a bug or remove this method.
+        // byte[] Serialize(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlyMemory<byte> rawMessagePackBlock)
+        // {
+        //     using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
+        //     var writer = new MessagePackWriter(bufferWriter);
+        //     writer.WriteArrayHeader(6);
+        //     writer.Write(messageId);
+        //     writer.Write(senderClientId);
+        //     writer.Write(originTimestamp);
+        //     writer.Write(transmitTimestamp);
+        //     // writer.Write(0);
+        //     writer.WriteRaw(rawMessagePackBlock.Span); // NOTE
+        //     writer.Flush();
+        //     return bufferWriter.WrittenSpan.ToArray();
+        // }
 
         byte[] Serialize<T>(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, T data)
         {

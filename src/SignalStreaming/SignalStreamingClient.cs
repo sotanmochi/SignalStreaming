@@ -265,31 +265,34 @@ namespace SignalStreaming
             }
         }
 
-        byte[] Serialize(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, ReadOnlySequence<byte> rawMessageBuffer)
-        {
-            using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
-            var writer = new MessagePackWriter(bufferWriter);
-            writer.WriteArrayHeader(5);
-            writer.Write(messageId);
-            writer.Write(senderClientId);
-            writer.Write(originTimestamp);
-            writer.Flush();
-            MessagePackSerializer.Serialize(bufferWriter, sendOptions);
-            writer.WriteRaw(rawMessageBuffer); // NOTE
-            writer.Flush();
-            return bufferWriter.WrittenSpan.ToArray();
-        }
+        // TODO: Fix a bug or remove this method
+        // byte[] Serialize(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, ReadOnlySequence<byte> rawMessageBuffer)
+        // {
+        //     using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
+        //     var writer = new MessagePackWriter(bufferWriter);
+        //     writer.WriteArrayHeader(6);
+        //     writer.Write(messageId);
+        //     writer.Write(senderClientId);
+        //     writer.Write(originTimestamp);
+        //     writer.Write((byte)sendOptions.StreamingType);
+        //     writer.Write(sendOptions.Reliable);
+        //     writer.Flush();
+        //     writer.WriteRaw(rawMessageBuffer); // NOTE
+        //     writer.Flush();
+        //     return bufferWriter.WrittenSpan.ToArray();
+        // }
 
         byte[] Serialize<T>(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, T message)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
-            writer.WriteArrayHeader(5);
+            writer.WriteArrayHeader(6);
             writer.Write(messageId);
             writer.Write(senderClientId);
             writer.Write(originTimestamp);
+            writer.Write((byte)sendOptions.StreamingType);
+            writer.Write(sendOptions.Reliable);
             writer.Flush();
-            MessagePackSerializer.Serialize(bufferWriter, sendOptions);
             MessagePackSerializer.Serialize(bufferWriter, message);
             return bufferWriter.WrittenSpan.ToArray();
         }
