@@ -168,18 +168,31 @@ namespace SignalStreaming.Samples.ENetSample
                 var message = MessagePackSerializer.Deserialize<string>(payload);
                 _latestReceivedMessageText.text = message;
                 _senderClientIdText.text = senderClientId.ToString();
-            }
 
-            if (sendOptions.StreamingType == StreamingType.All)
-            {
-                if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                if (sendOptions.StreamingType == StreamingType.All)
                 {
-                    UnityEngine.Profiling.Profiler.EndSample();
-                    return;
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+                    _streamingHub.Broadcast(groupId, messageId, message, sendOptions.Reliable, senderClientId, originTimestamp);
                 }
-
-                _streamingHub.Broadcast(groupId, messageId, payload, sendOptions.Reliable, senderClientId, originTimestamp);
             }
+
+            // ------------------------------------------------
+            // TODO: Fix a bug or remove this code.
+            // if (sendOptions.StreamingType == StreamingType.All)
+            // {
+            //     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+            //     {
+            //         UnityEngine.Profiling.Profiler.EndSample();
+            //         return;
+            //     }
+            //     _streamingHub.Broadcast(groupId, messageId, payload, sendOptions.Reliable, senderClientId, originTimestamp);
+            // }
+            // ------------------------------------------------
+
             UnityEngine.Profiling.Profiler.EndSample();
         }
     }
