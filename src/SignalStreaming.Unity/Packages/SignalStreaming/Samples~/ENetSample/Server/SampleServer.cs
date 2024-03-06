@@ -4,6 +4,7 @@ using System.Diagnostics;
 using MessagePack;
 using SignalStreaming.Infrastructure.ENet;
 using UnityEngine;
+using Button = UnityEngine.UI.Button;
 using Text = UnityEngine.UI.Text;
 using Debug = UnityEngine.Debug;
 
@@ -14,16 +15,46 @@ namespace SignalStreaming.Samples.ENetSample
         [SerializeField] ushort _port = 3333;
         [SerializeField] string _connectionKey = "SignalStreaming";
         [SerializeField] string _groupId = "01HP8DMTNKAVNQDWCBMG9NWG8S";
+
+        [SerializeField] Button _resetButton;
+
         [SerializeField] Text _receivedSignalCountText;
         [SerializeField] Text _signalsPerSecondText;
-        [SerializeField] Text _latestReceivedMessageText;
-        [SerializeField] Text _senderClientIdText;
+        [SerializeField] Text _receivedSignalCountText1;
+        [SerializeField] Text _signalsPerSecondText1;
+        [SerializeField] Text _receivedSignalCountText2;
+        [SerializeField] Text _signalsPerSecondText2;
+        [SerializeField] Text _receivedSignalCountText3;
+        [SerializeField] Text _signalsPerSecondText3;
 
-        uint _receivedSignalCount;
-        float _receivedSignalsPerSecond;
-        uint _previousMeasuredSignalCount;
+        [SerializeField] Text _outgoingSignalCountText;
+        [SerializeField] Text _outgoingSignalCountText1;
+        [SerializeField] Text _outgoingSignalCountText2;
+        [SerializeField] Text _outgoingSignalCountText3;
+
+        readonly Stopwatch _stopwatch = new();
+
         long _previousMeasuredTimeMilliseconds;
-        Stopwatch _stopwatch = new();
+        uint _receivedSignalCount;
+        uint _previousMeasuredSignalCount;
+        float _receivedSignalsPerSecond;
+
+        uint _receivedSignalCount1;
+        uint _previousMeasuredSignalCount1;
+        float _receivedSignalsPerSecond1;
+
+        uint _receivedSignalCount2;
+        uint _previousMeasuredSignalCount2;
+        float _receivedSignalsPerSecond2;
+
+        uint _receivedSignalCount3;
+        uint _previousMeasuredSignalCount3;
+        float _receivedSignalsPerSecond3;
+
+        uint _outgoingSignalCount;
+        uint _outgoingSignalCount1;
+        uint _outgoingSignalCount2;
+        uint _outgoingSignalCount3;
 
         ISignalStreamingHub _streamingHub;
         ISignalTransportHub _transportHub;
@@ -32,6 +63,30 @@ namespace SignalStreaming.Samples.ENetSample
         {
             Application.targetFrameRate = 60;
             _stopwatch.Start();
+
+            _resetButton.onClick.AddListener(() =>
+            {
+                _receivedSignalCount = 0;
+                _previousMeasuredSignalCount = 0;
+                _receivedSignalsPerSecond = 0;
+
+                _receivedSignalCount1 = 0;
+                _previousMeasuredSignalCount1 = 0;
+                _receivedSignalsPerSecond1 = 0;
+
+                _receivedSignalCount2 = 0;
+                _previousMeasuredSignalCount2 = 0;
+                _receivedSignalsPerSecond2 = 0;
+
+                _receivedSignalCount3 = 0;
+                _previousMeasuredSignalCount3 = 0;
+                _receivedSignalsPerSecond3 = 0;
+
+                _outgoingSignalCount = 0;
+                _outgoingSignalCount1 = 0;
+                _outgoingSignalCount2 = 0;
+                _outgoingSignalCount3 = 0;
+            });
 
             _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 120, isBackground: true);
             // _transportHub = new ENetTransportHub(_port, useAnotherThread: false, targetFrameRate: 60, isBackground: true);
@@ -47,29 +102,6 @@ namespace SignalStreaming.Samples.ENetSample
             _receivedSignalCountText.text = $"{_receivedSignalCount}";
         }
 
-        void Start()
-        {
-            _transportHub.Start();
-            _transportHub.TryAddGroup(_groupId, "DevGroup", out var group);
-        }
-
-        void Update()
-        {
-            var currentTimeMilliseconds = _stopwatch.ElapsedMilliseconds;
-            if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
-            {
-                var deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
-                _receivedSignalsPerSecond = (_receivedSignalCount - _previousMeasuredSignalCount) / deltaTime;
-
-                _previousMeasuredSignalCount = _receivedSignalCount;
-                _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
-
-                _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
-            }
-
-            _transportHub.DequeueIncomingSignals();
-        }
-
         void OnDestroy()
         {
             _streamingHub.OnClientConnectionRequested -= OnClientConnectionRequested;
@@ -81,6 +113,49 @@ namespace SignalStreaming.Samples.ENetSample
 
             _streamingHub.Dispose();
             _transportHub.Dispose();
+        }
+
+        void Start()
+        {
+            _transportHub.Start();
+            _transportHub.TryAddGroup(_groupId, "DevGroup", out var group);
+        }
+
+        void Update()
+        {
+            _transportHub.DequeueIncomingSignals();
+
+            _receivedSignalCountText.text = $"{_receivedSignalCount}";
+            _receivedSignalCountText1.text = $"{_receivedSignalCount1}";
+            _receivedSignalCountText2.text = $"{_receivedSignalCount2}";
+            _receivedSignalCountText3.text = $"{_receivedSignalCount3}";
+
+            _outgoingSignalCountText.text = $"{_outgoingSignalCount}";
+            _outgoingSignalCountText1.text = $"{_outgoingSignalCount1}";
+            _outgoingSignalCountText2.text = $"{_outgoingSignalCount2}";
+            _outgoingSignalCountText3.text = $"{_outgoingSignalCount3}";
+
+            var currentTimeMilliseconds = _stopwatch.ElapsedMilliseconds;
+            if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
+            {
+                var deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
+
+                _receivedSignalsPerSecond = (_receivedSignalCount - _previousMeasuredSignalCount) / deltaTime;
+                _receivedSignalsPerSecond1 = (_receivedSignalCount1 - _previousMeasuredSignalCount1) / deltaTime;
+                _receivedSignalsPerSecond2 = (_receivedSignalCount2 - _previousMeasuredSignalCount2) / deltaTime;
+                _receivedSignalsPerSecond3 = (_receivedSignalCount3 - _previousMeasuredSignalCount3) / deltaTime;
+
+                _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
+                _previousMeasuredSignalCount = _receivedSignalCount;
+                _previousMeasuredSignalCount1 = _receivedSignalCount1;
+                _previousMeasuredSignalCount2 = _receivedSignalCount2;
+                _previousMeasuredSignalCount3 = _receivedSignalCount3;
+
+                _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
+                _signalsPerSecondText1.text = $"{_receivedSignalsPerSecond1:F2} [signals/sec]";
+                _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
+                _signalsPerSecondText3.text = $"{_receivedSignalsPerSecond3:F2} [signals/sec]";
+            }
         }
 
         ClientConnectionResponse OnClientConnectionRequested(uint clientId, ClientConnectionRequest connectionRequest)
@@ -161,13 +236,10 @@ namespace SignalStreaming.Samples.ENetSample
             UnityEngine.Profiling.Profiler.BeginSample("SampleServer.OnIncomingSignalDequeued");
 
             _receivedSignalCount++;
-            _receivedSignalCountText.text = $"{_receivedSignalCount}";
 
             if (messageId == 0)
             {
                 var message = MessagePackSerializer.Deserialize<string>(payload);
-                _latestReceivedMessageText.text = message;
-                _senderClientIdText.text = senderClientId.ToString();
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -177,6 +249,60 @@ namespace SignalStreaming.Samples.ENetSample
                         return;
                     }
                     _streamingHub.Broadcast(groupId, messageId, message, sendOptions.Reliable, senderClientId, originTimestamp);
+                }
+            }
+            else if (messageId == (int)SignalType.PlayerObjectColor)
+            {
+                _receivedSignalCount1++;
+
+                var color = MessagePackSerializer.Deserialize<Color>(payload);
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+
+                    _outgoingSignalCount++;
+                    _outgoingSignalCount1++;
+                    _streamingHub.Broadcast(groupId, messageId, color, sendOptions.Reliable, senderClientId, originTimestamp);
+                }
+            }
+            else if (messageId == (int)SignalType.PlayerObjectPosition)
+            {
+                _receivedSignalCount2++;
+
+                var position = MessagePackSerializer.Deserialize<Vector3>(payload);
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+
+                    _outgoingSignalCount++;
+                    _outgoingSignalCount2++;
+                    _streamingHub.Broadcast(groupId, messageId, position, sendOptions.Reliable, senderClientId, originTimestamp);
+                }
+            }
+            else if (messageId == (int)SignalType.PlayerObjectRotation)
+            {
+                _receivedSignalCount3++;
+
+                var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+
+                    _outgoingSignalCount++;
+                    _outgoingSignalCount3++;
+                    _streamingHub.Broadcast(groupId, messageId, rotation, sendOptions.Reliable, senderClientId, originTimestamp);
                 }
             }
 
