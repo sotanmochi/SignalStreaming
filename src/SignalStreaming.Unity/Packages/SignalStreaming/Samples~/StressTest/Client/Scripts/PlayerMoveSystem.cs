@@ -54,7 +54,7 @@ namespace SignalStreaming.Samples.StressTest
                     material = _playerMaterials[playerId];
                 }
             }
-            material.SetColor("_Color", color);
+            material.color = color;
         }
     }
 }
