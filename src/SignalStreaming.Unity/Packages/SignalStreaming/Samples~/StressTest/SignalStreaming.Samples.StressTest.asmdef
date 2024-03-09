@@ -1,6 +1,6 @@
 {
-    "name": "SignalStreaming.Samples.ENetSample",
-    "rootNamespace": "SignalStreaming.Samples.ENetSample",
+    "name": "SignalStreaming.Samples.StressTest",
+    "rootNamespace": "",
     "references": [
         "SignalStreaming",
         "SignalStreaming.MessagePackGenerated",
