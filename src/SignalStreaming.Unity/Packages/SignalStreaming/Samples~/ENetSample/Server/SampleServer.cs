@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Diagnostics;
 using MessagePack;
 using SignalStreaming.Infrastructure.ENet;
+using SignalStreaming.Infrastructure.LiteNetLib;
 using UnityEngine;
 using Button = UnityEngine.UI.Button;
 using Text = UnityEngine.UI.Text;
@@ -88,8 +89,10 @@ namespace SignalStreaming.Samples.ENetSample
                 _outgoingSignalCount3 = 0;
             });
 
-            _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 120, isBackground: true);
+            // _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 120, isBackground: true);
             // _transportHub = new ENetTransportHub(_port, useAnotherThread: false, targetFrameRate: 60, isBackground: true);
+
+            _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120);
             _streamingHub = new SignalStreamingHub(_transportHub);
 
             _streamingHub.OnClientConnectionRequested += OnClientConnectionRequested;
@@ -124,6 +127,12 @@ namespace SignalStreaming.Samples.ENetSample
         void Update()
         {
             _transportHub.DequeueIncomingSignals();
+            UpdateView();
+        }
+
+        void UpdateView()
+        {
+            UnityEngine.Profiling.Profiler.BeginSample("SampleServer.UpdateView");
 
             _receivedSignalCountText.text = $"{_receivedSignalCount}";
             _receivedSignalCountText1.text = $"{_receivedSignalCount1}";
@@ -156,6 +165,8 @@ namespace SignalStreaming.Samples.ENetSample
                 _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
                 _signalsPerSecondText3.text = $"{_receivedSignalsPerSecond3:F2} [signals/sec]";
             }
+
+            UnityEngine.Profiling.Profiler.EndSample();
         }
 
         ClientConnectionResponse OnClientConnectionRequested(uint clientId, ClientConnectionRequest connectionRequest)
