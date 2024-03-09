@@ -3,8 +3,9 @@
     "rootNamespace": "SignalStreaming.Samples.ENetSample",
     "references": [
         "SignalStreaming",
-        "SignalStreaming.Infrastructure.ENet",
         "SignalStreaming.MessagePackGenerated",
+        "SignalStreaming.Infrastructure.ENet",
+        "SignalStreaming.Infrastructure.LiteNetLib",
         "MessagePack",
         "Ulid"
     ],

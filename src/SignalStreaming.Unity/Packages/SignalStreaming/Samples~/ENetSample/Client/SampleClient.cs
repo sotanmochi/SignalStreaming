@@ -4,6 +4,7 @@ using System.Buffers;
 using System.Threading;
 using MessagePack;
 using SignalStreaming.Infrastructure.ENet;
+using SignalStreaming.Infrastructure.LiteNetLib;
 using UnityEngine;
 using Button = UnityEngine.UI.Button;
 using Text = UnityEngine.UI.Text;
@@ -59,6 +60,9 @@ namespace SignalStreaming.Samples.ENetSample
 
         ISignalStreamingClient _streamingClient;
         ISignalTransport _transport;
+        // ENetConnectParameters _connectParameters;
+        LiteNetLibConnectParameters _connectParameters;
+
         PlayerMoveController _localPlayerMoveController;
         uint _clientId;
 
@@ -66,6 +70,19 @@ namespace SignalStreaming.Samples.ENetSample
         {
             Application.targetFrameRate = 60;
             _stopwatch.Start();
+
+            // _connectParameters = new ENetConnectParameters()
+            // {
+            //     ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey),
+            //     ServerAddress = _serverAddress,
+            //     ServerPort = _port
+            // };
+            _connectParameters = new LiteNetLibConnectParameters()
+            {
+                ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey),
+                ServerAddress = _serverAddress,
+                ServerPort = _port
+            };
 
             _connectionButtonText.text = "Connect to server";
             _connectionButton.onClick.AddListener(() =>
@@ -108,7 +125,8 @@ namespace SignalStreaming.Samples.ENetSample
                 _receivedSignalsPerSecond3 = 0;
             });
 
-            _transport = new ENetTransport(useAnotherThread: true, targetFrameRate: 120, isBackground: true);
+            // _transport = new ENetTransport(useAnotherThread: true, targetFrameRate: 120, isBackground: true);
+            _transport = new LiteNetLibTransport(targetFrameRate: 120);
             _streamingClient = new SignalStreamingClient(_transport);
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;
@@ -178,14 +196,11 @@ namespace SignalStreaming.Samples.ENetSample
             var connected = false;
             var joined = false;
 
-            var connectParameters = new ENetConnectParameters()
-            {
-                ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey),
-                ServerAddress = _serverAddress,
-                ServerPort = _port
-            };
+            _connectParameters.ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey);
+            _connectParameters.ServerAddress = _serverAddress;
+            _connectParameters.ServerPort = _port;
 
-            connected = await _streamingClient.ConnectAsync(connectParameters, cancellationToken);
+            connected = await _streamingClient.ConnectAsync(_connectParameters, cancellationToken);
             if (connected)
             {
                 Debug.Log($"[{nameof(SampleClient)}] Connected to server. (Thread: {Thread.CurrentThread.ManagedThreadId})");
