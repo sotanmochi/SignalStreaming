@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace SignalStreaming.Samples.ENetSample
+namespace SignalStreaming.Samples.StressTest
 {
     public class ObjectPoseCalculator
     {

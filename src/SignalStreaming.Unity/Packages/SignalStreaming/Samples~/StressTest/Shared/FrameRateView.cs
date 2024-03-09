@@ -1,7 +1,7 @@
 using UnityEngine;
 using Text = UnityEngine.UI.Text;
 
-namespace SignalStreaming.Samples.ENetSample
+namespace SignalStreaming.Samples.StressTest
 {
     public sealed class FrameRateView : MonoBehaviour
     {

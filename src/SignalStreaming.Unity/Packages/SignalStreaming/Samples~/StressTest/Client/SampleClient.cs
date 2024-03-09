@@ -10,7 +10,7 @@ using Button = UnityEngine.UI.Button;
 using Text = UnityEngine.UI.Text;
 using Debug = UnityEngine.Debug;
 
-namespace SignalStreaming.Samples.ENetSample
+namespace SignalStreaming.Samples.StressTest
 {
     public class SampleClient : MonoBehaviour
     {

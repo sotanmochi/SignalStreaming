@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SignalStreaming.Samples.ENetSample
+namespace SignalStreaming.Samples.StressTest
 {
     public class PlayerMoveSystem : MonoBehaviour
     {
