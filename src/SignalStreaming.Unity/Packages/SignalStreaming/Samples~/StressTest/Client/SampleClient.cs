@@ -15,7 +15,6 @@ namespace SignalStreaming.Samples.StressTest
 {
     public class SampleClient : MonoBehaviour
     {
-        [SerializeField] AppSettings _appSettings;
         [SerializeField] string _serverAddress = "localhost";
         [SerializeField] ushort _port = 3333;
         [SerializeField] string _connectionKey = "SignalStreaming";
@@ -70,6 +69,7 @@ namespace SignalStreaming.Samples.StressTest
         bool _colorUpdated;
         float _rainbowHueOffset;
         uint _clientId;
+        bool _autoConnect;
 
         void Awake()
         {
@@ -81,6 +81,7 @@ namespace SignalStreaming.Samples.StressTest
 
             Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] ServerAddress: {appSettings.ServerAddress}, Port: {appSettings.Port}, ConnectionKey: {appSettings.ConnectionKey}, GroupId: {appSettings.GroupId}</color>");
 
+            _autoConnect = appSettings.AutoConnect;
             _serverAddress = appSettings.ServerAddress;
             _port = appSettings.Port;
             _connectionKey = appSettings.ConnectionKey;
@@ -151,8 +152,14 @@ namespace SignalStreaming.Samples.StressTest
             _transport.Dispose();
         }
 
-        async void Start()
+        void Start()
         {
+            if (_autoConnect)
+            {
+                _connectionCts = new CancellationTokenSource();
+                ConnectAsync(_connectionCts.Token);
+                _connectionButtonText.text = "Cancel connection";
+            }
         }
 
         void Update()

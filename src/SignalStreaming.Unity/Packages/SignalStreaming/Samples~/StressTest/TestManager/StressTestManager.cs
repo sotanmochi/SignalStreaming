@@ -200,7 +200,8 @@ namespace SignalStreaming.Samples.StressTest
         {
             _transport.DequeueIncomingSignals();
 
-            _receivedMegaBytesText.text = $"{_receivedBytes / 1000000f:F4} [MB]";
+            // _receivedMegaBytesText.text = $"{_receivedBytes / 1000000f:F4} [MB]";
+            _receivedMegaBytesText.text = $"{_receivedBytes} [Bytes]";
             _receivedSignalCountText.text = $"{_receivedSignalCount}";
             _receivedSignalCountText1.text = $"{_receivedSignalCount1}";
             _receivedSignalCountText2.text = $"{_receivedSignalCount2}";
@@ -225,8 +226,10 @@ namespace SignalStreaming.Samples.StressTest
                 _previousMeasuredSignalCount2 = _receivedSignalCount2;
                 _previousMeasuredSignalCount3 = _receivedSignalCount3;
 
-                _receivedMegaBytesPerSecondText.text = $"{_receivedBytesPerSecond / 1000000f:F4} [MB/s]";
-                _receivedMegaBitsPerSecondText.text = $"{_receivedBytesPerSecond * 8f / 1000000f:F4} [Mbps]";
+                // _receivedMegaBytesPerSecondText.text = $"{_receivedBytesPerSecond / 1000000f:F4} [MB/s]";
+                // _receivedMegaBitsPerSecondText.text = $"{_receivedBytesPerSecond * 8f / 1000000f:F4} [Mbps]";
+                _receivedMegaBytesPerSecondText.text = $"{_receivedBytesPerSecond} [Bytes/s]";
+                _receivedMegaBitsPerSecondText.text = $"{_receivedBytesPerSecond * 8f} [bits/s]";
                 _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
                 _signalsPerSecondText1.text = $"{_receivedSignalsPerSecond1:F2} [signals/sec]";
                 _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
@@ -289,7 +292,7 @@ namespace SignalStreaming.Samples.StressTest
         private void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload)
         {
             _receivedSignalCount++;
-            _receivedBytes += payload.Length;
+            _receivedBytes = _transport.BytesReceived;
 
             if (messageId == (int)SignalType.PlayerObjectColor)
             {
