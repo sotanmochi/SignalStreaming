@@ -80,6 +80,14 @@ namespace SignalStreaming.Samples.StressTest
             Application.targetFrameRate = 60;
             _stopwatch.Start();
 
+            var appSettingsFilePath = $"{Application.streamingAssetsPath}/appsettings.json";
+            var appSettings = JsonUtility.FromJson<AppSettings>(System.IO.File.ReadAllText(appSettingsFilePath));
+
+            _serverAddress = appSettings.ServerAddress;
+            _port = appSettings.Port;
+            _connectionKey = appSettings.ConnectionKey;
+            _groupId = appSettings.GroupId;
+
             _testStateDropdown.ClearOptions();
             _testStateDropdown.AddOptions(new List<string>
             {
