@@ -88,10 +88,6 @@ namespace SignalStreaming.Samples.StressTest
                 _outgoingSignalCount2 = 0;
                 _outgoingSignalCount3 = 0;
             });
-
-            // _transportHub = new ENetTransportHub(_port, useAnotherThread: true, targetFrameRate: 120, isBackground: true);
-            // _transportHub = new ENetTransportHub(_port, useAnotherThread: false, targetFrameRate: 60, isBackground: true);
-
             _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120);
             _streamingHub = new SignalStreamingHub(_transportHub);
 
@@ -148,18 +144,18 @@ namespace SignalStreaming.Samples.StressTest
             if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
             {
                 var deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
-
+    
                 _receivedSignalsPerSecond = (_receivedSignalCount - _previousMeasuredSignalCount) / deltaTime;
                 _receivedSignalsPerSecond1 = (_receivedSignalCount1 - _previousMeasuredSignalCount1) / deltaTime;
                 _receivedSignalsPerSecond2 = (_receivedSignalCount2 - _previousMeasuredSignalCount2) / deltaTime;
                 _receivedSignalsPerSecond3 = (_receivedSignalCount3 - _previousMeasuredSignalCount3) / deltaTime;
-
+    
                 _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
                 _previousMeasuredSignalCount = _receivedSignalCount;
                 _previousMeasuredSignalCount1 = _receivedSignalCount1;
                 _previousMeasuredSignalCount2 = _receivedSignalCount2;
                 _previousMeasuredSignalCount3 = _receivedSignalCount3;
-
+    
                 _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
                 _signalsPerSecondText1.text = $"{_receivedSignalsPerSecond1:F2} [signals/sec]";
                 _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
@@ -314,6 +310,32 @@ namespace SignalStreaming.Samples.StressTest
                     _outgoingSignalCount++;
                     _outgoingSignalCount3++;
                     _streamingHub.Broadcast(groupId, messageId, rotation, sendOptions.Reliable, senderClientId, originTimestamp);
+                }
+            }
+            else if (messageId == (int)SignalType.ChangeStressTestState)
+            {
+                var stressTestState = MessagePackSerializer.Deserialize<StressTestState>(payload);
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+                    _streamingHub.Broadcast(groupId, messageId, stressTestState, sendOptions.Reliable, senderClientId, originTimestamp);
+                }
+            }
+            else if (messageId == (int)SignalType.ChangeColor)
+            {
+                var colorType = MessagePackSerializer.Deserialize<ColorType>(payload);
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+                    _streamingHub.Broadcast(groupId, messageId, colorType, sendOptions.Reliable, senderClientId, originTimestamp);
                 }
             }
 

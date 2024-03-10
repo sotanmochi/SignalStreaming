@@ -1,18 +1,18 @@
-using System;
-using System.Diagnostics;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using MessagePack;
-using SignalStreaming.Infrastructure.ENet;
+using SignalStreaming;
 using SignalStreaming.Infrastructure.LiteNetLib;
 using UnityEngine;
-using Button = UnityEngine.UI.Button;
-using Text = UnityEngine.UI.Text;
+using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
 namespace SignalStreaming.Samples.StressTest
 {
-    public class SampleClient : MonoBehaviour
+    public class StressTestManager : MonoBehaviour
     {
         [SerializeField] string _serverAddress = "localhost";
         [SerializeField] ushort _port = 3333;
@@ -23,9 +23,15 @@ namespace SignalStreaming.Samples.StressTest
 
         [SerializeField] Button _connectionButton;
         [SerializeField] Text _connectionButtonText;
-        [SerializeField] Button _transmissionButton;
-        [SerializeField] Text _transmissionButtonText;
+        [SerializeField] Button _testStateSignalButton;
+        [SerializeField] Dropdown _testStateDropdown;
+        [SerializeField] Button _changeColorButton;
+        [SerializeField] Dropdown _changeColorDropdown;
         [SerializeField] Button _resetButton;
+
+        [SerializeField] Text _receivedMegaBytesText;
+        [SerializeField] Text _receivedMegaBytesPerSecondText;
+        [SerializeField] Text _receivedMegaBitsPerSecondText;
 
         [SerializeField] Text _receivedSignalCountText;
         [SerializeField] Text _signalsPerSecondText;
@@ -46,6 +52,10 @@ namespace SignalStreaming.Samples.StressTest
         uint _previousMeasuredSignalCount;
         float _receivedSignalsPerSecond;
 
+        long _receivedBytes;
+        long _previousMeasuredBytes;
+        float _receivedBytesPerSecond;
+
         uint _receivedSignalCount1;
         uint _previousMeasuredSignalCount1;
         float _receivedSignalsPerSecond1;
@@ -63,10 +73,6 @@ namespace SignalStreaming.Samples.StressTest
         LiteNetLibConnectParameters _connectParameters;
 
         PlayerMoveController _localPlayerMoveController;
-        ColorType _localPlayerColorType;
-        Color _localPlayerColor;
-        bool _colorUpdated;
-        float _rainbowHueOffset;
         uint _clientId;
 
         void Awake()
@@ -74,15 +80,55 @@ namespace SignalStreaming.Samples.StressTest
             Application.targetFrameRate = 60;
             _stopwatch.Start();
 
-            _connectParameters = new LiteNetLibConnectParameters()
+            _testStateDropdown.ClearOptions();
+            _testStateDropdown.AddOptions(new List<string>
             {
-                ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey),
+                "All Signal Emitter Disabled",
+                "All Signal Emitter Enabled",
+            });
+            _testStateDropdown.value = 0;
+            _testStateDropdown.RefreshShownValue();
+
+            _testStateSignalButton.onClick.AddListener(() =>
+            {
+                var value = (StressTestState)_testStateDropdown.value;
+                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
+                _streamingClient.Send((int)SignalType.ChangeStressTestState, value, sendOptions);
+                Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] Sent stress test state signal: {value}</color>");
+            });
+
+            _changeColorDropdown.ClearOptions();
+            _changeColorDropdown.AddOptions(new List<string>
+            {
+                ColorType.Random.ToString(),
+                ColorType.Red.ToString(),
+                ColorType.Green.ToString(),
+                ColorType.Blue.ToString(),
+                ColorType.Cyan.ToString(),
+                ColorType.Magenta.ToString(),
+                ColorType.Yellow.ToString(),
+                ColorType.Rainbow.ToString()
+            });
+            _changeColorDropdown.value = 0;
+            _changeColorDropdown.RefreshShownValue();
+
+            _changeColorButton.onClick.AddListener(() =>
+            {
+                var value = (ColorType)_changeColorDropdown.value;
+                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
+                _streamingClient.Send((int)SignalType.ChangeColor, value, sendOptions);
+                Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] Sent color change signal: {value}</color>");
+            });
+
+            _connectParameters = new LiteNetLibConnectParameters
+            {
+                ConnectionRequestData = Encoding.UTF8.GetBytes(_connectionKey),
                 ServerAddress = _serverAddress,
                 ServerPort = _port
             };
 
             _connectionButtonText.text = "Connect to server";
-            _connectionButton.onClick.AddListener(() =>
+            _connectionButton.onClick.AddListener(delegate
             {
                 if (_connectionCts != null)
                 {
@@ -99,24 +145,24 @@ namespace SignalStreaming.Samples.StressTest
                 }
             });
 
-            _transmissionButtonText.text = "Start transmission";
-            _transmissionButton.onClick.AddListener(() =>
+            _resetButton.onClick.AddListener(delegate
             {
-                _transmissionEnabled = !_transmissionEnabled;
-                _transmissionButtonText.text = _transmissionEnabled ? "Stop transmission" : "Start transmission";
-            });
+                _receivedSignalsPerSecond = 0;
+                _receivedBytes = 0;
+                _previousMeasuredBytes = 0;
+                _receivedBytesPerSecond = 0;
 
-            _resetButton.onClick.AddListener(() =>
-            {
                 _receivedSignalCount = 0;
                 _previousMeasuredSignalCount = 0;
-                _receivedSignalsPerSecond = 0;
+
                 _receivedSignalCount1 = 0;
                 _previousMeasuredSignalCount1 = 0;
                 _receivedSignalsPerSecond1 = 0;
+
                 _receivedSignalCount2 = 0;
                 _previousMeasuredSignalCount2 = 0;
                 _receivedSignalsPerSecond2 = 0;
+
                 _receivedSignalCount3 = 0;
                 _previousMeasuredSignalCount3 = 0;
                 _receivedSignalsPerSecond3 = 0;
@@ -139,14 +185,11 @@ namespace SignalStreaming.Samples.StressTest
             _transport.Dispose();
         }
 
-        async void Start()
-        {
-        }
-
         void Update()
         {
             _transport.DequeueIncomingSignals();
 
+            _receivedMegaBytesText.text = $"{_receivedBytes / 1000000f:F4} [MB]";
             _receivedSignalCountText.text = $"{_receivedSignalCount}";
             _receivedSignalCountText1.text = $"{_receivedSignalCount1}";
             _receivedSignalCountText2.text = $"{_receivedSignalCount2}";
@@ -155,62 +198,30 @@ namespace SignalStreaming.Samples.StressTest
             var currentTimeMilliseconds = _stopwatch.ElapsedMilliseconds;
             if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
             {
-                var deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
+                float deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
+
+                _receivedBytesPerSecond = (_receivedBytes - _previousMeasuredBytes) / deltaTime;
                 _receivedSignalsPerSecond = (_receivedSignalCount - _previousMeasuredSignalCount) / deltaTime;
                 _receivedSignalsPerSecond1 = (_receivedSignalCount1 - _previousMeasuredSignalCount1) / deltaTime;
                 _receivedSignalsPerSecond2 = (_receivedSignalCount2 - _previousMeasuredSignalCount2) / deltaTime;
                 _receivedSignalsPerSecond3 = (_receivedSignalCount3 - _previousMeasuredSignalCount3) / deltaTime;
 
                 _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
+                _previousMeasuredBytes = _receivedBytes;
+
                 _previousMeasuredSignalCount = _receivedSignalCount;
                 _previousMeasuredSignalCount1 = _receivedSignalCount1;
                 _previousMeasuredSignalCount2 = _receivedSignalCount2;
                 _previousMeasuredSignalCount3 = _receivedSignalCount3;
 
+                _receivedMegaBytesPerSecondText.text = $"{_receivedBytesPerSecond / 1000000f:F4} [MB/s]";
+                _receivedMegaBitsPerSecondText.text = $"{_receivedBytesPerSecond * 8f / 1000000f:F4} [Mbps]";
                 _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
                 _signalsPerSecondText1.text = $"{_receivedSignalsPerSecond1:F2} [signals/sec]";
                 _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
                 _signalsPerSecondText3.text = $"{_receivedSignalsPerSecond3:F2} [signals/sec]";
             }
-
-            if (_transmissionEnabled && _localPlayerMoveController != null)
-            {
-                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
-
-                var position = _localPlayerMoveController.transform.position;
-                var rotation = _localPlayerMoveController.transform.rotation;
-
-                _streamingClient.Send((int)SignalType.PlayerObjectRotation, rotation, sendOptions);
-                _streamingClient.Send((int)SignalType.PlayerObjectPosition, position, sendOptions);
-            }
-
-            if (_localPlayerColorType == ColorType.Rainbow)
-            {
-                _rainbowHueOffset += Time.deltaTime * 0.1f;
-                _rainbowHueOffset %= 1f;
-                _localPlayerColor = Color.HSVToRGB(_rainbowHueOffset, 1f, 1f);
-                _playerMoveSystem.UpdateColor(_clientId, _localPlayerColor);
-                _colorUpdated = true;
-            }
-
-            if (_transmissionEnabled && _colorUpdated)
-            {
-                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
-                _streamingClient.Send((int)SignalType.PlayerObjectColor, _localPlayerColor, sendOptions);
-                _colorUpdated = false;
-            }
         }
-
-        Color GetColor(int colorType) => colorType switch
-        {
-            1 => Color.red,
-            2 => Color.green,
-            3 => Color.blue,
-            4 => Color.cyan,
-            5 => Color.magenta,
-            6 => Color.yellow,
-            _ => Color.white,
-        };
 
         async void ConnectAsync(CancellationToken cancellationToken)
         {
@@ -253,72 +264,23 @@ namespace SignalStreaming.Samples.StressTest
             }
         }
 
-        void OnConnected(uint clientId)
+        private void OnConnected(uint clientId)
         {
             Debug.Log($"[{nameof(SampleClient)}] Connected - ClientId: {clientId}");
             _clientId = clientId;
-            _playerMoveSystem.TryGetOrAdd(clientId, out _localPlayerMoveController);
-            _playerMoveSystem.EnableAutopilot(clientId, true);
-
-            _localPlayerColorType = ColorType.Random;
-
-            _localPlayerColor = GetColor(UnityEngine.Random.Range(1, 7));
-            _playerMoveSystem.UpdateColor(_clientId, _localPlayerColor);
-            _colorUpdated = true;
-
-            Debug.Log($"<color=cyan>[{nameof(SampleClient)}] Update color: {_localPlayerColor}, Type: {_localPlayerColorType}, Updated: {_colorUpdated}</color>");
         }
 
-        void OnDisconnected(string reason)
+        private void OnDisconnected(string reason)
         {
             Debug.Log($"[{nameof(SampleClient)}] Disconnected - Reason: {reason}");
-            _playerMoveSystem.UpdateColor(_clientId, Color.red);
         }
 
-        void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload)
+        private void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload)
         {
             _receivedSignalCount++;
-            if (messageId == (int)SignalType.ChangeStressTestState)
-            {
-                if (senderClientId == _clientId) return;
+            _receivedBytes += payload.Length;
 
-                var state = MessagePackSerializer.Deserialize<StressTestState>(in payload);
-                if (state == StressTestState.AllSignalEmittersDisabled)
-                {
-                    _transmissionEnabled = false;
-                    _transmissionButtonText.text = "Start transmission";
-                }
-                else if (state == StressTestState.AllSignalEmittersEnabled)
-                {
-                    _transmissionEnabled = true;
-                    _transmissionButtonText.text = "Stop transmission";
-                }
-            }
-            else if (messageId == (int)SignalType.ChangeColor)
-            {
-                if (senderClientId == _clientId) return;
-
-                _localPlayerColorType = MessagePackSerializer.Deserialize<ColorType>(in payload);
-                
-                if (_localPlayerColorType == ColorType.Random)
-                {
-                    _localPlayerColor = GetColor(UnityEngine.Random.Range(1, 7));
-                }
-                else if (_localPlayerColorType == ColorType.Rainbow)
-                {
-                    _rainbowHueOffset = 0f;
-                    _localPlayerColor = Color.HSVToRGB(_rainbowHueOffset, 1f, 1f);
-                }
-                else
-                {
-                    _localPlayerColor = GetColor((int)_localPlayerColorType);
-                }
-
-                _playerMoveSystem.UpdateColor(_clientId, _localPlayerColor);
-                _colorUpdated = true;
-                UnityEngine.Debug.Log(string.Format("<color=cyan>[{0}] Update color: {1}, Type: {2}, Updated: {3}</color>", "SampleClient", _localPlayerColor, _localPlayerColorType, _colorUpdated));
-            }
-            else if (messageId == (int)SignalType.PlayerObjectColor)
+            if (messageId == (int)SignalType.PlayerObjectColor)
             {
                 _receivedSignalCount1++;
 
