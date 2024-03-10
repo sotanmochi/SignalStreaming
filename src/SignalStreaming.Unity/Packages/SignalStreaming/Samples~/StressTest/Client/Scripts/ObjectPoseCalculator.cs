@@ -16,6 +16,11 @@ namespace SignalStreaming.Samples.StressTest
         float previousTime;
         float t;
 
+        public int MinA { get; set; } = 5;
+        public int MaxA { get; set; } = 50;
+        public int MinB { get; set; } = 5;
+        public int MaxB { get; set; } = 50;
+
         public Vector3 Position { get; private set; }
         public Quaternion Rotation { get; private set; }
         public Vector3 ForwardDirection { get; private set; }
@@ -24,8 +29,8 @@ namespace SignalStreaming.Samples.StressTest
         {
             var random = new System.Random();
             stopwatch.Start();
-            a = random.Next(5, 101);
-            b = random.Next(5, 101);
+            a = random.Next(MinA, MaxA);
+            b = random.Next(MinB, MaxB);
             offsetPosition = (a > b) ? new Vector3(a / 2f, 0, 0) : new Vector3(0, 0, b / 2f);
             offsetAngle = 360 * (float)random.NextDouble();
         }
