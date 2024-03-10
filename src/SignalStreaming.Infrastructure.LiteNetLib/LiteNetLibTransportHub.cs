@@ -77,9 +77,12 @@ namespace SignalStreaming.Infrastructure.LiteNetLib
         public int ConnectionCapacity => _maxClients;
         public int ConnectionCount => _connectedClients.Length; // TODO: Fix
 
-        public LiteNetLibTransportHub(ushort port, int targetFrameRate)
+        public LiteNetLibTransportHub(ushort port, int targetFrameRate, int maxClients = 4000, int maxGroups = 500)
         {
             _targetFrameTimeMilliseconds = (int)(1000 / (double)targetFrameRate);
+
+            _maxClients = maxClients;
+            _maxGroups = maxGroups;
             _maxClientsPerGroup = _maxClients / _maxGroups;
 
             _groupPool = new LiteNetLibGroup[_maxGroups];
