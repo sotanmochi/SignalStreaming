@@ -88,7 +88,7 @@ namespace SignalStreaming.Samples.StressTest
                 _outgoingSignalCount2 = 0;
                 _outgoingSignalCount3 = 0;
             });
-            _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120);
+            _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120, maxGroups: 1);
             _streamingHub = new SignalStreamingHub(_transportHub);
 
             _streamingHub.OnClientConnectionRequested += OnClientConnectionRequested;
