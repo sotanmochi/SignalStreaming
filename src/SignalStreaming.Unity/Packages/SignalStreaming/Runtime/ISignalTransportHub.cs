@@ -12,9 +12,11 @@ namespace SignalStreaming
         event Action<uint> OnDisconnected;
         event OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
 
+        long BytesReceived { get; }
+        long BytesSent { get; }
+
         void Start();
         void Shutdown();
-
 
         void Disconnect(uint clientId);
         void DisconnectAll();

@@ -75,6 +75,8 @@ namespace SignalStreaming.Infrastructure.ENet
 
         public int ConnectionCapacity => _maxClients;
         public int ConnectionCount => _connectedClients.Length; // TODO: Fix
+        public long BytesReceived => -1;
+        public long BytesSent => -1;
 
         public ENetTransportHub(ushort port, bool useAnotherThread, int targetFrameRate, bool isBackground)
         {

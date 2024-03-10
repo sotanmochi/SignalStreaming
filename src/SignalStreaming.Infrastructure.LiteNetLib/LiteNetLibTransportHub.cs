@@ -76,6 +76,8 @@ namespace SignalStreaming.Infrastructure.LiteNetLib
 
         public int ConnectionCapacity => _maxClients;
         public int ConnectionCount => _connectedClients.Length; // TODO: Fix
+        public long BytesReceived => _server.Statistics.BytesReceived;
+        public long BytesSent => _server.Statistics.BytesSent;
 
         public LiteNetLibTransportHub(ushort port, int targetFrameRate, int maxClients = 4000, int maxGroups = 500)
         {
@@ -113,7 +115,8 @@ namespace SignalStreaming.Infrastructure.LiteNetLib
 
             _server = new NetManager(this)
             {
-                AutoRecycle = true
+                AutoRecycle = true,
+                EnableStatistics = true
             };
             _server.Start(port);
             _server.BroadcastReceiveEnabled = true;

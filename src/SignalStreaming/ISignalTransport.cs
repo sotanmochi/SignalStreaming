@@ -12,6 +12,8 @@ namespace SignalStreaming
         event Action<ReadOnlySequence<byte>> OnIncomingSignalDequeued;
 
         bool IsConnected { get; }
+        long BytesReceived { get; }
+        long BytesSent { get; }
 
         Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters;
         Task DisconnectAsync(CancellationToken cancellationToken = default);

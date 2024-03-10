@@ -60,6 +60,8 @@ namespace SignalStreaming.Infrastructure.ENet
         public event Action<ReadOnlySequence<byte>> OnIncomingSignalDequeued;
 
         public bool IsConnected => _connected;
+        public long BytesReceived => -1;
+        public long BytesSent => -1;
 
         public ENetTransport(bool useAnotherThread, int targetFrameRate, bool isBackground)
         {

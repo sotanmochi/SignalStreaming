@@ -61,6 +61,8 @@ namespace SignalStreaming.Infrastructure.LiteNetLib
         public event Action<ReadOnlySequence<byte>> OnIncomingSignalDequeued;
 
         public bool IsConnected => _connected;
+        public long BytesReceived => _client.Statistics.BytesReceived;
+        public long BytesSent => _client.Statistics.BytesSent;
 
         public LiteNetLibTransport(int targetFrameRate)
         {
@@ -72,7 +74,8 @@ namespace SignalStreaming.Infrastructure.LiteNetLib
 
             _client = new NetManager(this)
             {
-                AutoRecycle = true
+                AutoRecycle = true,
+                EnableStatistics = true
             };
             _client.Start();
 
