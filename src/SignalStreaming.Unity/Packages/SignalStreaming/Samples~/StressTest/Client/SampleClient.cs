@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Buffers;
 using System.Threading;
 using MessagePack;
+using Newtonsoft.Json;
 using SignalStreaming.Infrastructure.ENet;
 using SignalStreaming.Infrastructure.LiteNetLib;
 using UnityEngine;
@@ -76,7 +77,9 @@ namespace SignalStreaming.Samples.StressTest
             _stopwatch.Start();
 
             var appSettingsFilePath = $"{Application.streamingAssetsPath}/appsettings.json";
-            var appSettings = JsonUtility.FromJson<AppSettings>(System.IO.File.ReadAllText(appSettingsFilePath));
+            var appSettings = JsonConvert.DeserializeObject<AppSettings>(System.IO.File.ReadAllText(appSettingsFilePath));
+
+            Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] ServerAddress: {appSettings.ServerAddress}, Port: {appSettings.Port}, ConnectionKey: {appSettings.ConnectionKey}, GroupId: {appSettings.GroupId}</color>");
 
             _serverAddress = appSettings.ServerAddress;
             _port = appSettings.Port;
