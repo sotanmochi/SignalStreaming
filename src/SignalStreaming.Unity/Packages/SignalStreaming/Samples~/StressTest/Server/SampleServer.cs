@@ -13,7 +13,7 @@ namespace SignalStreaming.Samples.StressTest
 {
     public class SampleServer : MonoBehaviour
     {
-        [SerializeField] ushort _port = 3333;
+        [SerializeField] ushort _port = 54970;
         [SerializeField] string _connectionKey = "SignalStreaming";
         [SerializeField] string _groupId = "01HP8DMTNKAVNQDWCBMG9NWG8S";
 

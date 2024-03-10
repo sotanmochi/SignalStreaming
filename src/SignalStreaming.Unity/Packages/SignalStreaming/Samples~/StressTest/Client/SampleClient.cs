@@ -14,6 +14,7 @@ namespace SignalStreaming.Samples.StressTest
 {
     public class SampleClient : MonoBehaviour
     {
+        [SerializeField] AppSettings _appSettings;
         [SerializeField] string _serverAddress = "localhost";
         [SerializeField] ushort _port = 3333;
         [SerializeField] string _connectionKey = "SignalStreaming";
@@ -73,6 +74,14 @@ namespace SignalStreaming.Samples.StressTest
         {
             Application.targetFrameRate = 60;
             _stopwatch.Start();
+
+            var appSettingsFilePath = $"{Application.streamingAssetsPath}/appsettings.json";
+            var appSettings = JsonUtility.FromJson<AppSettings>(System.IO.File.ReadAllText(appSettingsFilePath));
+
+            _serverAddress = appSettings.ServerAddress;
+            _port = appSettings.Port;
+            _connectionKey = appSettings.ConnectionKey;
+            _groupId = appSettings.GroupId;
 
             _connectParameters = new LiteNetLibConnectParameters()
             {
@@ -214,6 +223,8 @@ namespace SignalStreaming.Samples.StressTest
 
         async void ConnectAsync(CancellationToken cancellationToken)
         {
+
+
             Debug.Log($"[{nameof(SampleClient)}] Trying to connect to server... (Thread: {Thread.CurrentThread.ManagedThreadId})");
 
             var connected = false;
