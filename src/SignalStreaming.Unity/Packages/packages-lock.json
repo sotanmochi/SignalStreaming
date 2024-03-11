@@ -27,6 +27,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.nxrighthere.netstack": {
+      "version": "file:NetStack",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.burst": {
       "version": "1.8.12",
       "depth": 1,
