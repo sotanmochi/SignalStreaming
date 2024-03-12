@@ -201,64 +201,62 @@ namespace NetStack.Serialization {
 			readPosition = 0;
 		}
 
-		#if NETSTACK_SPAN
-			public int ToSpan(ref Span<byte> data) {
-				Add(1, 1);
+		public int ToSpan(ref Span<byte> data) {
+			Add(1, 1);
 
-				int numChunks = (nextPosition >> 5) + 1;
-				int length = data.Length;
+			int numChunks = (nextPosition >> 5) + 1;
+			int length = data.Length;
 
-				for (int i = 0; i < numChunks; i++) {
-					int dataIdx = i * 4;
-					uint chunk = chunks[i];
+			for (int i = 0; i < numChunks; i++) {
+				int dataIdx = i * 4;
+				uint chunk = chunks[i];
 
-					if (dataIdx < length)
-						data[dataIdx] = (byte)(chunk);
+				if (dataIdx < length)
+					data[dataIdx] = (byte)(chunk);
 
-					if (dataIdx + 1 < length)
-						data[dataIdx + 1] = (byte)(chunk >> 8);
+				if (dataIdx + 1 < length)
+					data[dataIdx + 1] = (byte)(chunk >> 8);
 
-					if (dataIdx + 2 < length)
-						data[dataIdx + 2] = (byte)(chunk >> 16);
+				if (dataIdx + 2 < length)
+					data[dataIdx + 2] = (byte)(chunk >> 16);
 
-					if (dataIdx + 3 < length)
-						data[dataIdx + 3] = (byte)(chunk >> 24);
-				}
-
-				return Length;
+				if (dataIdx + 3 < length)
+					data[dataIdx + 3] = (byte)(chunk >> 24);
 			}
 
-			public void FromSpan(ref ReadOnlySpan<byte> data, int length) {
-				int numChunks = (length / 4) + 1;
+			return Length;
+		}
 
-				if (chunks.Length < numChunks)
-					chunks = new uint[numChunks];
+		public void FromSpan(ref ReadOnlySpan<byte> data, int length) {
+			int numChunks = (length / 4) + 1;
 
-				for (int i = 0; i < numChunks; i++) {
-					int dataIdx = i * 4;
-					uint chunk = 0;
+			if (chunks.Length < numChunks)
+				chunks = new uint[numChunks];
 
-					if (dataIdx < length)
-						chunk = (uint)data[dataIdx];
+			for (int i = 0; i < numChunks; i++) {
+				int dataIdx = i * 4;
+				uint chunk = 0;
 
-					if (dataIdx + 1 < length)
- 						chunk = chunk | (uint)data[dataIdx + 1] << 8;
+				if (dataIdx < length)
+					chunk = (uint)data[dataIdx];
 
-					if (dataIdx + 2 < length)
-						chunk = chunk | (uint)data[dataIdx + 2] << 16;
+				if (dataIdx + 1 < length)
+					chunk = chunk | (uint)data[dataIdx + 1] << 8;
 
-					if (dataIdx + 3 < length)
-						chunk = chunk | (uint)data[dataIdx + 3] << 24;
+				if (dataIdx + 2 < length)
+					chunk = chunk | (uint)data[dataIdx + 2] << 16;
 
-					chunks[i] = chunk;
-				}
+				if (dataIdx + 3 < length)
+					chunk = chunk | (uint)data[dataIdx + 3] << 24;
 
-				int positionInByte = FindHighestBitPosition(data[length - 1]);
-
-				nextPosition = ((length - 1) * 8) + (positionInByte - 1);
-				readPosition = 0;
+				chunks[i] = chunk;
 			}
-		#endif
+
+			int positionInByte = FindHighestBitPosition(data[length - 1]);
+
+			nextPosition = ((length - 1) * 8) + (positionInByte - 1);
+			readPosition = 0;
+		}
 
 		[MethodImpl(256)]
 		public BitBuffer AddBool(bool value) {
