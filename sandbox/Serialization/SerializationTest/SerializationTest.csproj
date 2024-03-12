@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\ThirdParty\NetStack\Quantization\NetStack.Quantization.csproj" />
+    <ProjectReference Include="..\..\..\src\ThirdParty\NetStack\Serialization\NetStack.Serialization.csproj" />
     <ProjectReference Include="..\MessagePack.NetStack\SignalStreaming.Serialization.MessagePack.NetStack.csproj" />
   </ItemGroup>
 
