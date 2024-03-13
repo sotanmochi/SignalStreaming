@@ -16,8 +16,25 @@ namespace SignalStreaming.SerializationTest
 
         static void Main(string[] args)
         {
+            UnionValueTest();
             QuantizedQuaternionTest();
             QuantizedQuaternionTest2();
+            QuantizedPositionTest();
+            QuantizedPositionTest2();
+        }
+
+        static void UnionValueTest()
+        {
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"        UnionValueTest");
+            Console.WriteLine("----------------------------------------");
+            var value = new UnionValue();
+            value = -1.234f;
+            Console.WriteLine($"[{nameof(UnionValueTest)}] Size of UnionValue: {Marshal.SizeOf(value)} bytes");
+            Console.WriteLine($"[{nameof(UnionValueTest)}] Value.AsFloat(): {value.AsFloat()}");
+            Console.WriteLine($"[{nameof(UnionValueTest)}] Value.AsInt(): {value.AsInt()}");
+            Console.WriteLine($"[{nameof(UnionValueTest)}] Value.AsUInt(): {value.AsUInt()}");
+            Console.WriteLine("----------------------------------------");
         }
 
         static void QuantizedQuaternionTest()
@@ -61,8 +78,8 @@ namespace SignalStreaming.SerializationTest
             Console.WriteLine("----------------------------------------");
             Console.WriteLine($"        QuantizedQuaternionTest2");
             Console.WriteLine("----------------------------------------");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Size of Quaternion: {Marshal.SizeOf(q)} bytes");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Size of QuantizedQuaternion: {Marshal.SizeOf(qq)} bytes");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Size of Quaternion: {Marshal.SizeOf(q)} bytes");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Size of QuantizedQuaternion: {Marshal.SizeOf(qq)} bytes");
             Console.WriteLine("");
 
             var bytesQ = new byte[1500];
@@ -87,8 +104,8 @@ namespace SignalStreaming.SerializationTest
                                         .AddUInt(qq.c)
                                         .ToSpan(ref bytesSpanQq);
 
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Serialized data size of Quaternion: {serializedQLength} bytes");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Serialized data size of QuantizedQuaternion: {serializedQqLength} bytes");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Serialized data size of Quaternion: {serializedQLength} bytes");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Serialized data size of QuantizedQuaternion: {serializedQqLength} bytes");
             Console.WriteLine("");
 
             var bytesQqReadOnlySpan = new ReadOnlySpan<byte>(bytesQq);
@@ -99,10 +116,132 @@ namespace SignalStreaming.SerializationTest
             var dequantizedQ = SmallestThree.Dequantize(deserializedQq).ToUnityQuaternion();
             var angle = Angle(q, dequantizedQ);
 
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] q: ({q.x}, {q.y}, {q.z}, {q.w})");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] dequantizedQ: ({dequantizedQ.x}, {dequantizedQ.y}, {dequantizedQ.z}, {dequantizedQ.w})");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Dot(q, dequantizedQ): {Dot(q, dequantizedQ)}");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Angle(q, dequantizedQ): {angle} [deg]");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] q: ({q.x}, {q.y}, {q.z}, {q.w})");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] dequantizedQ: ({dequantizedQ.x}, {dequantizedQ.y}, {dequantizedQ.z}, {dequantizedQ.w})");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Dot(q, dequantizedQ): {Dot(q, dequantizedQ)}");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Angle(q, dequantizedQ): {angle} [deg]");
+            Console.WriteLine("----------------------------------------");
+        }
+
+        static void QuantizedPositionTest()
+        {
+            var options = MessagePackSerializerOptions.Standard
+                            .WithResolver(CompositeResolver.Create(QuantizationResolver.Instance, StandardResolver.Instance));
+
+            var precision = 0.001f;
+            var worldBounds = new BoundedRange[3];
+            worldBounds[0] = new BoundedRange(-256.0f, 256.0f, precision);
+            worldBounds[1] = new BoundedRange(-256.0f, 256.0f, precision);
+            worldBounds[2] = new BoundedRange(-32.0f, 32.0f, precision);
+
+            var random = new Random();
+            var posX = random.NextSingle() * 512.0f - 256.0f; // [-256, 256]
+            var posY = random.NextSingle() * 512.0f - 256.0f; // [-256, 256]
+            var posZ = random.NextSingle() * 64.0f - 32.0f; // [-32, 32]
+
+            var position = new Vector3(posX, posY, posZ);
+            var quantizedPosition = BoundedRange.Quantize(position.ToSystemNumericsVector3(), worldBounds);
+
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"        QuantizedPositionTest");
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] Size of Position: {Marshal.SizeOf(position)} bytes");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] Size of QuantizedPosition: {Marshal.SizeOf(quantizedPosition)} bytes");
+            Console.WriteLine("");
+
+            var serializedV = MessagePackSerializer.Serialize(position, options);
+            var serializedQv = MessagePackSerializer.Serialize(quantizedPosition, options);
+
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] Serialized data size of Vector3: {serializedV.Length} bytes");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] Serialized data size of QuantizedVector3: {serializedQv.Length} bytes");
+            Console.WriteLine("");
+
+            var deserializedQv = MessagePackSerializer.Deserialize<QuantizedVector3>(serializedQv, options);
+            var dequantizedQ = BoundedRange.Dequantize(deserializedQv, worldBounds);
+            var dequantizedPosition = dequantizedQ.ToUnityVector3();
+
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] position: ({position.x}, {position.y}, {position.z})");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] dequantizedPosition: ({dequantizedPosition.x}, {dequantizedPosition.y}, {dequantizedPosition.z})");
+
+            var diffX = Math.Abs(position.x - dequantizedPosition.x);
+            var diffY = Math.Abs(position.y - dequantizedPosition.y);
+            var diffZ = Math.Abs(position.z - dequantizedPosition.z);
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] diff: ({diffX}, {diffY}, {diffZ})");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] precision: ({precision}, {precision}, {precision})");
+            
+            var approximately = (Math.Abs(diffX) < precision) && (Math.Abs(diffY) < precision) && (Math.Abs(diffZ) < precision);
+            Console.WriteLine($"[{nameof(QuantizedPositionTest)}] approximately: {approximately}");
+
+            Console.WriteLine("----------------------------------------");
+        }
+
+        static void QuantizedPositionTest2()
+        {
+            var precision = 0.001f;
+            var worldBounds = new BoundedRange[3];
+            worldBounds[0] = new BoundedRange(-256.0f, 256.0f, precision);
+            worldBounds[1] = new BoundedRange(-256.0f, 256.0f, precision);
+            worldBounds[2] = new BoundedRange(-32.0f, 32.0f, precision);
+
+            var random = new Random();
+            var posX = random.NextSingle() * 512.0f - 256.0f; // [-256, 256]
+            var posY = random.NextSingle() * 512.0f - 256.0f; // [-256, 256]
+            var posZ = random.NextSingle() * 64.0f - 32.0f; // [-32, 32]
+
+            var position = new Vector3(posX, posY, posZ);
+            var quantizedPosition = BoundedRange.Quantize(position.ToSystemNumericsVector3(), worldBounds);
+
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"        QuantizedPositionTest2");
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] Size of Position: {Marshal.SizeOf(position)} bytes");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] Size of QuantizedPosition: {Marshal.SizeOf(quantizedPosition)} bytes");
+            Console.WriteLine("");
+
+            var bytesV = new byte[1500];
+            var bytesSpanV = new Span<byte>(bytesV);
+
+            var bytesQv = new byte[1500];
+            var bytesSpanQv = new Span<byte>(bytesQv);
+
+            var bitButterV = new BitBuffer(375); // ChunkCount: 375, BufferSize: 375 * 4 = 1500 bytes
+            var bitButterQv = new BitBuffer(375); // ChunkCount: 375, BufferSize: 375 * 4 = 1500 bytes
+
+            var serializedVLength = bitButterV
+                                        .AddUInt(new UnionValue(position.x).AsUInt())
+                                        .AddUInt(new UnionValue(position.y).AsUInt())
+                                        .AddUInt(new UnionValue(position.z).AsUInt())
+                                        .ToSpan(ref bytesSpanV);
+            var serializedQvLength = bitButterQv
+                                        .AddUInt(quantizedPosition.x)
+                                        .AddUInt(quantizedPosition.y)
+                                        .AddUInt(quantizedPosition.z)
+                                        .ToSpan(ref bytesSpanQv);
+
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] Serialized data size of Vector3: {serializedVLength} bytes");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] Serialized data size of QuantizedVector3: {serializedQvLength} bytes");
+            Console.WriteLine("");
+
+            var bytesQvReadOnlySpan = new ReadOnlySpan<byte>(bytesQv);
+            var bitBuffer = new BitBuffer(375); // ChunkCount: 375, BufferSize: 375 * 4 = 1500 bytes
+            bitBuffer.FromSpan(ref bytesQvReadOnlySpan, serializedQvLength);
+
+            var deserializedQv = new QuantizedVector3(bitBuffer.ReadUInt(), bitBuffer.ReadUInt(), bitBuffer.ReadUInt());
+            var dequantizedQ = BoundedRange.Dequantize(deserializedQv, worldBounds);
+            var dequantizedPosition = dequantizedQ.ToUnityVector3();
+
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] position: ({position.x}, {position.y}, {position.z})");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] dequantizedPosition: ({dequantizedPosition.x}, {dequantizedPosition.y}, {dequantizedPosition.z})");
+
+            var diffX = Math.Abs(position.x - dequantizedPosition.x);
+            var diffY = Math.Abs(position.y - dequantizedPosition.y);
+            var diffZ = Math.Abs(position.z - dequantizedPosition.z);
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] diff: ({diffX}, {diffY}, {diffZ})");
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] precision: ({precision}, {precision}, {precision})");
+
+            var approximately = (Math.Abs(diffX) < precision) && (Math.Abs(diffY) < precision) && (Math.Abs(diffZ) < precision);
+            Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] approximately: {approximately}");
+
             Console.WriteLine("----------------------------------------");
         }
 
