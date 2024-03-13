@@ -5,8 +5,8 @@
     "license": "MIT",
     "samples": [
         {
-            "displayName": "ENetSample",
-            "path": "Samples~/ENetSample"
+            "displayName": "StressTest",
+            "path": "Samples~/StressTest"
         }
     ]
 }
