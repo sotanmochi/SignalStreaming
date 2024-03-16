@@ -7,6 +7,7 @@ using MessagePack;
 using Newtonsoft.Json;
 using SignalStreaming;
 using SignalStreaming.Infrastructure.LiteNetLib;
+using SignalStreaming.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
@@ -69,6 +70,7 @@ namespace SignalStreaming.Samples.StressTest
         uint _previousMeasuredSignalCount3;
         float _receivedSignalsPerSecond3;
 
+        ISignalSerializer _signalSerializer;
         ISignalStreamingClient _streamingClient;
         ISignalTransport _transport;
         LiteNetLibConnectParameters _connectParameters;
@@ -180,7 +182,8 @@ namespace SignalStreaming.Samples.StressTest
             });
 
             _transport = new LiteNetLibTransport(targetFrameRate: 120);
-            _streamingClient = new SignalStreamingClient(_transport);
+            _signalSerializer = new SignalSerializer(MessagePackSerializer.DefaultOptions);
+            _streamingClient = new SignalStreamingClient(_transport, _signalSerializer);
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;
             _streamingClient.OnIncomingSignalDequeued += OnIncomingSignalDequeued;

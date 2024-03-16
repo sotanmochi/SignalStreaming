@@ -6,6 +6,7 @@ using MessagePack;
 using Newtonsoft.Json;
 using SignalStreaming.Infrastructure.ENet;
 using SignalStreaming.Infrastructure.LiteNetLib;
+using SignalStreaming.Serialization;
 using UnityEngine;
 using Button = UnityEngine.UI.Button;
 using Text = UnityEngine.UI.Text;
@@ -59,6 +60,7 @@ namespace SignalStreaming.Samples.StressTest
         uint _previousMeasuredSignalCount3;
         float _receivedSignalsPerSecond3;
 
+        ISignalSerializer _signalSerializer;
         ISignalStreamingClient _streamingClient;
         ISignalTransport _transport;
         LiteNetLibConnectParameters _connectParameters;
@@ -136,7 +138,8 @@ namespace SignalStreaming.Samples.StressTest
             });
 
             _transport = new LiteNetLibTransport(targetFrameRate: 120);
-            _streamingClient = new SignalStreamingClient(_transport);
+            _signalSerializer = new SignalSerializer(MessagePackSerializer.DefaultOptions);
+            _streamingClient = new SignalStreamingClient(_transport, _signalSerializer);
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;
             _streamingClient.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
@@ -233,8 +236,6 @@ namespace SignalStreaming.Samples.StressTest
 
         async void ConnectAsync(CancellationToken cancellationToken)
         {
-
-
             Debug.Log($"[{nameof(SampleClient)}] Trying to connect to server... (Thread: {Thread.CurrentThread.ManagedThreadId})");
 
             var connected = false;

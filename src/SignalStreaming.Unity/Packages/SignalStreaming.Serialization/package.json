@@ -1,0 +1,6 @@
+{
+    "name": "jp.sotanmochi.signalstreaming.serialization",
+    "version": "0.2.0-dev",
+    "displayName": "SignalStreaming.Serialization",
+    "license": "MIT"
+}

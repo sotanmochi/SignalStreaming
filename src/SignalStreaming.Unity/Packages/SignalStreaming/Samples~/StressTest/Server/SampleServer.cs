@@ -4,6 +4,7 @@ using System.Diagnostics;
 using MessagePack;
 using SignalStreaming.Infrastructure.ENet;
 using SignalStreaming.Infrastructure.LiteNetLib;
+using SignalStreaming.Serialization;
 using UnityEngine;
 using Button = UnityEngine.UI.Button;
 using Text = UnityEngine.UI.Text;
@@ -57,6 +58,7 @@ namespace SignalStreaming.Samples.StressTest
         uint _outgoingSignalCount2;
         uint _outgoingSignalCount3;
 
+        ISignalSerializer _signalSerializer;
         ISignalStreamingHub _streamingHub;
         ISignalTransportHub _transportHub;
 
@@ -88,8 +90,10 @@ namespace SignalStreaming.Samples.StressTest
                 _outgoingSignalCount2 = 0;
                 _outgoingSignalCount3 = 0;
             });
+
             _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120, maxGroups: 1);
-            _streamingHub = new SignalStreamingHub(_transportHub);
+            _signalSerializer = new SignalSerializer(MessagePackSerializer.DefaultOptions);
+            _streamingHub = new SignalStreamingHub(_transportHub, _signalSerializer);
 
             _streamingHub.OnClientConnectionRequested += OnClientConnectionRequested;
             _streamingHub.OnClientConnected += OnConnected;
