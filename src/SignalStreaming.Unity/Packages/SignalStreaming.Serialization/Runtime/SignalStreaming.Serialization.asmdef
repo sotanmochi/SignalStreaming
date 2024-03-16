@@ -1,0 +1,19 @@
+{
+    "name": "SignalStreaming.Serialization",
+    "rootNamespace": "",
+    "references": [
+        "SignalStreaming",
+        "MessagePack",
+        "NetStack.Quantization",
+        "NetStack.Serialization"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

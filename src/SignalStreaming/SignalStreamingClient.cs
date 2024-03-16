@@ -11,6 +11,7 @@ namespace SignalStreaming
     {
         static readonly string DefaultDisconnectionReason = "Disconnected from server";
 
+        ISignalSerializer _signalSerializer;
         ISignalTransport _transport;
         string _connectionId = "";
 
@@ -35,8 +36,9 @@ namespace SignalStreaming
         public bool IsConnecting => _connecting;
         public bool IsConnected => _connected;
 
-        public SignalStreamingClient(ISignalTransport transport)
+        public SignalStreamingClient(ISignalTransport transport, ISignalSerializer signalSerializer)
         {
+            _signalSerializer = signalSerializer;
             _transport = transport;
             _transport.OnDisconnected += OnTransportDisconnected;
             _transport.OnIncomingSignalDequeued += OnTransportIncomingSignalDequeued;
@@ -48,6 +50,7 @@ namespace SignalStreaming
             _transport.OnDisconnected -= OnTransportDisconnected;
             _transport.OnIncomingSignalDequeued -= OnTransportIncomingSignalDequeued;
             _transport = null;
+            _signalSerializer = null;
         }
 
         public async Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters
@@ -95,7 +98,7 @@ namespace SignalStreaming
                 var sendOptions = new SendOptions(StreamingType.ToHubServer, reliable: true);
                 var originTimestamp = TimestampProvider.GetCurrentTimestamp();
 
-                var payload = Serialize(messageId: (int)MessageType.GroupJoinRequest, message: request,
+                var payload = Serialize(messageId: (int)MessageType.GroupJoinRequest, value: request,
                     sendOptions: sendOptions, senderClientId: _clientId, originTimestamp: originTimestamp);
 
                 _transport.EnqueueOutgoingSignal(payload, sendOptions);
@@ -116,7 +119,7 @@ namespace SignalStreaming
             var sendOptions = new SendOptions(StreamingType.ToHubServer, reliable: true);
             var originTimestamp = TimestampProvider.GetCurrentTimestamp();
 
-            var payload = Serialize(messageId: (int)MessageType.GroupLeaveRequest, message: request,
+            var payload = Serialize(messageId: (int)MessageType.GroupLeaveRequest, value: request,
                 sendOptions: sendOptions, senderClientId: _clientId, originTimestamp: originTimestamp);
             _transport.EnqueueOutgoingSignal(payload, sendOptions);
         }
@@ -282,7 +285,7 @@ namespace SignalStreaming
         //     return bufferWriter.WrittenSpan.ToArray();
         // }
 
-        byte[] Serialize<T>(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, T message)
+        byte[] Serialize<T>(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, T value)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
@@ -293,7 +296,7 @@ namespace SignalStreaming
             writer.Write((byte)sendOptions.StreamingType);
             writer.Write(sendOptions.Reliable);
             writer.Flush();
-            MessagePackSerializer.Serialize(bufferWriter, message);
+            _signalSerializer.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan.ToArray();
         }
     }
