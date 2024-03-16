@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Diagnostics;
 using MessagePack;
+using NetStack.Quantization;
 using SignalStreaming.Infrastructure.ENet;
 using SignalStreaming.Infrastructure.LiteNetLib;
 using SignalStreaming.Serialization;
@@ -59,6 +60,13 @@ namespace SignalStreaming.Samples.StressTest
         uint _outgoingSignalCount3;
 
         ISignalSerializer _signalSerializer;
+        BoundedRange[] _boundedRange3 = new BoundedRange[]
+        {
+            new BoundedRange(-64f, 64f, 0.001f), // X
+            new BoundedRange(-16f, 48f, 0.001f), // Y (Height)
+            new BoundedRange(-64f, 64f, 0.001f), // Z
+        };
+
         ISignalStreamingHub _streamingHub;
         ISignalTransportHub _transportHub;
 
@@ -284,7 +292,12 @@ namespace SignalStreaming.Samples.StressTest
             {
                 _receivedSignalCount2++;
 
-                var position = MessagePackSerializer.Deserialize<Vector3>(payload);
+                // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectPosition - Payload: {payload.Length} [bytes]");
+
+                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(payload);
+                var position = BoundedRange.Dequantize(quantizedPosition, _boundedRange3);
+                // var position = MessagePackSerializer.Deserialize<Vector3>(payload);
+
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
@@ -302,7 +315,12 @@ namespace SignalStreaming.Samples.StressTest
             {
                 _receivedSignalCount3++;
 
-                var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+                // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectRotation - Payload: {payload.Length} [bytes]</color>");
+
+                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(payload);
+                var rotation = SmallestThree.Dequantize(quantizedRotation);
+                // var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
