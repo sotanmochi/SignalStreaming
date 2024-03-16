@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Buffers;
 using System.Threading;
 using MessagePack;
+using NetStack.Quantization;
 using Newtonsoft.Json;
 using SignalStreaming.Infrastructure.ENet;
 using SignalStreaming.Infrastructure.LiteNetLib;
@@ -61,6 +62,13 @@ namespace SignalStreaming.Samples.StressTest
         float _receivedSignalsPerSecond3;
 
         ISignalSerializer _signalSerializer;
+        BoundedRange[] _boundedRange3 = new BoundedRange[]
+        {
+            new BoundedRange(-64f, 64f, 0.001f), // X
+            new BoundedRange(-16f, 48f, 0.001f), // Y (Height)
+            new BoundedRange(-64f, 64f, 0.001f), // Z
+        };
+
         ISignalStreamingClient _streamingClient;
         ISignalTransport _transport;
         LiteNetLibConnectParameters _connectParameters;
@@ -202,8 +210,13 @@ namespace SignalStreaming.Samples.StressTest
                 var position = _localPlayerMoveController.transform.position;
                 var rotation = _localPlayerMoveController.transform.rotation;
 
-                _streamingClient.Send((int)SignalType.PlayerObjectRotation, rotation, sendOptions);
-                _streamingClient.Send((int)SignalType.PlayerObjectPosition, position, sendOptions);
+                var quantizedPosition = BoundedRange.Quantize(position, _boundedRange3);
+                var quantizedRotation = SmallestThree.Quantize(rotation);
+
+                // _streamingClient.Send((int)SignalType.PlayerObjectRotation, rotation, sendOptions);
+                // _streamingClient.Send((int)SignalType.PlayerObjectPosition, position, sendOptions);
+                _streamingClient.Send((int)SignalType.PlayerObjectRotation, quantizedRotation, sendOptions);
+                _streamingClient.Send((int)SignalType.PlayerObjectPosition, quantizedPosition, sendOptions);
             }
 
             if (_localPlayerColorType == ColorType.Rainbow)
