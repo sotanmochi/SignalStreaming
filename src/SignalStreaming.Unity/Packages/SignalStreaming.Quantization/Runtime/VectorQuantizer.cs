@@ -13,38 +13,65 @@ namespace SignalStreaming.Quantization
     {
         public enum DeltaType : byte
         {
-            GreaterThanDeltaMax,
-            XYZ,
-            XY,
-            XZ,
-            YZ,
-            X,
-            Y,
-            Z,
-            Zero,
+            OutOfDeltaRange = 0,
+            XYZ = 1,
+            XY = 2,
+            XZ = 3,
+            YZ = 4,
+            X = 5,
+            Y = 6,
+            Z = 7,
+            Zero = 8,
         }
 
-        public static Vector3 DefaultDeltaMaxValues => new Vector3(0.5f, 0.5f, 0.5f);
+        public static Vector3 DefaultDeltaValues => new Vector3(0.25f, 0.25f, 0.25f);
+        public static float DefaultDeltaPrecision => 0.002f;
 
         readonly BoundedRange[] _boundedRanges;
-        readonly BoundedRange[] _deltaBoundedRanges = new BoundedRange[3];
+        readonly BoundedRange[] _deltaBoundedRanges;
 
         Vector3 _previousValue;
         Vector3 _dequantizedPreviousValue;
 
-        public VectorQuantizer(BoundedRange[] boundedRanges, Vector3 deltaMaxValues, float deltaPrecision = 0.01f)
+        public int[] RequiredBits { get; } = new int[3];
+        public int[] DeltaRequiredBits { get; } = new int[3];
+
+        public VectorQuantizer(BoundedRange[] boundedRanges, BoundedRange[] deltaBoundedRanges = null)
         {
             if (boundedRanges == null || boundedRanges.Length != 3)
             {
                 throw new System.ArgumentException("BoundedRanges must have 3 elements");
             }
 
-            _boundedRanges = boundedRanges;
-
-            for (var i = 0; i < 3; i++)
+            if (deltaBoundedRanges != null && deltaBoundedRanges.Length != 3)
             {
-                _deltaBoundedRanges[i] = new BoundedRange(-deltaMaxValues[i], deltaMaxValues[i], deltaPrecision);
+                throw new System.ArgumentException("DeltaBoundedRanges must have 3 elements");
             }
+
+            _boundedRanges = boundedRanges;
+            _deltaBoundedRanges = deltaBoundedRanges;
+
+            if (_deltaBoundedRanges == null)
+            {
+                _deltaBoundedRanges = new BoundedRange[3];
+#if ENABLE_MONO || ENABLE_IL2CPP
+                _deltaBoundedRanges[0] = new BoundedRange(-DefaultDeltaValues.x, DefaultDeltaValues.x, DefaultDeltaPrecision);
+                _deltaBoundedRanges[1] = new BoundedRange(-DefaultDeltaValues.y, DefaultDeltaValues.y, DefaultDeltaPrecision);
+                _deltaBoundedRanges[2] = new BoundedRange(-DefaultDeltaValues.z, DefaultDeltaValues.z, DefaultDeltaPrecision);
+#else
+                _deltaBoundedRanges[0] = new BoundedRange(-DefaultDeltaValues.X, DefaultDeltaValues.X, DefaultDeltaPrecision);
+                _deltaBoundedRanges[1] = new BoundedRange(-DefaultDeltaValues.Y, DefaultDeltaValues.Y, DefaultDeltaPrecision);
+                _deltaBoundedRanges[2] = new BoundedRange(-DefaultDeltaValues.Z, DefaultDeltaValues.Z, DefaultDeltaPrecision);
+#endif
+            }
+
+            RequiredBits[0] = _boundedRanges[0].RequiredBits;
+            RequiredBits[1] = _boundedRanges[1].RequiredBits;
+            RequiredBits[2] = _boundedRanges[2].RequiredBits;
+
+            DeltaRequiredBits[0] = _deltaBoundedRanges[0].RequiredBits;
+            DeltaRequiredBits[1] = _deltaBoundedRanges[1].RequiredBits;
+            DeltaRequiredBits[2] = _deltaBoundedRanges[2].RequiredBits;
 
 #if ENABLE_MONO || ENABLE_IL2CPP
             _previousValue = Vector3.zero;
@@ -69,6 +96,10 @@ namespace SignalStreaming.Quantization
             var deltaPrecisionX = _deltaBoundedRanges[0].Precision;
             var deltaPrecisionY = _deltaBoundedRanges[1].Precision;
             var deltaPrecisionZ = _deltaBoundedRanges[2].Precision;
+
+            var deltaMinX = _deltaBoundedRanges[0].MinValue;
+            var deltaMinY = _deltaBoundedRanges[1].MinValue;
+            var deltaMinZ = _deltaBoundedRanges[2].MinValue;
 
             var deltaMaxX = _deltaBoundedRanges[0].MaxValue;
             var deltaMaxY = _deltaBoundedRanges[1].MaxValue;
@@ -96,7 +127,7 @@ namespace SignalStreaming.Quantization
             var absDy = Math.Abs(dy);
             var absDz = Math.Abs(dz);
 
-            if (absDx < deltaPrecisionX && absDy < deltaPrecisionY && absDz < deltaPrecisionZ)
+            if (absDx <= deltaPrecisionX && absDy <= deltaPrecisionY && absDz <= deltaPrecisionZ)
             {
                 deltaType = DeltaType.Zero;
 
@@ -106,7 +137,7 @@ namespace SignalStreaming.Quantization
                 requiredBitsOutput[1] = 0;
                 requiredBitsOutput[2] = 0;
             }
-            else if (absDx < deltaMaxX && absDy < deltaMaxY && absDz < deltaMaxZ)
+            else if (deltaMinX <= dx && dx <= deltaMaxX && deltaMinY <= dy && dy <= deltaMaxY && deltaMinZ <= dz && dz <= deltaMaxZ)
             {
                 deltaType = DeltaType.XYZ;
 
@@ -119,7 +150,7 @@ namespace SignalStreaming.Quantization
                 requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
                 requiredBitsOutput[2] = _deltaBoundedRanges[2].RequiredBits;
             }
-            else if (absDx < deltaMaxX && absDy < deltaMaxY)
+            else if (deltaMinX <= dx && dx <= deltaMaxX && deltaMinY <= dy && dy <= deltaMaxY)
             {
                 deltaType = DeltaType.XY;
 
@@ -132,7 +163,7 @@ namespace SignalStreaming.Quantization
                 requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
                 requiredBitsOutput[2] = _boundedRanges[2].RequiredBits;
             }
-            else if (absDx < deltaMaxX && absDz < deltaMaxZ)
+            else if (deltaMinX <= dx && dx <= deltaMaxX && deltaMinZ <= dz && dz <= deltaMaxZ)
             {
                 deltaType = DeltaType.XZ;
 
@@ -145,7 +176,7 @@ namespace SignalStreaming.Quantization
                 requiredBitsOutput[1] = _boundedRanges[1].RequiredBits;
                 requiredBitsOutput[2] = _deltaBoundedRanges[2].RequiredBits;
             }
-            else if (absDy < deltaMaxY && absDz < deltaMaxZ)
+            else if (deltaMinY <= dy && dy <= deltaMaxY && deltaMinZ <= dz && dz <= deltaMaxZ)
             {
                 deltaType = DeltaType.YZ;
 
@@ -158,7 +189,7 @@ namespace SignalStreaming.Quantization
                 requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
                 requiredBitsOutput[2] = _deltaBoundedRanges[2].RequiredBits;
             }
-            else if (absDx < deltaMaxX)
+            else if (deltaMinX <= dx && dx <= deltaMaxX)
             {
                 deltaType = DeltaType.X;
 
@@ -171,7 +202,7 @@ namespace SignalStreaming.Quantization
                 requiredBitsOutput[1] = _boundedRanges[1].RequiredBits;
                 requiredBitsOutput[2] = _boundedRanges[2].RequiredBits;
             }
-            else if (absDy < deltaMaxY)
+            else if (deltaMinY <= dy && dy <= deltaMaxY)
             {
                 deltaType = DeltaType.Y;
 
@@ -184,7 +215,7 @@ namespace SignalStreaming.Quantization
                 requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
                 requiredBitsOutput[2] = _boundedRanges[2].RequiredBits;
             }
-            else if (absDz < deltaMaxZ)
+            else if (deltaMinZ <= dz && dz <= deltaMaxZ)
             {
                 deltaType = DeltaType.Z;
 
@@ -199,7 +230,7 @@ namespace SignalStreaming.Quantization
             }
             else
             {
-                deltaType = DeltaType.GreaterThanDeltaMax;
+                deltaType = DeltaType.OutOfDeltaRange;
                 quantizedValue = BoundedRange.Quantize(value, _boundedRanges);
                 requiredBitsOutput[0] = _boundedRanges[0].RequiredBits;
                 requiredBitsOutput[1] = _boundedRanges[1].RequiredBits;
@@ -215,7 +246,7 @@ namespace SignalStreaming.Quantization
                 throw new System.ArgumentException("QuantizedVector3 must have 3 elements");
             }
 
-            if (deltaType == DeltaType.GreaterThanDeltaMax)
+            if (deltaType == DeltaType.OutOfDeltaRange)
             {
                 var x = _boundedRanges[0].Dequantize(quantizedVector3[0]);
                 var y = _boundedRanges[1].Dequantize(quantizedVector3[1]);
