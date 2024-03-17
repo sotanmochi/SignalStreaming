@@ -96,11 +96,8 @@ namespace SignalStreaming
             {
                 var request = new GroupJoinRequest(groupId, _connectionId);
                 var sendOptions = new SendOptions(StreamingType.ToHubServer, reliable: true);
-                var originTimestamp = TimestampProvider.GetCurrentTimestamp();
-
-                var payload = Serialize(messageId: (int)MessageType.GroupJoinRequest, value: request,
-                    sendOptions: sendOptions, senderClientId: _clientId, originTimestamp: originTimestamp);
-
+                // var originTimestamp = TimestampProvider.GetCurrentTimestamp();
+                var payload = Serialize((int)MessageType.GroupJoinRequest, request, sendOptions, _clientId);
                 _transport.EnqueueOutgoingSignal(payload, sendOptions);
             }
             catch (Exception e)
@@ -117,26 +114,25 @@ namespace SignalStreaming
         {
             var request = new GroupLeaveRequest(groupId, _connectionId);
             var sendOptions = new SendOptions(StreamingType.ToHubServer, reliable: true);
-            var originTimestamp = TimestampProvider.GetCurrentTimestamp();
-
-            var payload = Serialize(messageId: (int)MessageType.GroupLeaveRequest, value: request,
-                sendOptions: sendOptions, senderClientId: _clientId, originTimestamp: originTimestamp);
+            // var originTimestamp = TimestampProvider.GetCurrentTimestamp();
+            var payload = Serialize((int)MessageType.GroupLeaveRequest, request, sendOptions, _clientId);
             _transport.EnqueueOutgoingSignal(payload, sendOptions);
         }
 
-        public void Send(int messageId, ReadOnlySequence<byte> rawMessageBuffer, SendOptions sendOptions, uint[] destinationClientIds = null)
+        public void Send(int signalId, ReadOnlySequence<byte> rawMessageBuffer, SendOptions sendOptions, uint[] destinationClientIds = null)
         {
-            if (!_connected) return;
-            var originTimestamp = TimestampProvider.GetCurrentTimestamp();
-            var payload = Serialize(messageId, senderClientId: _clientId, originTimestamp, sendOptions, rawMessageBuffer);            
-            _transport.EnqueueOutgoingSignal(payload, sendOptions);
+            throw new NotImplementedException();
+            // if (!_connected) return;
+            // var originTimestamp = TimestampProvider.GetCurrentTimestamp();
+            // var payload = Serialize(messageId, rawMessageBuffer, sendOptions, _clientId);            
+            // _transport.EnqueueOutgoingSignal(payload, sendOptions);
         }
 
-        public void Send<T>(int messageId, T data, SendOptions sendOptions, uint[] destinationClientIds = null)
+        public void Send<T>(int signalId, T value, SendOptions sendOptions, uint[] destinationClientIds = null)
         {
             if (!_connected) return;
             var originTimestamp = TimestampProvider.GetCurrentTimestamp();
-            var payload = Serialize(messageId, senderClientId: _clientId, originTimestamp, sendOptions, data);
+            var payload = Serialize(signalId, value, sendOptions, _clientId);
             _transport.EnqueueOutgoingSignal(payload, sendOptions);
         }
 
@@ -159,36 +155,36 @@ namespace SignalStreaming
             var reader = new MessagePackReader(signalBytes);
 
             var arrayLength = reader.ReadArrayHeader();
-            if (arrayLength != 6)
+            if (arrayLength != 6 && arrayLength != 3)
             {
                 throw new InvalidOperationException($"[{nameof(SignalStreamingClient)}] Invalid data format.");
             }
 
-            var messageId = reader.ReadInt32();
-            var senderClientId = reader.ReadUInt32();
-            var originTimestamp = reader.ReadInt64();
-            var transmitTimestamp = reader.ReadInt64();
+            var signalId = reader.ReadInt32();
+            var sourceClientId = reader.ReadUInt32();
 
-            if (messageId == (int)MessageType.TransportConnected)
+            if (signalId == (int)MessageType.TransportConnected)
             {
+                var originTimestamp = reader.ReadInt64();
+                var transmitTimestamp = reader.ReadInt64();
                 var connectedClientId = reader.ReadUInt32();
                 HandleTransportConnectionResponse(connectedClientId);
             }
-            else if (messageId == (int)MessageType.ClientConnectionResponse)
+            else if (signalId == (int)MessageType.ClientConnectionResponse)
             {
                 var payloadOffset = (int)reader.Consumed;
                 var payloadLength = signalBytes.Length - (int)reader.Consumed;
                 var payload = signalBytes.Slice(payloadOffset, payloadLength);
                 HandleConnectionResponse(payload);
             }
-            else if (messageId == (int)MessageType.GroupJoinResponse)
+            else if (signalId == (int)MessageType.GroupJoinResponse)
             {
                 var payloadOffset = (int)reader.Consumed;
                 var payloadLength = signalBytes.Length - (int)reader.Consumed;
                 var payload = signalBytes.Slice(payloadOffset, payloadLength);
                 HandleGroupJoinResponse(payload);
             }
-            else if (messageId == (int)MessageType.GroupLeaveResponse)
+            else if (signalId == (int)MessageType.GroupLeaveResponse)
             {
                 var payloadOffset = (int)reader.Consumed;
                 var payloadLength = signalBytes.Length - (int)reader.Consumed;
@@ -200,7 +196,7 @@ namespace SignalStreaming
                 var payloadOffset = (int)reader.Consumed;
                 var payloadLength = signalBytes.Length - (int)reader.Consumed;
                 var payload = signalBytes.Slice(payloadOffset, payloadLength);
-                OnIncomingSignalDequeued?.Invoke(messageId, senderClientId, originTimestamp, transmitTimestamp, payload);
+                OnIncomingSignalDequeued?.Invoke(signalId, payload, sourceClientId);
             }
         }
 
@@ -219,7 +215,7 @@ namespace SignalStreaming
             var originTimestamp = TimestampProvider.GetCurrentTimestamp();
 
             var connectionRequest = new ClientConnectionRequest(_connectionRequestData);
-            var data = Serialize((int)MessageType.ClientConnectionRequest, clientId, originTimestamp, sendOptions, connectionRequest);
+            var data = Serialize((int)MessageType.ClientConnectionRequest, connectionRequest, sendOptions, clientId);
             _transport.EnqueueOutgoingSignal(data, sendOptions);
         }
 
@@ -285,14 +281,28 @@ namespace SignalStreaming
         //     return bufferWriter.WrittenSpan.ToArray();
         // }
 
-        byte[] Serialize<T>(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, T value)
+        // byte[] Serialize<T>(int messageId, uint senderClientId, long originTimestamp, SendOptions sendOptions, T value)
+        // {
+        //     using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
+        //     var writer = new MessagePackWriter(bufferWriter);
+        //     writer.WriteArrayHeader(6);
+        //     writer.Write(messageId);
+        //     writer.Write(senderClientId);
+        //     writer.Write(originTimestamp);
+        //     writer.Write((byte)sendOptions.StreamingType);
+        //     writer.Write(sendOptions.Reliable);
+        //     writer.Flush();
+        //     _signalSerializer.Serialize(bufferWriter, value);
+        //     return bufferWriter.WrittenSpan.ToArray();
+        // }
+
+        byte[] Serialize<T>(int signalId,  T value, SendOptions sendOptions, uint sourceClientId)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
-            writer.WriteArrayHeader(6);
-            writer.Write(messageId);
-            writer.Write(senderClientId);
-            writer.Write(originTimestamp);
+            writer.WriteArrayHeader(5);
+            writer.Write(signalId);
+            writer.Write(sourceClientId);
             writer.Write((byte)sendOptions.StreamingType);
             writer.Write(sendOptions.Reliable);
             writer.Flush();
