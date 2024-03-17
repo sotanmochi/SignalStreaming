@@ -1,0 +1,270 @@
+using System;
+using NetStack.Quantization;
+
+#if !(ENABLE_MONO || ENABLE_IL2CPP)
+using System.Numerics;
+#else
+using UnityEngine;
+#endif
+
+namespace SignalStreaming.Quantization
+{
+    public sealed class VectorQuantizer
+    {
+        public enum DeltaType : byte
+        {
+            GreaterThanDeltaMax,
+            XYZ,
+            XY,
+            XZ,
+            YZ,
+            X,
+            Y,
+            Z,
+            Zero,
+        }
+
+        public static Vector3 DefaultDeltaMaxValues => new Vector3(0.5f, 0.5f, 0.5f);
+
+        readonly BoundedRange[] _boundedRanges;
+        readonly BoundedRange[] _deltaBoundedRanges = new BoundedRange[3];
+
+        Vector3 _previousValue;
+        Vector3 _dequantizedPreviousValue;
+
+        public VectorQuantizer(BoundedRange[] boundedRanges, Vector3 deltaMaxValues, float deltaPrecision = 0.01f)
+        {
+            if (boundedRanges == null || boundedRanges.Length != 3)
+            {
+                throw new System.ArgumentException("BoundedRanges must have 3 elements");
+            }
+
+            _boundedRanges = boundedRanges;
+
+            for (var i = 0; i < 3; i++)
+            {
+                _deltaBoundedRanges[i] = new BoundedRange(-deltaMaxValues[i], deltaMaxValues[i], deltaPrecision);
+            }
+
+            _previousValue = Vector3.Zero;
+            _dequantizedPreviousValue = Vector3.Zero;
+        }
+
+        public void Quantize(Vector3 value, out QuantizedVector3 quantizedValue, out DeltaType deltaType, int[] requiredBitsOutput)
+        {
+            if (requiredBitsOutput == null || requiredBitsOutput.Length != 3)
+            {
+                throw new System.ArgumentException("RequiredBitsOutput must have 3 elements");
+            }
+
+            var precisionX = _boundedRanges[0].Precision;
+            var precisionY = _boundedRanges[1].Precision;
+            var precisionZ = _boundedRanges[2].Precision;
+
+            var deltaPrecisionX = _deltaBoundedRanges[0].Precision;
+            var deltaPrecisionY = _deltaBoundedRanges[1].Precision;
+            var deltaPrecisionZ = _deltaBoundedRanges[2].Precision;
+
+            var deltaMaxX = _deltaBoundedRanges[0].MaxValue;
+            var deltaMaxY = _deltaBoundedRanges[1].MaxValue;
+            var deltaMaxZ = _deltaBoundedRanges[2].MaxValue;
+
+#if ENABLE_MONO || ENABLE_IL2CPP
+            var x = value.x;
+            var y = value.y;
+            var z = value.z;
+
+            var dx = x - _previousValue.x;
+            var dy = y - _previousValue.y;
+            var dz = z - _previousValue.z;
+#else
+            var x = value.X;
+            var y = value.Y;
+            var z = value.Z;
+
+            var dx = x - _previousValue.X;
+            var dy = y - _previousValue.Y;
+            var dz = z - _previousValue.Z;
+#endif
+
+            var absDx = Math.Abs(dx);
+            var absDy = Math.Abs(dy);
+            var absDz = Math.Abs(dz);
+
+            if (absDx < deltaPrecisionX && absDy < deltaPrecisionY && absDz < deltaPrecisionZ)
+            {
+                deltaType = DeltaType.Zero;
+
+                quantizedValue = new QuantizedVector3(0, 0, 0);
+
+                requiredBitsOutput[0] = 0;
+                requiredBitsOutput[1] = 0;
+                requiredBitsOutput[2] = 0;
+            }
+            else if (absDx < deltaMaxX && absDy < deltaMaxY && absDz < deltaMaxZ)
+            {
+                deltaType = DeltaType.XYZ;
+
+                var qdx = _deltaBoundedRanges[0].Quantize(dx);
+                var qdy = _deltaBoundedRanges[1].Quantize(dy);
+                var qdz = _deltaBoundedRanges[2].Quantize(dz);
+                quantizedValue = new QuantizedVector3(qdx, qdy, qdz);
+
+                requiredBitsOutput[0] = _deltaBoundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _deltaBoundedRanges[2].RequiredBits;
+            }
+            else if (absDx < deltaMaxX && absDy < deltaMaxY)
+            {
+                deltaType = DeltaType.XY;
+
+                var qdx = _deltaBoundedRanges[0].Quantize(dx);
+                var qdy = _deltaBoundedRanges[1].Quantize(dy);
+                var qz = _boundedRanges[2].Quantize(z);
+                quantizedValue = new QuantizedVector3(qdx, qdy, qz);
+
+                requiredBitsOutput[0] = _deltaBoundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _boundedRanges[2].RequiredBits;
+            }
+            else if (absDx < deltaMaxX && absDz < deltaMaxZ)
+            {
+                deltaType = DeltaType.XZ;
+
+                var qdx = _deltaBoundedRanges[0].Quantize(dx);
+                var qy = _boundedRanges[1].Quantize(y);
+                var qdz = _deltaBoundedRanges[2].Quantize(dz);
+                quantizedValue = new QuantizedVector3(qdx, qy, qdz);
+
+                requiredBitsOutput[0] = _deltaBoundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _boundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _deltaBoundedRanges[2].RequiredBits;
+            }
+            else if (absDy < deltaMaxY && absDz < deltaMaxZ)
+            {
+                deltaType = DeltaType.YZ;
+
+                var qx = _boundedRanges[0].Quantize(x);
+                var qdy = _deltaBoundedRanges[1].Quantize(dy);
+                var qdz = _deltaBoundedRanges[2].Quantize(dz);
+                quantizedValue = new QuantizedVector3(qx, qdy, qdz);
+
+                requiredBitsOutput[0] = _boundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _deltaBoundedRanges[2].RequiredBits;
+            }
+            else if (absDx < deltaMaxX)
+            {
+                deltaType = DeltaType.X;
+
+                var qdx = _deltaBoundedRanges[0].Quantize(dx);
+                var qy = _boundedRanges[1].Quantize(y);
+                var qz = _boundedRanges[2].Quantize(z);
+                quantizedValue = new QuantizedVector3(qdx, qy, qz);
+
+                requiredBitsOutput[0] = _deltaBoundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _boundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _boundedRanges[2].RequiredBits;
+            }
+            else if (absDy < deltaMaxY)
+            {
+                deltaType = DeltaType.Y;
+
+                var qx = _boundedRanges[0].Quantize(x);
+                var qdy = _deltaBoundedRanges[1].Quantize(dy);
+                var qz = _boundedRanges[2].Quantize(z);
+                quantizedValue = new QuantizedVector3(qx, qdy, qz);
+
+                requiredBitsOutput[0] = _boundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _deltaBoundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _boundedRanges[2].RequiredBits;
+            }
+            else if (absDz < deltaMaxZ)
+            {
+                deltaType = DeltaType.Z;
+
+                var qx = _boundedRanges[0].Quantize(x);
+                var qy = _boundedRanges[1].Quantize(y);
+                var qdz = _deltaBoundedRanges[2].Quantize(dz);
+                quantizedValue = new QuantizedVector3(qx, qy, qdz);
+
+                requiredBitsOutput[0] = _boundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _boundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _deltaBoundedRanges[2].RequiredBits;
+            }
+            else
+            {
+                deltaType = DeltaType.GreaterThanDeltaMax;
+                quantizedValue = BoundedRange.Quantize(value, _boundedRanges);
+                requiredBitsOutput[0] = _boundedRanges[0].RequiredBits;
+                requiredBitsOutput[1] = _boundedRanges[1].RequiredBits;
+                requiredBitsOutput[2] = _boundedRanges[2].RequiredBits;
+                _previousValue = value;
+            }
+        }
+
+        public void Dequantize(uint[] quantizedVector3, DeltaType deltaType, out Vector3 dequantizedValue)
+        {
+            if (quantizedVector3 == null || quantizedVector3.Length != 3)
+            {
+                throw new System.ArgumentException("QuantizedVector3 must have 3 elements");
+            }
+
+            if (deltaType == DeltaType.GreaterThanDeltaMax)
+            {
+                var x = _boundedRanges[0].Dequantize(quantizedVector3[0]);
+                var y = _boundedRanges[1].Dequantize(quantizedVector3[1]);
+                var z = _boundedRanges[2].Dequantize(quantizedVector3[2]);
+                dequantizedValue = new Vector3(x, y, z);
+                _dequantizedPreviousValue = dequantizedValue;
+            }
+            else if (deltaType == DeltaType.Zero)
+            {
+                dequantizedValue = _dequantizedPreviousValue;
+            }
+            else
+            {
+                var dx = _deltaBoundedRanges[0].Dequantize(quantizedVector3[0]);
+                var dy = _deltaBoundedRanges[1].Dequantize(quantizedVector3[1]);
+                var dz = _deltaBoundedRanges[2].Dequantize(quantizedVector3[2]);
+
+                var x = _boundedRanges[0].Dequantize(quantizedVector3[0]);
+                var y = _boundedRanges[1].Dequantize(quantizedVector3[1]);
+                var z = _boundedRanges[2].Dequantize(quantizedVector3[2]);
+
+                if (deltaType == DeltaType.XYZ)
+                {
+                    dequantizedValue = new Vector3(_dequantizedPreviousValue.X + dx, _dequantizedPreviousValue.Y + dy, _dequantizedPreviousValue.Z + dz);
+                }
+                else if (deltaType == DeltaType.XY)
+                {
+                    dequantizedValue = new Vector3(_dequantizedPreviousValue.X + dx, _dequantizedPreviousValue.Y + dy, z);
+                }
+                else if (deltaType == DeltaType.XZ)
+                {
+                    dequantizedValue = new Vector3(_dequantizedPreviousValue.X + dx, y, _dequantizedPreviousValue.Z + dz);
+                }
+                else if (deltaType == DeltaType.YZ)
+                {
+                    dequantizedValue = new Vector3(x, _dequantizedPreviousValue.Y + dy, _dequantizedPreviousValue.Z + dz);
+                }
+                else if (deltaType == DeltaType.X)
+                {
+                    dequantizedValue = new Vector3(_dequantizedPreviousValue.X + dx, y, z);
+                }
+                else if (deltaType == DeltaType.Y)
+                {
+                    dequantizedValue = new Vector3(x, _dequantizedPreviousValue.Y + dy, z);
+                }
+                else if (deltaType == DeltaType.Z)
+                {
+                    dequantizedValue = new Vector3(x, y, _dequantizedPreviousValue.Z + dz);
+                }
+                else
+                {
+                    throw new System.ArgumentException("Invalid DeltaType");
+                }
+            }
+        }
+    }
+}
