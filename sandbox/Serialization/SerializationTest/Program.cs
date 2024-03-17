@@ -4,6 +4,7 @@ using MessagePack;
 using MessagePack.Resolvers;
 using NetStack.Quantization;
 using NetStack.Serialization;
+using SignalStreaming.Quantization;
 using SignalStreaming.Serialization.MessagePack.NetStack;
 using UnityEngine;
 
@@ -21,6 +22,8 @@ namespace SignalStreaming.SerializationTest
             QuantizedQuaternionTest2();
             QuantizedPositionTest();
             QuantizedPositionTest2();
+            QuantizedFloatArrayTest();
+            VectorQuantizerTest();
         }
 
         static void UnionValueTest()
@@ -179,14 +182,14 @@ namespace SignalStreaming.SerializationTest
         {
             var precision = 0.001f;
             var worldBounds = new BoundedRange[3];
-            worldBounds[0] = new BoundedRange(-256.0f, 256.0f, precision);
-            worldBounds[1] = new BoundedRange(-256.0f, 256.0f, precision);
-            worldBounds[2] = new BoundedRange(-32.0f, 32.0f, precision);
+            worldBounds[0] = new BoundedRange(-64f, 64f, precision); // X
+            worldBounds[1] = new BoundedRange(-16f, 48f, precision); // Y (Height)
+            worldBounds[2] = new BoundedRange(-64f, 64f, precision); // Z
 
             var random = new Random();
-            var posX = random.NextSingle() * 512.0f - 256.0f; // [-256, 256]
-            var posY = random.NextSingle() * 512.0f - 256.0f; // [-256, 256]
-            var posZ = random.NextSingle() * 64.0f - 32.0f; // [-32, 32]
+            var posX = random.NextSingle() * 128.0f - 64.0f; // [-64, 64]
+            var posY = random.NextSingle() * 64.0f - 16.0f; // [-16, 48]
+            var posZ = random.NextSingle() * 128.0f - 64.0f; // [-64, 64]
 
             var position = new Vector3(posX, posY, posZ);
             var quantizedPosition = BoundedRange.Quantize(position.ToSystemNumericsVector3(), worldBounds);
@@ -241,6 +244,144 @@ namespace SignalStreaming.SerializationTest
 
             var approximately = (Math.Abs(diffX) < precision) && (Math.Abs(diffY) < precision) && (Math.Abs(diffZ) < precision);
             Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] approximately: {approximately}");
+
+            Console.WriteLine("----------------------------------------");
+        }
+
+        static void QuantizedFloatArrayTest()
+        {
+            var precision = 0.1f;
+            var boundedRange = new BoundedRange(-180.0f, 180.0f, precision);
+            var mask = (uint)((1L << boundedRange.RequiredBits) - 1);
+
+            var random = new Random();
+
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"        QuantizedFloatArrayTest");
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"[{nameof(QuantizedFloatArrayTest)}] MinValue: {boundedRange.MinValue}, MaxValue: {boundedRange.MaxValue}, Precision: {precision}");
+            Console.WriteLine($"[{nameof(QuantizedFloatArrayTest)}] RequiredBits: {boundedRange.RequiredBits} bits");
+            Console.WriteLine($"[{nameof(QuantizedFloatArrayTest)}] Mask: {Convert.ToString(mask, 16).ToUpper()} ({Convert.ToString(mask, 2)}))"); 
+            Console.WriteLine("");
+
+            var bitButter = new BitBuffer(256); // ChunkCount: 256, BufferSize: 256 * 4 = 1024 bytes
+            var bytes = new byte[1024];
+            var bytesSpan = new Span<byte>(bytes);
+
+            var floatArray = new float[95];
+            bitButter.AddByte((byte)floatArray.Length);
+            bitButter.AddByte((byte)boundedRange.RequiredBits);
+
+            for (var i = 0; i < floatArray.Length; i++)
+            {
+                floatArray[i] = random.NextSingle() * 180.0f - 180.0f;
+                bitButter.Add(boundedRange.RequiredBits, boundedRange.Quantize(floatArray[i]));
+            }
+
+            var serializedLength = bitButter.ToSpan(ref bytesSpan);
+
+            var bytesReadOnlySpan = new ReadOnlySpan<byte>(bytes);
+            bitButter.Clear();
+            bitButter.FromSpan(ref bytesReadOnlySpan, serializedLength);
+
+            var arrayLength = bitButter.ReadByte();
+            var requiredBits = bitButter.ReadByte();
+            var dequantizedFloatArray = new float[arrayLength];
+            for (var i = 0; i < arrayLength; i++)
+            {
+                var quantizedValue = bitButter.Read(requiredBits);
+                dequantizedFloatArray[i] = boundedRange.Dequantize(quantizedValue);
+            }
+
+            var maxDiff = 0.0f;
+            for (var i = 0; i < floatArray.Length; i++)
+            {
+                var diff = Math.Abs(floatArray[i] - dequantizedFloatArray[i]);
+                maxDiff = Math.Max(maxDiff, diff);
+            }
+
+            Console.WriteLine($"[{nameof(QuantizedFloatArrayTest)}] Serialized data size of QuantizedFloatArray: {serializedLength} bytes");
+            Console.WriteLine($"[{nameof(QuantizedFloatArrayTest)}] ArrayLength: {arrayLength}");
+            Console.WriteLine($"[{nameof(QuantizedFloatArrayTest)}] Max diff: {maxDiff}");
+            Console.WriteLine($"[{nameof(QuantizedFloatArrayTest)}] Precision: {precision}");
+            Console.WriteLine("----------------------------------------");
+        }
+
+        static void VectorQuantizerTest()
+        {
+            var precision = 0.001f;
+            var worldBounds = new BoundedRange[3];
+            worldBounds[0] = new BoundedRange(-64f, 64f, precision); // X
+            worldBounds[1] = new BoundedRange(-16f, 48f, precision); // Y (Height)
+            worldBounds[2] = new BoundedRange(-64f, 64f, precision); // Z
+
+            var quantizer = new VectorQuantizer(worldBounds);
+
+            var random = new Random();
+            var posX = random.NextSingle() * 128.0f - 64.0f; // [-64, 64]
+            var posY = random.NextSingle() * 64.0f - 16.0f; // [-16, 48]
+            var posZ = random.NextSingle() * 128.0f - 64.0f; // [-64, 64]
+
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"        VectorQuantizerTest");
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] MinValues: {worldBounds[0].MinValue}, {worldBounds[1].MinValue}, {worldBounds[2].MinValue}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] MaxValues: {worldBounds[0].MaxValue}, {worldBounds[1].MaxValue}, {worldBounds[2].MaxValue}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] Precision: {precision}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] RequiredBits: {worldBounds[0].RequiredBits}, {worldBounds[1].RequiredBits}, {worldBounds[2].RequiredBits}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] RequiredBytes: {Math.Ceiling(worldBounds[0].RequiredBits / 8.0)}, {Math.Ceiling(worldBounds[1].RequiredBits / 8.0)}, {Math.Ceiling(worldBounds[2].RequiredBits / 8.0)}");
+            Console.WriteLine("");
+            // Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DeltaMinValues: {quantizer.DeltaMinValues[0]}, {quantizer.DeltaMinValues[1]}, {quantizer.DeltaMinValues[2]}");
+            // Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DeltaMaxValues: {quantizer.DeltaMaxValues[0]}, {quantizer.DeltaMaxValues[1]}, {quantizer.DeltaMaxValues[2]}");
+            // Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DeltaPrecision: {quantizer.DeltaPrecision}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DeltaRequiredBits: {quantizer.DeltaRequiredBits[0]}, {quantizer.DeltaRequiredBits[1]}, {quantizer.DeltaRequiredBits[2]}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DeltaRequiredBytes: {Math.Ceiling(quantizer.DeltaRequiredBits[0] / 8.0)}, {Math.Ceiling(quantizer.DeltaRequiredBits[1] / 8.0)}, {Math.Ceiling(quantizer.DeltaRequiredBits[2] / 8.0)}");
+            Console.WriteLine("");
+
+            var bitButter = new BitBuffer(256); // ChunkCount: 256, BufferSize: 256 * 4 = 1024 bytes
+            var bytes = new byte[1024];
+            var bytesSpan = new Span<byte>(bytes);
+
+            var position = new Vector3(posX, posY, posZ);
+            var previousPosition = position;
+            var requiredBitsOutput = new int[3];
+            quantizer.Quantize(position.ToSystemNumericsVector3(), out QuantizedVector3 quantizedValue, out VectorQuantizer.DeltaType deltaType, requiredBitsOutput);
+
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] Position: ({position.x}, {position.y}, {position.z})");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] PreviousPosition: ({previousPosition.x}, {previousPosition.y}, {previousPosition.z})");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] Diff: ({position.x - previousPosition.x}, {position.y - previousPosition.y}, {position.z - previousPosition.z})");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DeltaType: {deltaType}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] RequiredBits: {requiredBitsOutput[0]}, {requiredBitsOutput[1]}, {requiredBitsOutput[2]}");
+            Console.WriteLine($"[{nameof(VectorQuantizerTest)}] RequiredBytes: {Math.Ceiling(requiredBitsOutput[0] / 8.0)}, {Math.Ceiling(requiredBitsOutput[1] / 8.0)}, {Math.Ceiling(requiredBitsOutput[2] / 8.0)}");
+            Console.WriteLine("");
+
+            for (var i = 0; i < 10; i++)
+            {
+                var dx = random.NextSingle() * 1f - 0.5f;
+                var dy = random.NextSingle() * 1f - 0.5f;
+                var dz = random.NextSingle() * 1f - 0.5f;
+
+                position.x += dx;
+                position.y += dy;
+                position.z += dz;
+                quantizer.Quantize(position.ToSystemNumericsVector3(), out quantizedValue, out deltaType, requiredBitsOutput);
+                quantizer.Dequantize(new uint[]{ quantizedValue.x, quantizedValue.y, quantizedValue.z }, deltaType, out System.Numerics.Vector3 dequantizedValue);
+            
+                var bytesLength = (byte)Math.Ceiling((requiredBitsOutput[0] + requiredBitsOutput[1] + requiredBitsOutput[2]) / 8f);
+                byte packed = (byte)((bytesLength & 0x1F) << 3 | ((byte)deltaType & 0x7));
+
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] Position: ({position.x}, {position.y}, {position.z})");
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] PreviousPosition: ({previousPosition.x}, {previousPosition.y}, {previousPosition.z})");
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] Diff: ({position.x - previousPosition.x}, {position.y - previousPosition.y}, {position.z - previousPosition.z})");
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] Delta: ({dx}, {dy}, {dz})");
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DeltaType: {deltaType}");
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] DequantizedValue: ({dequantizedValue.X}, {dequantizedValue.Y}, {dequantizedValue.Z})");
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] RequiredBits: {requiredBitsOutput[0]}, {requiredBitsOutput[1]}, {requiredBitsOutput[2]}");
+                Console.WriteLine($"[{nameof(VectorQuantizerTest)}] RequiredBytes: {Math.Ceiling(requiredBitsOutput[0] / 8.0)}, {Math.Ceiling(requiredBitsOutput[1] / 8.0)}, {Math.Ceiling(requiredBitsOutput[2] / 8.0)}");
+                Console.WriteLine("");
+
+                previousPosition = position;
+            }
 
             Console.WriteLine("----------------------------------------");
         }
