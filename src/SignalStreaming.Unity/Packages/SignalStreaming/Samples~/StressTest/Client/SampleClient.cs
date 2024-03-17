@@ -310,7 +310,7 @@ namespace SignalStreaming.Samples.StressTest
             _playerMoveSystem.UpdateColor(_clientId, Color.red);
         }
 
-        void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload)
+        void OnIncomingSignalDequeued(int messageId, ReadOnlySequence<byte> payload, uint senderClientId)
         {
             _receivedSignalCount++;
             if (messageId == (int)SignalType.ChangeStressTestState)

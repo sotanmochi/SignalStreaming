@@ -292,7 +292,7 @@ namespace SignalStreaming.Samples.StressTest
             Debug.Log($"[{nameof(SampleClient)}] Disconnected - Reason: {reason}");
         }
 
-        private void OnIncomingSignalDequeued(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlySequence<byte> payload)
+        private void OnIncomingSignalDequeued(int messageId, ReadOnlySequence<byte> payload, uint senderClientId)
         {
             _receivedSignalCount++;
             _receivedBytes = _transport.BytesReceived;
