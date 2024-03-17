@@ -1,0 +1,16 @@
+{
+    "name": "SignalStreaming.Quantization",
+    "rootNamespace": "",
+    "references": [
+        "NetStack.Quantization"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
