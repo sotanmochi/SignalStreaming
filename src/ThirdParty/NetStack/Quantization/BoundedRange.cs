@@ -80,6 +80,12 @@ namespace NetStack.Quantization {
 		private readonly int requiredBits;
 		private readonly uint mask;
 
+		public float MinValue => minValue;
+		public float MaxValue => maxValue;
+		public float Precision => precision;
+		public int RequiredBits => requiredBits;
+		public uint Mask => mask;
+
 		public BoundedRange(float minValue, float maxValue, float precision) {
 			this.minValue = minValue;
 			this.maxValue = maxValue;
