@@ -1,10 +1,12 @@
 using System;
+using System.Buffers;
 using System.Runtime.InteropServices;
 using MessagePack;
 using MessagePack.Resolvers;
 using NetStack.Quantization;
 using NetStack.Serialization;
 using SignalStreaming.Quantization;
+using SignalStreaming.Serialization;
 using SignalStreaming.Serialization.MessagePack.NetStack;
 using UnityEngine;
 
@@ -24,6 +26,7 @@ namespace SignalStreaming.SerializationTest
             QuantizedPositionTest2();
             QuantizedFloatArrayTest();
             VectorQuantizerTest();
+            QuantizedVectorTest();
         }
 
         static void UnionValueTest()
@@ -381,6 +384,89 @@ namespace SignalStreaming.SerializationTest
                 Console.WriteLine("");
 
                 previousPosition = position;
+            }
+
+            Console.WriteLine("----------------------------------------");
+        }
+
+        static void QuantizedVectorTest()
+        {
+            var precision = 0.001f;
+            var worldBounds = new BoundedRange[3];
+            worldBounds[0] = new BoundedRange(-64f, 64f, precision); // X
+            worldBounds[1] = new BoundedRange(-16f, 48f, precision); // Y (Height)
+            worldBounds[2] = new BoundedRange(-64f, 64f, precision); // Z
+
+            var deltaPrecision = VectorQuantizer.DefaultDeltaPrecision;
+            var deltaValues = VectorQuantizer.DefaultDeltaValues;
+            var deltaBounds = new BoundedRange[3];
+            deltaBounds[0] = new BoundedRange(-deltaValues.X, deltaValues.X, deltaPrecision);
+            deltaBounds[1] = new BoundedRange(-deltaValues.Y, deltaValues.Y, deltaPrecision);
+            deltaBounds[2] = new BoundedRange(-deltaValues.Z, deltaValues.Z, deltaPrecision);
+
+            var quantizer = new VectorQuantizer(worldBounds, deltaBounds);
+            var serializer = new SignalSerializer();
+            var deserializedVector = new uint[3];
+
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"        QuantizedVectorTest");
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine($"RequiredBits: {quantizer.RequiredBits[0]}, {quantizer.RequiredBits[1]}, {quantizer.RequiredBits[2]}");
+            Console.WriteLine($"RequiredBytes: {Math.Ceiling((quantizer.RequiredBits[0] + quantizer.RequiredBits[1] + quantizer.RequiredBits[2]) / 8.0)}");
+            Console.WriteLine("");
+
+            var random = new Random();
+            var posX = random.NextSingle() * 128.0f - 64.0f; // [-64, 64]
+            var posY = random.NextSingle() * 64.0f - 16.0f; // [-16, 48]
+            var posZ = random.NextSingle() * 128.0f - 64.0f; // [-64, 64]
+
+            var position = new System.Numerics.Vector3(posX, posY, posZ);
+            var previousPosition = new System.Numerics.Vector3(0f, 0f, 0f);
+            var requiredBitsOutput = new int[3];
+            
+            for (var i = 0; i < 10; i++)
+            {
+                Console.WriteLine("----------");
+                var dx = random.NextSingle() * 1f - 0.5f;
+                var dy = random.NextSingle() * 1f - 0.5f;
+                var dz = random.NextSingle() * 1f - 0.5f;
+
+                position.X += dx;
+                position.Y += dy;
+                position.Z += dz;
+                
+                // Serialization
+                using var writer = ArrayPoolBufferWriter.RentThreadStaticWriter();
+                quantizer.Quantize(position, out QuantizedVector3 quantizedValue, out var quantizedDeltaType, requiredBitsOutput);
+                serializer.Serialize(writer, quantizedValue, quantizer.RequiredBits, quantizer.DeltaRequiredBits, quantizedDeltaType);
+                var bytes = writer.WrittenMemory.ToArray();
+
+                Console.WriteLine($"Position: ({position.X}, {position.Y}, {position.Z})");
+                Console.WriteLine($"PreviousPosition: ({previousPosition.X}, {previousPosition.Y}, {previousPosition.Z})");
+                Console.WriteLine($"Delta: ({position.X - previousPosition.X}, {position.Y - previousPosition.Y}, {position.Z - previousPosition.Z})");
+                Console.WriteLine($"DeltaType: {quantizedDeltaType}");
+                Console.WriteLine("");
+                Console.WriteLine($"Serialized data size: {bytes.Length} bytes");
+                Console.WriteLine("");
+
+                // Deserialization
+                serializer.DeserializeQuantizedVector(new ReadOnlySequence<byte>(bytes),
+                    quantizer.RequiredBits, quantizer.DeltaRequiredBits, out VectorQuantizer.DeltaType dequantizedDeltaType, deserializedVector);
+                quantizer.Dequantize(deserializedVector, dequantizedDeltaType, out var dequantizedVector3);
+
+                Console.WriteLine($"Deserialize DeltaType: {dequantizedDeltaType}");
+                Console.WriteLine($"Dequantized Position: ({dequantizedVector3.X}, {dequantizedVector3.Y}, {dequantizedVector3.Z})");
+
+                var diffX = Math.Abs(position.X - dequantizedVector3.X);
+                var diffY = Math.Abs(position.Y - dequantizedVector3.Y);
+                var diffZ = Math.Abs(position.Z - dequantizedVector3.Z);
+                var approximately = (Math.Abs(diffX) < deltaPrecision) && (Math.Abs(diffY) < deltaPrecision) && (Math.Abs(diffZ) < deltaPrecision);
+                Console.WriteLine($"Approximately: {approximately}");
+
+                Console.WriteLine("");
+
+                previousPosition = position;
+                Console.WriteLine("----------");
             }
 
             Console.WriteLine("----------------------------------------");
