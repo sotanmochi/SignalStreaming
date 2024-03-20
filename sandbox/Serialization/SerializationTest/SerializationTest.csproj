@@ -10,6 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\src\SignalStreaming\SignalStreaming.csproj" />
+    <ProjectReference Include="..\..\..\src\SignalStreaming.Quantization\SignalStreaming.Quantization.csproj" />
+    <ProjectReference Include="..\..\..\src\SignalStreaming.Serialization\SignalStreaming.Serialization.csproj" />
     <ProjectReference Include="..\..\..\src\ThirdParty\NetStack\Quantization\NetStack.Quantization.csproj" />
     <ProjectReference Include="..\..\..\src\ThirdParty\NetStack\Serialization\NetStack.Serialization.csproj" />
     <ProjectReference Include="..\MessagePack.NetStack\SignalStreaming.Serialization.MessagePack.NetStack.csproj" />
