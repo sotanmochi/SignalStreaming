@@ -62,7 +62,7 @@ namespace SignalStreaming.Samples.StressTest
         float _receivedSignalsPerSecond3;
 
         ISignalSerializer _signalSerializer;
-        BoundedRange[] _boundedRange3 = new BoundedRange[]
+        BoundedRange[] _worldBounds = new BoundedRange[]
         {
             new BoundedRange(-64f, 64f, 0.001f), // X
             new BoundedRange(-16f, 48f, 0.001f), // Y (Height)
@@ -205,18 +205,18 @@ namespace SignalStreaming.Samples.StressTest
 
             if (_transmissionEnabled && _localPlayerMoveController != null)
             {
-                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
+                // var sendOptions = new SendOptions(StreamingType.All, reliable: true);
+                var sendOptions = new SendOptions(StreamingType.All, reliable: false);
 
                 var position = _localPlayerMoveController.transform.position;
                 var rotation = _localPlayerMoveController.transform.rotation;
-
-                var quantizedPosition = BoundedRange.Quantize(position, _boundedRange3);
-                var quantizedRotation = SmallestThree.Quantize(rotation);
-
-                // _streamingClient.Send((int)SignalType.PlayerObjectRotation, rotation, sendOptions);
                 // _streamingClient.Send((int)SignalType.PlayerObjectPosition, position, sendOptions);
-                _streamingClient.Send((int)SignalType.PlayerObjectRotation, quantizedRotation, sendOptions);
-                _streamingClient.Send((int)SignalType.PlayerObjectPosition, quantizedPosition, sendOptions);
+                // _streamingClient.Send((int)SignalType.PlayerObjectRotation, rotation, sendOptions);
+
+                var quantizedPosition = BoundedRange.Quantize(position, _worldBounds);
+                var quantizedRotation = SmallestThree.Quantize(rotation);
+                _streamingClient.Send((int)SignalType.PlayerObjectQuantizedPosition, quantizedPosition, sendOptions);
+                _streamingClient.Send((int)SignalType.PlayerObjectQuantizedRotation, quantizedRotation, sendOptions);
             }
 
             if (_localPlayerColorType == ColorType.Rainbow)
@@ -378,6 +378,28 @@ namespace SignalStreaming.Samples.StressTest
                 if (senderClientId == _clientId) return;
 
                 var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+                _playerMoveSystem.UpdateRotation(senderClientId, rotation);
+            }
+            else if (messageId == (int)SignalType.PlayerObjectQuantizedPosition)
+            {
+                _receivedSignalCount2++;
+
+                if (senderClientId == _clientId) return;
+
+                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(payload);
+                var position = BoundedRange.Dequantize(quantizedPosition, _worldBounds);
+                
+                _playerMoveSystem.UpdatePosition(senderClientId, position);
+            }
+            else if (messageId == (int)SignalType.PlayerObjectQuantizedRotation)
+            {
+                _receivedSignalCount3++;
+
+                if (senderClientId == _clientId) return;
+
+                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(payload);
+                var rotation = SmallestThree.Dequantize(quantizedRotation);
+                
                 _playerMoveSystem.UpdateRotation(senderClientId, rotation);
             }
         }

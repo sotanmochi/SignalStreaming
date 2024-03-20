@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using MessagePack;
+using NetStack.Quantization;
 using Newtonsoft.Json;
 using SignalStreaming;
 using SignalStreaming.Infrastructure.LiteNetLib;
@@ -71,6 +72,13 @@ namespace SignalStreaming.Samples.StressTest
         float _receivedSignalsPerSecond3;
 
         ISignalSerializer _signalSerializer;
+        BoundedRange[] _worldBounds = new BoundedRange[]
+        {
+            new BoundedRange(-64f, 64f, 0.001f), // X
+            new BoundedRange(-16f, 48f, 0.001f), // Y (Height)
+            new BoundedRange(-64f, 64f, 0.001f), // Z
+        };
+
         ISignalStreamingClient _streamingClient;
         ISignalTransport _transport;
         LiteNetLibConnectParameters _connectParameters;
@@ -322,6 +330,32 @@ namespace SignalStreaming.Samples.StressTest
                 if (senderClientId == _clientId) return;
 
                 var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+                _playerMoveSystem.UpdateRotation(senderClientId, rotation);
+            }
+            else if (messageId == (int)SignalType.PlayerObjectQuantizedPosition)
+            {
+                _receivedSignalCount2++;
+
+                // Debug.Log($"PlayerObjectQuantizedRotation - Payload Length: {payload.Length}");
+
+                if (senderClientId == _clientId) return;
+
+                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(payload);
+                var position = BoundedRange.Dequantize(quantizedPosition, _worldBounds);
+                
+                _playerMoveSystem.UpdatePosition(senderClientId, position);
+            }
+            else if (messageId == (int)SignalType.PlayerObjectQuantizedRotation)
+            {
+                _receivedSignalCount3++;
+
+                // Debug.Log($"PlayerObjectQuantizedRotation - Payload Length: {payload.Length}");
+
+                if (senderClientId == _clientId) return;
+
+                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(payload);
+                var rotation = SmallestThree.Dequantize(quantizedRotation);
+                
                 _playerMoveSystem.UpdateRotation(senderClientId, rotation);
             }
         }

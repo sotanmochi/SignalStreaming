@@ -60,12 +60,12 @@ namespace SignalStreaming.Samples.StressTest
         uint _outgoingSignalCount3;
 
         ISignalSerializer _signalSerializer;
-        BoundedRange[] _boundedRange3 = new BoundedRange[]
-        {
-            new BoundedRange(-64f, 64f, 0.001f), // X
-            new BoundedRange(-16f, 48f, 0.001f), // Y (Height)
-            new BoundedRange(-64f, 64f, 0.001f), // Z
-        };
+        // BoundedRange[] _worldBounds = new BoundedRange[]
+        // {
+        //     new BoundedRange(-64f, 64f, 0.001f), // X
+        //     new BoundedRange(-16f, 48f, 0.001f), // Y (Height)
+        //     new BoundedRange(-64f, 64f, 0.001f), // Z
+        // };
 
         ISignalStreamingHub _streamingHub;
         ISignalTransportHub _transportHub;
@@ -294,9 +294,7 @@ namespace SignalStreaming.Samples.StressTest
 
                 // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectPosition - Payload: {payload.Length} [bytes]");
 
-                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(payload);
-                var position = BoundedRange.Dequantize(quantizedPosition, _boundedRange3);
-                // var position = MessagePackSerializer.Deserialize<Vector3>(payload);
+                var position = MessagePackSerializer.Deserialize<Vector3>(payload);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -317,9 +315,7 @@ namespace SignalStreaming.Samples.StressTest
 
                 // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectRotation - Payload: {payload.Length} [bytes]</color>");
 
-                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(payload);
-                var rotation = SmallestThree.Dequantize(quantizedRotation);
-                // var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+                var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -332,6 +328,48 @@ namespace SignalStreaming.Samples.StressTest
                     _outgoingSignalCount++;
                     _outgoingSignalCount3++;
                     _streamingHub.Broadcast(groupId, messageId, rotation, sendOptions.Reliable, senderClientId, 0);
+                }
+            }
+            else if (messageId == (int)SignalType.PlayerObjectQuantizedPosition)
+            {
+                _receivedSignalCount2++;
+
+                // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectQuantizedPosition - Payload: {payload.Length} [bytes]");
+
+                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(payload);
+
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+
+                    _outgoingSignalCount++;
+                    _outgoingSignalCount2++;
+                    _streamingHub.Broadcast(groupId, messageId, quantizedPosition, sendOptions.Reliable, senderClientId, 0);
+                }
+            }
+            else if (messageId == (int)SignalType.PlayerObjectQuantizedRotation)
+            {
+                _receivedSignalCount3++;
+
+                // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectQuantizedRotation - Payload: {payload.Length} [bytes]</color>");
+
+                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(payload);
+
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+
+                    _outgoingSignalCount++;
+                    _outgoingSignalCount3++;
+                    _streamingHub.Broadcast(groupId, messageId, quantizedRotation, sendOptions.Reliable, senderClientId, 0);
                 }
             }
             else if (messageId == (int)SignalType.ChangeStressTestState)

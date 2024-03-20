@@ -5,6 +5,8 @@ namespace SignalStreaming.Samples.StressTest
         PlayerObjectColor = 1,
         PlayerObjectPosition = 2,
         PlayerObjectRotation = 3,
+        PlayerObjectQuantizedPosition = 4,
+        PlayerObjectQuantizedRotation = 5,
 
         // Stress Test Manager
         ChangeStressTestState = 90,
