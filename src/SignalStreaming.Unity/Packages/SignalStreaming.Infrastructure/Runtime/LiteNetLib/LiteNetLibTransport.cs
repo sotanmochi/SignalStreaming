@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using LiteNetLib;
+using LiteNetLib.Utils;
 using SignalStreaming.Collections;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
@@ -44,10 +45,6 @@ namespace SignalStreaming.Infrastructure.LiteNetLib
         readonly ConcurrentRingBuffer<byte> _incomingSignalsBuffer;
         readonly ConcurrentRingBuffer<byte> _outgoingSignalsBuffer;
         readonly byte[] _signalDispatcherBuffer;
-
-        string _serverAddress;
-        ushort _serverPort;
-        string _connectionKey = "SignalStreaming";
 
         NetManager _client;
         NetPeer _peer;
@@ -111,16 +108,15 @@ namespace SignalStreaming.Infrastructure.LiteNetLib
             {
                 if (connectParameters is LiteNetLibConnectParameters LiteNetLibConnectParameters)
                 {
-                    _serverAddress = LiteNetLibConnectParameters.ServerAddress;
-                    _serverPort = LiteNetLibConnectParameters.ServerPort;
-                    // _connectionKey = LiteNetLibConnectParameters.ConnectionKey;
+                    var serverAddress = LiteNetLibConnectParameters.ServerAddress;
+                    var serverPort = LiteNetLibConnectParameters.ServerPort;
+                    var connectionKey = System.Text.Encoding.UTF8.GetString(LiteNetLibConnectParameters.ConnectionRequestData);
+                    _peer = _client.Connect(serverAddress, serverPort, connectionKey);
                 }
                 else
                 {
                     throw new ArgumentException($"Invalid type of {nameof(connectParameters)}");
                 }
-
-                _peer = _client.Connect(_serverAddress, _serverPort, _connectionKey);
 
                 await _connectionTcs.Task;
             }
