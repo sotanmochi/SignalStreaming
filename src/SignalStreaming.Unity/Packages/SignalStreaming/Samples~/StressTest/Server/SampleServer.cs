@@ -274,7 +274,7 @@ namespace SignalStreaming.Samples.StressTest
             {
                 _receivedSignalCount1++;
 
-                var color = MessagePackSerializer.Deserialize<Color>(payload);
+                var quantizedHue = MessagePackSerializer.Deserialize<byte>(payload);
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
@@ -285,7 +285,7 @@ namespace SignalStreaming.Samples.StressTest
 
                     _outgoingSignalCount++;
                     _outgoingSignalCount1++;
-                    _streamingHub.Broadcast(groupId, messageId, color, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, quantizedHue, sendOptions.Reliable, senderClientId, 0);
                 }
             }
             else if (messageId == (int)SignalType.PlayerObjectPosition)

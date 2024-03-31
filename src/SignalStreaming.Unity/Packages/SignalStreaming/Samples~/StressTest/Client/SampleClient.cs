@@ -77,7 +77,8 @@ namespace SignalStreaming.Samples.StressTest
         ColorType _localPlayerColorType;
         Color _localPlayerColor;
         bool _colorUpdated;
-        float _rainbowHueOffset;
+        float _playerColorHue;
+        byte _quantizedHue;
         uint _clientId;
         bool _autoConnect;
 
@@ -221,9 +222,10 @@ namespace SignalStreaming.Samples.StressTest
 
             if (_localPlayerColorType == ColorType.Rainbow)
             {
-                _rainbowHueOffset += Time.deltaTime * 0.1f;
-                _rainbowHueOffset %= 1f;
-                _localPlayerColor = Color.HSVToRGB(_rainbowHueOffset, 1f, 1f);
+                _playerColorHue += Time.deltaTime * 0.1f;
+                _playerColorHue %= 1f;
+                _quantizedHue = (byte)(_playerColorHue * 255f);
+                _localPlayerColor = Color.HSVToRGB(_playerColorHue, 1f, 1f);
                 _playerMoveSystem.UpdateColor(_clientId, _localPlayerColor);
                 _colorUpdated = true;
             }
@@ -231,7 +233,7 @@ namespace SignalStreaming.Samples.StressTest
             if (_transmissionEnabled && _colorUpdated)
             {
                 var sendOptions = new SendOptions(StreamingType.All, reliable: true);
-                _streamingClient.Send((int)SignalType.PlayerObjectColor, _localPlayerColor, sendOptions);
+                _streamingClient.Send((int)SignalType.PlayerObjectColor, _quantizedHue, sendOptions);
                 _colorUpdated = false;
             }
         }
@@ -341,8 +343,8 @@ namespace SignalStreaming.Samples.StressTest
                 }
                 else if (_localPlayerColorType == ColorType.Rainbow)
                 {
-                    _rainbowHueOffset = 0f;
-                    _localPlayerColor = Color.HSVToRGB(_rainbowHueOffset, 1f, 1f);
+                    _playerColorHue = 0f;
+                    _localPlayerColor = Color.HSVToRGB(_playerColorHue, 1f, 1f);
                 }
                 else
                 {
@@ -359,7 +361,8 @@ namespace SignalStreaming.Samples.StressTest
 
                 if (senderClientId == _clientId) return;
 
-                var color = MessagePackSerializer.Deserialize<Color>(payload);
+                var quantizedHue = MessagePackSerializer.Deserialize<byte>(payload);
+                var color = Color.HSVToRGB(quantizedHue / 255f, 1f, 1f);
                 _playerMoveSystem.UpdateColor(senderClientId, color);
             }
             else if (messageId == (int)SignalType.PlayerObjectPosition)
