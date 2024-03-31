@@ -23,46 +23,53 @@
 using System;
 
 #if !(ENABLE_MONO || ENABLE_IL2CPP)
-	using System.Numerics;
+using System.Numerics;
 #else
 	using UnityEngine;
 #endif
 
-namespace SignalStreaming.Quantization {
-	public struct QuantizedQuaternion {
-		public uint m;
-		public uint a;
-		public uint b;
-		public uint c;
+namespace SignalStreaming.Quantization
+{
+    public struct QuantizedQuaternion
+    {
+        public uint m;
+        public uint a;
+        public uint b;
+        public uint c;
 
-		public QuantizedQuaternion(uint m, uint a, uint b, uint c) {
-			this.m = m;
-			this.a = a;
-			this.b = b;
-			this.c = c;
-		}
-	}
+        public QuantizedQuaternion(uint m, uint a, uint b, uint c)
+        {
+            this.m = m;
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+    }
 
-	public static class SmallestThree {
-		private const float smallestThreeUnpack = 0.70710678118654752440084436210485f + 0.0000001f;
-		private const float smallestThreePack = 1.0f / smallestThreeUnpack;
+    public static class SmallestThree
+    {
+        private const float smallestThreeUnpack = 0.70710678118654752440084436210485f + 0.0000001f;
+        private const float smallestThreePack = 1.0f / smallestThreeUnpack;
 
-		public static QuantizedQuaternion Quantize(Quaternion quaternion, int bitsPerElement = 12) {
-			float halfRange = (1 << bitsPerElement - 1);
-			float packer = smallestThreePack * halfRange;
-			float maxValue = float.MinValue;
-			bool signMinus = false;
-			uint m = 0;
-			uint a = 0;
-			uint b = 0;
-			uint c = 0;
+        public static QuantizedQuaternion Quantize(Quaternion quaternion, int bitsPerElement = 12)
+        {
+            float halfRange = (1 << bitsPerElement - 1);
+            float packer = smallestThreePack * halfRange;
+            float maxValue = float.MinValue;
+            bool signMinus = false;
+            uint m = 0;
+            uint a = 0;
+            uint b = 0;
+            uint c = 0;
 
-			for (uint i = 0; i <= 3; i++) {
-				float element = 0.0f;
-				float abs = 0.0f;
+            for (uint i = 0; i <= 3; i++)
+            {
+                float element = 0.0f;
+                float abs = 0.0f;
 
-				switch (i) {
-					#if ENABLE_MONO || ENABLE_IL2CPP
+                switch (i)
+                {
+#if ENABLE_MONO || ENABLE_IL2CPP
 						case 0:
 							element = quaternion.x;
 
@@ -82,43 +89,44 @@ namespace SignalStreaming.Quantization {
 							element = quaternion.w;
 
 							break;
-					#else
-						case 0:
-							element = quaternion.X;
+#else
+                    case 0:
+                        element = quaternion.X;
 
-							break;
+                        break;
 
-						case 1:
-							element = quaternion.Y;
+                    case 1:
+                        element = quaternion.Y;
 
-							break;
+                        break;
 
-						case 2:
-							element = quaternion.Z;
+                    case 2:
+                        element = quaternion.Z;
 
-							break;
+                        break;
 
-						case 3:
-							element = quaternion.W;
+                    case 3:
+                        element = quaternion.W;
 
-							break;
-					#endif
-				}
+                        break;
+#endif
+                }
 
-				abs = Math.Abs(element);
+                abs = Math.Abs(element);
 
-				if (abs > maxValue) {
-					signMinus = (element < 0.0f);
-					m = i;
-					maxValue = abs;
-				}
-			}
+                if (abs > maxValue)
+                {
+                    signMinus = (element < 0.0f);
+                    m = i;
+                    maxValue = abs;
+                }
+            }
 
-			float af = 0.0f;
-			float bf = 0.0f;
-			float cf = 0.0f;
+            float af = 0.0f;
+            float bf = 0.0f;
+            float cf = 0.0f;
 
-			#if ENABLE_MONO || ENABLE_IL2CPP
+#if ENABLE_MONO || ENABLE_IL2CPP
 				switch (m) {
 					case 0:
 						af = quaternion.y;
@@ -145,79 +153,85 @@ namespace SignalStreaming.Quantization {
 
 						break;
 				}
-			#else
-				switch (m) {
-					case 0:
-						af = quaternion.Y;
-						bf = quaternion.Z;
-						cf = quaternion.W;
+#else
+            switch (m)
+            {
+                case 0:
+                    af = quaternion.Y;
+                    bf = quaternion.Z;
+                    cf = quaternion.W;
 
-						break;
-					case 1:
-						af = quaternion.X;
-						bf = quaternion.Z;
-						cf = quaternion.W;
+                    break;
+                case 1:
+                    af = quaternion.X;
+                    bf = quaternion.Z;
+                    cf = quaternion.W;
 
-						break;
-					case 2:
-						af = quaternion.X;
-						bf = quaternion.Y;
-						cf = quaternion.W;
+                    break;
+                case 2:
+                    af = quaternion.X;
+                    bf = quaternion.Y;
+                    cf = quaternion.W;
 
-						break;
-					default:
-						af = quaternion.X;
-						bf = quaternion.Y;
-						cf = quaternion.Z;
+                    break;
+                default:
+                    af = quaternion.X;
+                    bf = quaternion.Y;
+                    cf = quaternion.Z;
 
-						break;
-				}
-			#endif
+                    break;
+            }
+#endif
 
-			if (signMinus) {
-				a = (uint)((-af * packer) + halfRange);
-				b = (uint)((-bf * packer) + halfRange);
-				c = (uint)((-cf * packer) + halfRange);
-			} else {
-				a = (uint)((af * packer) + halfRange);
-				b = (uint)((bf * packer) + halfRange);
-				c = (uint)((cf * packer) + halfRange);
-			}
+            if (signMinus)
+            {
+                a = (uint)((-af * packer) + halfRange);
+                b = (uint)((-bf * packer) + halfRange);
+                c = (uint)((-cf * packer) + halfRange);
+            }
+            else
+            {
+                a = (uint)((af * packer) + halfRange);
+                b = (uint)((bf * packer) + halfRange);
+                c = (uint)((cf * packer) + halfRange);
+            }
 
-			return new QuantizedQuaternion(m, a, b, c);
-		}
+            return new QuantizedQuaternion(m, a, b, c);
+        }
 
-		public static Quaternion Dequantize(QuantizedQuaternion data, int bitsPerElement = 12) {
-   			int halfRange = (1 << bitsPerElement - 1);
-			float unpacker = smallestThreeUnpack * (1.0f / halfRange);
-			uint m = data.m;
-			int ai = (int)data.a;
-			int bi = (int)data.b;
-			int ci = (int)data.c;
+        public static Quaternion Dequantize(QuantizedQuaternion data, int bitsPerElement = 12)
+        {
+            int halfRange = (1 << bitsPerElement - 1);
+            float unpacker = smallestThreeUnpack * (1.0f / halfRange);
+            uint m = data.m;
+            int ai = (int)data.a;
+            int bi = (int)data.b;
+            int ci = (int)data.c;
 
-			ai -= halfRange;
-			bi -= halfRange;
-			ci -= halfRange;
+            ai -= halfRange;
+            bi -= halfRange;
+            ci -= halfRange;
 
-			float a = ai * unpacker;
-			float b = bi * unpacker;
-			float c = ci * unpacker;
+            float a = ai * unpacker;
+            float b = bi * unpacker;
+            float c = ci * unpacker;
 
-			float d = (float)Math.Sqrt(1.0f - ((a * a) + (b * b) + (c * c)));
+            float d = (float)Math.Sqrt(1.0f - ((a * a) + (b * b) + (c * c)));
 
-			switch (m) {
-				case 0:
-					return new Quaternion(d, a, b, c);
+            switch (m)
+            {
+                case 0:
+                    return new Quaternion(d, a, b, c);
 
-				case 1:
-					return new Quaternion(a, d, b, c);
+                case 1:
+                    return new Quaternion(a, d, b, c);
 
-				case 2:
-					return new Quaternion(a, b, d, c);
+                case 2:
+                    return new Quaternion(a, b, d, c);
 
-				default:
-					return new Quaternion(a, b, c, d);
-			}
-		}
-	}
+                default:
+                    return new Quaternion(a, b, c, d);
+            }
+        }
+    }
 }
