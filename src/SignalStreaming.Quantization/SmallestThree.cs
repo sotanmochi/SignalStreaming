@@ -28,7 +28,7 @@ using System;
 	using UnityEngine;
 #endif
 
-namespace NetStack.Quantization {
+namespace SignalStreaming.Quantization {
 	public struct QuantizedQuaternion {
 		public uint m;
 		public uint a;

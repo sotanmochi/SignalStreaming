@@ -1,6 +1,6 @@
 using System.Buffers;
-using NetStack.Quantization;
 using NetStack.Serialization;
+using SignalStreaming.Quantization;
 
 namespace SignalStreaming.Serialization
 {

@@ -23,7 +23,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace NetStack.Quantization {
+namespace SignalStreaming.Quantization {
 	public static class HalfPrecision {
 		[StructLayout(LayoutKind.Explicit)]
 		private struct Values {

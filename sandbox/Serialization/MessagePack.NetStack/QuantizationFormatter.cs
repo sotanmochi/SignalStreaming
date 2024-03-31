@@ -12,16 +12,16 @@
 
 namespace SignalStreaming.Serialization.MessagePack.NetStack
 {
-    public sealed class QuantizedVector2Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::NetStack.Quantization.QuantizedVector2>
+    public sealed class QuantizedVector2Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::SignalStreaming.Quantization.QuantizedVector2>
     {
-        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::NetStack.Quantization.QuantizedVector2 value, global::MessagePack.MessagePackSerializerOptions options)
+        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::SignalStreaming.Quantization.QuantizedVector2 value, global::MessagePack.MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(2);
             writer.Write(value.x);
             writer.Write(value.y);
         }
 
-        public global::NetStack.Quantization.QuantizedVector2 Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        public global::SignalStreaming.Quantization.QuantizedVector2 Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -49,15 +49,15 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
                 }
             }
 
-            var ____result = new global::NetStack.Quantization.QuantizedVector2(__x__, __y__);
+            var ____result = new global::SignalStreaming.Quantization.QuantizedVector2(__x__, __y__);
             reader.Depth--;
             return ____result;
         }
     }
 
-    public sealed class QuantizedVector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::NetStack.Quantization.QuantizedVector3>
+    public sealed class QuantizedVector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::SignalStreaming.Quantization.QuantizedVector3>
     {
-        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::NetStack.Quantization.QuantizedVector3 value, global::MessagePack.MessagePackSerializerOptions options)
+        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::SignalStreaming.Quantization.QuantizedVector3 value, global::MessagePack.MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(3);
             writer.Write(value.x);
@@ -65,7 +65,7 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
             writer.Write(value.z);
         }
 
-        public global::NetStack.Quantization.QuantizedVector3 Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        public global::SignalStreaming.Quantization.QuantizedVector3 Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -97,15 +97,15 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
                 }
             }
 
-            var ____result = new global::NetStack.Quantization.QuantizedVector3(__x__, __y__, __z__);
+            var ____result = new global::SignalStreaming.Quantization.QuantizedVector3(__x__, __y__, __z__);
             reader.Depth--;
             return ____result;
         }
     }
 
-    public sealed class QuantizedVector4Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::NetStack.Quantization.QuantizedVector4>
+    public sealed class QuantizedVector4Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::SignalStreaming.Quantization.QuantizedVector4>
     {
-        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::NetStack.Quantization.QuantizedVector4 value, global::MessagePack.MessagePackSerializerOptions options)
+        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::SignalStreaming.Quantization.QuantizedVector4 value, global::MessagePack.MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(4);
             writer.Write(value.x);
@@ -114,7 +114,7 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
             writer.Write(value.w);
         }
 
-        public global::NetStack.Quantization.QuantizedVector4 Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        public global::SignalStreaming.Quantization.QuantizedVector4 Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -150,15 +150,15 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
                 }
             }
 
-            var ____result = new global::NetStack.Quantization.QuantizedVector4(__x__, __y__, __z__, __w__);
+            var ____result = new global::SignalStreaming.Quantization.QuantizedVector4(__x__, __y__, __z__, __w__);
             reader.Depth--;
             return ____result;
         }
     }
 
-    public sealed class QuantizedQuaternionFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::NetStack.Quantization.QuantizedQuaternion>
+    public sealed class QuantizedQuaternionFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::SignalStreaming.Quantization.QuantizedQuaternion>
     {
-        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::NetStack.Quantization.QuantizedQuaternion value, global::MessagePack.MessagePackSerializerOptions options)
+        public void Serialize(ref global::MessagePack.MessagePackWriter writer, global::SignalStreaming.Quantization.QuantizedQuaternion value, global::MessagePack.MessagePackSerializerOptions options)
         {
             writer.WriteArrayHeader(4);
             writer.Write(value.m);
@@ -167,7 +167,7 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
             writer.Write(value.c);
         }
 
-        public global::NetStack.Quantization.QuantizedQuaternion Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        public global::SignalStreaming.Quantization.QuantizedQuaternion Deserialize(ref global::MessagePack.MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
         {
             if (reader.TryReadNil())
             {
@@ -203,7 +203,7 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
                 }
             }
 
-            var ____result = new global::NetStack.Quantization.QuantizedQuaternion(__m__, __a__, __b__, __c__);
+            var ____result = new global::SignalStreaming.Quantization.QuantizedQuaternion(__m__, __a__, __b__, __c__);
             reader.Depth--;
             return ____result;            
         }
