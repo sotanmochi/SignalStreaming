@@ -26,7 +26,7 @@ using System.Runtime.CompilerServices;
 #if !(ENABLE_MONO || ENABLE_IL2CPP)
 using System.Numerics;
 #else
-	using UnityEngine;
+using UnityEngine;
 #endif
 
 namespace SignalStreaming.Quantization
@@ -140,8 +140,8 @@ namespace SignalStreaming.Quantization
             QuantizedVector2 data = default(QuantizedVector2);
 
 #if ENABLE_MONO || ENABLE_IL2CPP
-				data.x = boundedRange[0].Quantize(vector2.x);
-				data.y = boundedRange[1].Quantize(vector2.y);
+            data.x = boundedRange[0].Quantize(vector2.x);
+            data.y = boundedRange[1].Quantize(vector2.y);
 #else
             data.x = boundedRange[0].Quantize(vector2.X);
             data.y = boundedRange[1].Quantize(vector2.Y);
@@ -155,9 +155,9 @@ namespace SignalStreaming.Quantization
             QuantizedVector3 data = default(QuantizedVector3);
 
 #if ENABLE_MONO || ENABLE_IL2CPP
-				data.x = boundedRange[0].Quantize(vector3.x);
-				data.y = boundedRange[1].Quantize(vector3.y);
-				data.z = boundedRange[2].Quantize(vector3.z);
+            data.x = boundedRange[0].Quantize(vector3.x);
+            data.y = boundedRange[1].Quantize(vector3.y);
+            data.z = boundedRange[2].Quantize(vector3.z);
 #else
             data.x = boundedRange[0].Quantize(vector3.X);
             data.y = boundedRange[1].Quantize(vector3.Y);
@@ -172,10 +172,10 @@ namespace SignalStreaming.Quantization
             QuantizedVector4 data = default(QuantizedVector4);
 
 #if ENABLE_MONO || ENABLE_IL2CPP
-				data.x = boundedRange[0].Quantize(vector4.x);
-				data.y = boundedRange[1].Quantize(vector4.y);
-				data.z = boundedRange[2].Quantize(vector4.z);
-				data.w = boundedRange[3].Quantize(vector4.w);
+            data.x = boundedRange[0].Quantize(vector4.x);
+            data.y = boundedRange[1].Quantize(vector4.y);
+            data.z = boundedRange[2].Quantize(vector4.z);
+            data.w = boundedRange[3].Quantize(vector4.w);
 #else
             data.x = boundedRange[0].Quantize(vector4.X);
             data.y = boundedRange[1].Quantize(vector4.Y);

@@ -70,25 +70,25 @@ namespace SignalStreaming.Quantization
                 switch (i)
                 {
 #if ENABLE_MONO || ENABLE_IL2CPP
-						case 0:
-							element = quaternion.x;
+                    case 0:
+                        element = quaternion.x;
 
-							break;
+                        break;
 
-						case 1:
-							element = quaternion.y;
+                    case 1:
+                        element = quaternion.y;
 
-							break;
+                        break;
 
-						case 2:
-							element = quaternion.z;
+                    case 2:
+                        element = quaternion.z;
 
-							break;
+                        break;
 
-						case 3:
-							element = quaternion.w;
+                    case 3:
+                        element = quaternion.w;
 
-							break;
+                        break;
 #else
                     case 0:
                         element = quaternion.X;
@@ -127,32 +127,32 @@ namespace SignalStreaming.Quantization
             float cf = 0.0f;
 
 #if ENABLE_MONO || ENABLE_IL2CPP
-				switch (m) {
-					case 0:
-						af = quaternion.y;
-						bf = quaternion.z;
-						cf = quaternion.w;
+            switch (m) {
+                case 0:
+                    af = quaternion.y;
+                    bf = quaternion.z;
+                    cf = quaternion.w;
 
-						break;
-					case 1:
-						af = quaternion.x;
-						bf = quaternion.z;
-						cf = quaternion.w;
+                    break;
+                case 1:
+                    af = quaternion.x;
+                    bf = quaternion.z;
+                    cf = quaternion.w;
 
-						break;
-					case 2:
-						af = quaternion.x;
-						bf = quaternion.y;
-						cf = quaternion.w;
+                    break;
+                case 2:
+                    af = quaternion.x;
+                    bf = quaternion.y;
+                    cf = quaternion.w;
 
-						break;
-					default:
-						af = quaternion.x;
-						bf = quaternion.y;
-						cf = quaternion.z;
+                    break;
+                default:
+                    af = quaternion.x;
+                    bf = quaternion.y;
+                    cf = quaternion.z;
 
-						break;
-				}
+                    break;
+            }
 #else
             switch (m)
             {
