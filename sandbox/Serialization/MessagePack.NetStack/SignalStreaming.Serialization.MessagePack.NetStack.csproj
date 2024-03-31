@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="MessagePack" Version="2.5.140" />
-        <ProjectReference Include="..\..\..\src\ThirdParty\NetStack\Quantization\NetStack.Quantization.csproj" />
+        <ProjectReference Include="..\..\..\src\SignalStreaming.Quantization\SignalStreaming.Quantization.csproj" />
     </ItemGroup>
 
 </Project>

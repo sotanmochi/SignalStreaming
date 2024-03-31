@@ -45,10 +45,10 @@ namespace SignalStreaming.Serialization.MessagePack.NetStack
         {
             lookup = new global::System.Collections.Generic.Dictionary<global::System.Type, int>(4)
             {
-                { typeof(global::NetStack.Quantization.QuantizedVector2), 0 },
-                { typeof(global::NetStack.Quantization.QuantizedVector3), 1 },
-                { typeof(global::NetStack.Quantization.QuantizedVector4), 2 },
-                { typeof(global::NetStack.Quantization.QuantizedQuaternion), 3 },
+                { typeof(global::SignalStreaming.Quantization.QuantizedVector2), 0 },
+                { typeof(global::SignalStreaming.Quantization.QuantizedVector3), 1 },
+                { typeof(global::SignalStreaming.Quantization.QuantizedVector4), 2 },
+                { typeof(global::SignalStreaming.Quantization.QuantizedQuaternion), 3 },
             };
         }
 

@@ -29,7 +29,7 @@ using System.Runtime.CompilerServices;
 	using UnityEngine;
 #endif
 
-namespace NetStack.Quantization {
+namespace SignalStreaming.Quantization {
 	public struct QuantizedVector2 {
 		public uint x;
 		public uint y;
