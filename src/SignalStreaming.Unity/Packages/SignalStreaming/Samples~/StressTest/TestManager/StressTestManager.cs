@@ -311,7 +311,8 @@ namespace SignalStreaming.Samples.StressTest
 
                 if (senderClientId == _clientId) return;
 
-                var color = MessagePackSerializer.Deserialize<Color>(payload);
+                var quantizedHue = MessagePackSerializer.Deserialize<byte>(payload);
+                var color = Color.HSVToRGB(quantizedHue / 255f, 1f, 1f);
                 _playerMoveSystem.UpdateColor(senderClientId, color);
             }
             else if (messageId == (int)SignalType.PlayerObjectPosition)
