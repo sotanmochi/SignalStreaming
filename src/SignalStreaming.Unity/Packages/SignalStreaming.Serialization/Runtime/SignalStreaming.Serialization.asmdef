@@ -3,8 +3,8 @@
     "rootNamespace": "",
     "references": [
         "SignalStreaming",
+        "SignalStreaming.Quantization",
         "MessagePack",
-        "NetStack.Quantization",
         "NetStack.Serialization"
     ],
     "includePlatforms": [],
