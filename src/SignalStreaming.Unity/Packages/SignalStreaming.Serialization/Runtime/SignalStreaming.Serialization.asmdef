@@ -4,8 +4,7 @@
     "references": [
         "SignalStreaming",
         "SignalStreaming.Quantization",
-        "MessagePack",
-        "NetStack.Serialization"
+        "MessagePack"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

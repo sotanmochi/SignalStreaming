@@ -48,7 +48,7 @@ using System.Text;
 	using UnityEngine.Assertions;
 #endif
 
-namespace NetStack.Serialization {
+namespace SignalStreaming.Serialization {
 	public class BitBuffer {
 		private const int defaultCapacity = 375; // 375 * 4 = 1500 bytes
 		private const int stringLengthBits = 8;

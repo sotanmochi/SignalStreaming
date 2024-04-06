@@ -2,8 +2,8 @@ using System;
 using System.Runtime.InteropServices;
 using MessagePack;
 using MessagePack.Resolvers;
-using NetStack.Serialization;
 using SignalStreaming.Quantization;
+using SignalStreaming.Serialization;
 using SignalStreaming.Serialization.MessagePack.NetStack;
 using UnityEngine;
 
