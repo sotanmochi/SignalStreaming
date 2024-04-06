@@ -1,0 +1,6 @@
+{
+    "name": "jp.sotanmochi.signalstreaming.quantization",
+    "version": "0.2.0-dev",
+    "displayName": "SignalStreaming.Quantization",
+    "license": "MIT"
+}
