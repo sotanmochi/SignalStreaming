@@ -8,7 +8,7 @@ namespace SignalStreaming.Serialization
     {
         readonly MessagePackSerializerOptions _serializerOptions;
 
-        public SignalSerializer(MessagePackSerializerOptions serializerOptions)
+        public SignalSerializer(MessagePackSerializerOptions serializerOptions = null)
         {
             _serializerOptions = serializerOptions;
         }
