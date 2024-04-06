@@ -36,9 +36,22 @@ namespace SignalStreaming.Quantization
     {
         private readonly float minValue;
         private readonly float maxValue;
-        private readonly float precision;
-        private readonly int requiredBits;
-        private readonly uint mask;
+
+        private float precision;
+        private int requiredBits;
+        private uint mask;
+
+        public float Precision
+        {
+            get { return precision; }
+            set
+            {
+                if (value <= 0f) throw new ArgumentOutOfRangeException("Precision must be greater than zero.");
+                precision = value;
+                requiredBits = CalculateRequiredBits(minValue, maxValue, precision);
+                mask = (uint)((1L << requiredBits) - 1);
+            }
+        }
 
         public int RequiredBits => requiredBits;
 
@@ -48,8 +61,13 @@ namespace SignalStreaming.Quantization
             this.maxValue = maxValue;
             this.precision = precision;
 
-            requiredBits = Log2((uint)((maxValue - minValue) * (1.0f / precision) + 0.5f)) + 1;
+            requiredBits = CalculateRequiredBits(minValue, maxValue, precision);
             mask = (uint)((1L << requiredBits) - 1);
+        }
+
+        private int CalculateRequiredBits(float minValue, float maxValue, float precision)
+        {
+            return Log2((uint)((maxValue - minValue) * (1.0f / precision) + 0.5f)) + 1;
         }
 
         private int Log2(uint value)

@@ -23,6 +23,15 @@ namespace SignalStreaming.EngineBridge
         public bool IsAvailable { get; private set; }
         public byte MuscleCount => (byte)_quantizedHumanPose.Muscles.Size;
         public byte RequiredBitsPerMuscleElement => (byte)_muscleBound.RequiredBits;
+        public float MusclePrecision
+        {
+            get => _muscleBound.Precision;
+            set
+            {
+                _muscleBound.Precision = value;
+                _quantizedHumanPose.Muscles.RequiredBitsPerElement = (byte)_muscleBound.RequiredBits;
+            }
+        }
 
         public QuantizedHumanPoseHandler(Animator animator, BoundedRange[] worldBounds,
             float musclePrecision = 1f / 2048, MuscleType muscleType = MuscleType.All)
