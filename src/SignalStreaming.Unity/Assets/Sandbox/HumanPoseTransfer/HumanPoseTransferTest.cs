@@ -55,10 +55,10 @@ namespace SignalStreaming.Samples
             Profiler.BeginSample("HumanPoseTransferTest.Serialize");
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             _serializer.Serialize(bufferWriter, sourcePose);
-            var serializedData = bufferWriter.WrittenSpan.ToArray();
+            var serializedDataMemory = bufferWriter.WrittenMemory;
             Profiler.EndSample();
 
-            _serializedDataSizeText.text = $"Serialized Data Size: {serializedData.Length} [bytes]";
+            _serializedDataSizeText.text = $"Serialized Data Size: {serializedDataMemory.Length} [bytes]";
 
             Profiler.BeginSample("HumanPoseTransferTest.Deserialize");
             // --------------------
@@ -67,7 +67,7 @@ namespace SignalStreaming.Samples
             // _dstPoseHandler.SetHumanPose(deserializedData);
             // --------------------
             // Avoid GC allocation
-            _serializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, new ReadOnlySequence<byte>(serializedData));
+            _serializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, new ReadOnlySequence<byte>(serializedDataMemory));
             _dstPoseHandler.SetHumanPose(_deserializedData);
             // --------------------
             Profiler.EndSample();
