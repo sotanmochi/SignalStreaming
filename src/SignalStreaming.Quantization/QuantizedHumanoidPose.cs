@@ -6,9 +6,9 @@ namespace SignalStreaming.Quantization
         public QuantizedQuaternion BodyRotation { get; set; }
         public QuantizedVector Muscles { get; }
 
-        public QuantizedHumanPose(byte muscleCount, byte elementRequiredBits)
+        public QuantizedHumanPose(byte muscleCount, byte requiredBitsPerElement)
         {
-            Muscles = new QuantizedVector(muscleCount, elementRequiredBits);
+            Muscles = new QuantizedVector(muscleCount, requiredBitsPerElement);
         }
     }
 }
