@@ -6,7 +6,12 @@ namespace SignalStreaming.EngineBridge
 {
     public sealed class QuantizedHumanPoseHandler
     {
-        public const int MuscleCount = 95; // UnityEngine.HumanTrait.MuscleCount
+        public enum MuscleType
+        {
+            All,
+        }
+
+        public const int AllMuscleCount = 95; // UnityEngine.HumanTrait.MuscleCount
 
         readonly BoundedRange[] _worldBounds;
         readonly BoundedRange _muscleBound;
@@ -16,12 +21,21 @@ namespace SignalStreaming.EngineBridge
         HumanPoseHandler _humanPoseHandler;
 
         public bool IsAvailable { get; private set; }
+        public byte MuscleCount => (byte)_quantizedHumanPose.Muscles.Size;
+        public byte RequiredBitsPerMuscleElement => (byte)_muscleBound.RequiredBits;
 
-        public QuantizedHumanPoseHandler(Animator animator, BoundedRange[] worldBounds, float musclePrecision = 1f / 2048)
+        public QuantizedHumanPoseHandler(Animator animator, BoundedRange[] worldBounds,
+            float musclePrecision = 1f / 2048, MuscleType muscleType = MuscleType.All)
         {
+            var muscleCount = muscleType switch
+            {
+                MuscleType.All => AllMuscleCount,
+                _ => AllMuscleCount
+            };
+
             _worldBounds = worldBounds;
             _muscleBound = new(-1f, 1f, musclePrecision);
-            _quantizedHumanPose = new(MuscleCount);
+            _quantizedHumanPose = new((byte)muscleCount, (byte)_muscleBound.RequiredBits);
 
             if (animator != null)
             {
