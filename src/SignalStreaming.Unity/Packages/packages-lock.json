@@ -247,6 +247,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "jp.sotanmochi.signalstreaming.enginebridge": {
+      "version": "file:SignalStreaming.EngineBridge",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "jp.sotanmochi.signalstreaming.infrastructure": {
       "version": "file:SignalStreaming.Infrastructure",
       "depth": 0,
