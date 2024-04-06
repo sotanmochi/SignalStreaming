@@ -40,6 +40,8 @@ namespace SignalStreaming.Quantization
         private readonly int requiredBits;
         private readonly uint mask;
 
+        public int RequiredBits => requiredBits;
+
         public BoundedRange(float minValue, float maxValue, float precision)
         {
             this.minValue = minValue;
