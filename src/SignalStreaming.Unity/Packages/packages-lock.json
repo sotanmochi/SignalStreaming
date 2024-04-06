@@ -226,6 +226,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "jp.sotanmochi.signalstreaming.quantization": {
+      "version": "file:SignalStreaming.Quantization",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "jp.sotanmochi.signalstreaming.serialization": {
       "version": "file:SignalStreaming.Serialization",
       "depth": 0,
