@@ -67,13 +67,22 @@ namespace SignalStreaming.Quantization
 
     public sealed class QuantizedVector
     {
+        byte _requiredBitsPerElement;
+
         public uint[] Elements { get; }
 
-        public int Size => Elements.Length;
+        public byte Size => (byte)Elements.Length;
 
-        public QuantizedVector(int size)
+        public byte RequiredBitsPerElement
+        {
+            get => _requiredBitsPerElement;
+            set => _requiredBitsPerElement = System.Math.Clamp(value, (byte)1, (byte)32);
+        }
+
+        public QuantizedVector(byte size, byte requiredBitsPerElement)
         {
             Elements = new uint[size];
+            RequiredBitsPerElement = requiredBitsPerElement;
         }
     }
 }

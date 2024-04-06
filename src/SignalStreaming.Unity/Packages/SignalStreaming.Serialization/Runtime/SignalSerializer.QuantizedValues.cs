@@ -83,12 +83,14 @@ namespace SignalStreaming.Serialization
             }
 
             var span = writer.GetSpan();
-
             _bitBuffer.Clear();
-            _bitBuffer.AddInt(value.Size);
+
+            var requiredBitsPerElement = value.RequiredBitsPerElement;
+            _bitBuffer.AddByte(value.Size); // Optimized
+            _bitBuffer.AddByte(requiredBitsPerElement); // Optimized
             for (var i = 0; i < value.Size; i++)
             {
-                _bitBuffer.AddUInt(value.Elements[i]);
+                _bitBuffer.Add(requiredBitsPerElement, value.Elements[i]); // Optimized
             }
 
             var length = _bitBuffer.ToSpan(ref span);
@@ -105,12 +107,13 @@ namespace SignalStreaming.Serialization
 
             // TODO: Multisegments
 
-            var size = _bitBuffer.ReadInt();
-            var quantizedVector = new QuantizedVector(size); // Allocation
+            var size = _bitBuffer.ReadByte(); // Optimized
+            var requiredBitsPerElement = _bitBuffer.ReadByte(); // Optimized
+            var quantizedVector = new QuantizedVector(size, requiredBitsPerElement); // Allocation
 
             for (var i = 0; i < size; i++)
             {
-                quantizedVector.Elements[i] = _bitBuffer.ReadUInt();
+                quantizedVector.Elements[i] = _bitBuffer.Read(requiredBitsPerElement); // Optimized
             }
 
             return quantizedVector;
@@ -126,16 +129,17 @@ namespace SignalStreaming.Serialization
 
             // TODO: Multisegments
 
-            var size = _bitBuffer.ReadInt();
+            var size = _bitBuffer.ReadByte(); // Optimized
             if (size != output.Size)
             {
                 _bitBuffer.Clear();
                 throw new ArgumentException("Mismatched size");
             }
 
+            var requiredBitsPerElement = _bitBuffer.ReadByte(); // Optimized
             for (var i = 0; i < size; i++)
             {
-                output.Elements[i] = _bitBuffer.ReadUInt();
+                output.Elements[i] = _bitBuffer.Read(requiredBitsPerElement); // Optimized
             }
         }
 
@@ -155,10 +159,12 @@ namespace SignalStreaming.Serialization
                         .AddUInt(value.BodyRotation.c);
 
             // Muscles
-            _bitBuffer.AddInt(value.Muscles.Size);
+            var requiredBitsPerElement = value.Muscles.RequiredBitsPerElement;
+            _bitBuffer.AddByte(value.Muscles.Size); // Optimized
+            _bitBuffer.AddByte(requiredBitsPerElement); // Optimized
             for (var i = 0; i < value.Muscles.Size; i++)
             {
-                _bitBuffer.AddUInt(value.Muscles.Elements[i]);
+                _bitBuffer.Add(requiredBitsPerElement, value.Muscles.Elements[i]); // Optimized
             }
 
             var span = writer.GetSpan();
@@ -185,12 +191,13 @@ namespace SignalStreaming.Serialization
             var b = _bitBuffer.ReadUInt();
             var c = _bitBuffer.ReadUInt();
 
-            var muscleCount = _bitBuffer.ReadInt();
+            var muscleCount = _bitBuffer.ReadByte(); // Optimized
+            var requiredBitsPerElement = _bitBuffer.ReadByte(); // Optimized
 
-            var quantizedHumanPose = new QuantizedHumanPose(muscleCount); // Allocation
+            var quantizedHumanPose = new QuantizedHumanPose(muscleCount, requiredBitsPerElement); // Allocation
             for (var i = 0; i < muscleCount; i++)
             {
-                quantizedHumanPose.Muscles.Elements[i] = _bitBuffer.ReadUInt();
+                quantizedHumanPose.Muscles.Elements[i] = _bitBuffer.Read(requiredBitsPerElement); // Optimized
             }
             quantizedHumanPose.BodyPosition = new QuantizedVector3(x, y, z);
             quantizedHumanPose.BodyRotation = new QuantizedQuaternion(m, a, b, c);
@@ -222,16 +229,17 @@ namespace SignalStreaming.Serialization
             var b = _bitBuffer.ReadUInt();
             var c = _bitBuffer.ReadUInt();
 
-            var muscleCount = _bitBuffer.ReadInt();
+            var muscleCount = _bitBuffer.ReadByte(); // Optimized
             if (muscleCount != output.Muscles.Size)
             {
                 _bitBuffer.Clear();
                 throw new ArgumentException("Mismatched muscle count");
             }
 
+            var requiredBitsPerElement = _bitBuffer.ReadByte(); // Optimized
             for (var i = 0; i < muscleCount; i++)
             {
-                output.Muscles.Elements[i] = _bitBuffer.ReadUInt();
+                output.Muscles.Elements[i] = _bitBuffer.Read(requiredBitsPerElement); // Optimized
             }
             output.BodyPosition = new QuantizedVector3(x, y, z);
             output.BodyRotation = new QuantizedQuaternion(m, a, b, c);
