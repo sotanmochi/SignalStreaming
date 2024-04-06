@@ -185,15 +185,10 @@ namespace SignalStreaming.Serialization
             var b = _bitBuffer.ReadUInt();
             var c = _bitBuffer.ReadUInt();
 
-            var size = _bitBuffer.ReadInt();
-            if (size != QuantizedHumanPose.MuscleCount)
-            {
-                _bitBuffer.Clear();
-                throw new ArgumentException("Mismatched muscle count");
-            }
+            var muscleCount = _bitBuffer.ReadInt();
 
-            var quantizedHumanPose = new QuantizedHumanPose(); // Allocation
-            for (var i = 0; i < size; i++)
+            var quantizedHumanPose = new QuantizedHumanPose(muscleCount); // Allocation
+            for (var i = 0; i < muscleCount; i++)
             {
                 quantizedHumanPose.Muscles.Elements[i] = _bitBuffer.ReadUInt();
             }
@@ -227,14 +222,14 @@ namespace SignalStreaming.Serialization
             var b = _bitBuffer.ReadUInt();
             var c = _bitBuffer.ReadUInt();
 
-            var size = _bitBuffer.ReadInt();
-            if (size != output.Muscles.Size)
+            var muscleCount = _bitBuffer.ReadInt();
+            if (muscleCount != output.Muscles.Size)
             {
                 _bitBuffer.Clear();
                 throw new ArgumentException("Mismatched muscle count");
             }
 
-            for (var i = 0; i < size; i++)
+            for (var i = 0; i < muscleCount; i++)
             {
                 output.Muscles.Elements[i] = _bitBuffer.ReadUInt();
             }
