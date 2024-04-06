@@ -34,7 +34,7 @@ namespace SignalStreaming.EngineBridge
         }
 
         public QuantizedHumanPoseHandler(Animator animator, BoundedRange[] worldBounds,
-            float musclePrecision = 1f / 2048, MuscleType muscleType = MuscleType.All)
+            float musclePrecision = 0.001f, MuscleType muscleType = MuscleType.All)
         {
             var muscleCount = muscleType switch
             {
