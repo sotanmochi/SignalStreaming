@@ -255,6 +255,10 @@ MonoBehaviour:
   _connectionKey: SignalStreaming
   _groupId: 01HP8DMTNKAVNQDWCBMG9NWG8S
   _playerMoveSystem: {fileID: 123792486}
+  _selfOwnedCharacterPrefab: {fileID: 4110912333391040675, guid: 420ffb4898c188e40b5d55005d07fcc0,
+    type: 3}
+  _replicatedCharacterPrefab: {fileID: 2023304640119624909, guid: 9cb6b2a5a6cb2b846bc062132579a82b,
+    type: 3}
   _connectionButton: {fileID: 1021631673}
   _connectionButtonText: {fileID: 215997803}
   _transmissionButton: {fileID: 2076207388}
