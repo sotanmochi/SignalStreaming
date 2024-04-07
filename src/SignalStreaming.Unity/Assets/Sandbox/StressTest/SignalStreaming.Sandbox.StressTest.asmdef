@@ -1,5 +1,5 @@
 {
-    "name": "SignalStreaming.Samples.StressTest",
+    "name": "SignalStreaming.Sandbox.StressTest",
     "rootNamespace": "",
     "references": [
         "SignalStreaming",

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace SignalStreaming.Samples.StressTest
+namespace SignalStreaming.Sandbox.StressTest
 {
     public sealed class SimpleCameraController : MonoBehaviour
     {

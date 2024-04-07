@@ -2,7 +2,7 @@ using MessagePack;
 using MessagePack.Resolvers;
 using UnityEngine;
 
-namespace SignalStreaming.Samples.StressTest
+namespace SignalStreaming.Sandbox.StressTest
 {
     class SampleAppInitializer
     {

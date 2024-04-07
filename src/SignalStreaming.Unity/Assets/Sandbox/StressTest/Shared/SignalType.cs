@@ -1,4 +1,4 @@
-namespace SignalStreaming.Samples.StressTest
+namespace SignalStreaming.Sandbox.StressTest
 {
     public enum SignalType
     {

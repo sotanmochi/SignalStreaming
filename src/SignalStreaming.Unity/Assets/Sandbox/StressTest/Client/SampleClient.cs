@@ -1,21 +1,21 @@
-using System.Buffers;
-using System.Collections.Generic;
+using System;
 using System.Diagnostics;
-using System.Text;
+using System.Buffers;
 using System.Threading;
 using MessagePack;
 using NetStack.Quantization;
 using Newtonsoft.Json;
-using SignalStreaming;
+using SignalStreaming.Infrastructure.ENet;
 using SignalStreaming.Infrastructure.LiteNetLib;
 using SignalStreaming.Serialization;
 using UnityEngine;
-using UnityEngine.UI;
+using Button = UnityEngine.UI.Button;
+using Text = UnityEngine.UI.Text;
 using Debug = UnityEngine.Debug;
 
-namespace SignalStreaming.Samples.StressTest
+namespace SignalStreaming.Sandbox.StressTest
 {
-    public class StressTestManager : MonoBehaviour
+    public class SampleClient : MonoBehaviour
     {
         [SerializeField] string _serverAddress = "localhost";
         [SerializeField] ushort _port = 3333;
@@ -26,15 +26,9 @@ namespace SignalStreaming.Samples.StressTest
 
         [SerializeField] Button _connectionButton;
         [SerializeField] Text _connectionButtonText;
-        [SerializeField] Button _testStateSignalButton;
-        [SerializeField] Dropdown _testStateDropdown;
-        [SerializeField] Button _changeColorButton;
-        [SerializeField] Dropdown _changeColorDropdown;
+        [SerializeField] Button _transmissionButton;
+        [SerializeField] Text _transmissionButtonText;
         [SerializeField] Button _resetButton;
-
-        [SerializeField] Text _receivedMegaBytesText;
-        [SerializeField] Text _receivedMegaBytesPerSecondText;
-        [SerializeField] Text _receivedMegaBitsPerSecondText;
 
         [SerializeField] Text _receivedSignalCountText;
         [SerializeField] Text _signalsPerSecondText;
@@ -54,10 +48,6 @@ namespace SignalStreaming.Samples.StressTest
         uint _receivedSignalCount;
         uint _previousMeasuredSignalCount;
         float _receivedSignalsPerSecond;
-
-        long _receivedBytes;
-        long _previousMeasuredBytes;
-        float _receivedBytesPerSecond;
 
         uint _receivedSignalCount1;
         uint _previousMeasuredSignalCount1;
@@ -84,7 +74,13 @@ namespace SignalStreaming.Samples.StressTest
         LiteNetLibConnectParameters _connectParameters;
 
         PlayerMoveController _localPlayerMoveController;
+        ColorType _localPlayerColorType;
+        Color _localPlayerColor;
+        bool _colorUpdated;
+        float _playerColorHue;
+        byte _quantizedHue;
         uint _clientId;
+        bool _autoConnect;
 
         void Awake()
         {
@@ -96,60 +92,21 @@ namespace SignalStreaming.Samples.StressTest
 
             Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] ServerAddress: {appSettings.ServerAddress}, Port: {appSettings.Port}, ConnectionKey: {appSettings.ConnectionKey}, GroupId: {appSettings.GroupId}</color>");
 
+            _autoConnect = appSettings.AutoConnect;
             _serverAddress = appSettings.ServerAddress;
             _port = appSettings.Port;
             _connectionKey = appSettings.ConnectionKey;
             _groupId = appSettings.GroupId;
 
-            _testStateDropdown.ClearOptions();
-            _testStateDropdown.AddOptions(new List<string>
+            _connectParameters = new LiteNetLibConnectParameters()
             {
-                "All Signal Emitter Disabled",
-                "All Signal Emitter Enabled",
-            });
-            _testStateDropdown.value = 0;
-            _testStateDropdown.RefreshShownValue();
-
-            _testStateSignalButton.onClick.AddListener(() =>
-            {
-                var value = (StressTestState)_testStateDropdown.value;
-                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
-                _streamingClient.Send((int)SignalType.ChangeStressTestState, value, sendOptions);
-                Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] Sent stress test state signal: {value}</color>");
-            });
-
-            _changeColorDropdown.ClearOptions();
-            _changeColorDropdown.AddOptions(new List<string>
-            {
-                ColorType.Random.ToString(),
-                ColorType.Red.ToString(),
-                ColorType.Green.ToString(),
-                ColorType.Blue.ToString(),
-                ColorType.Cyan.ToString(),
-                ColorType.Magenta.ToString(),
-                ColorType.Yellow.ToString(),
-                ColorType.Rainbow.ToString()
-            });
-            _changeColorDropdown.value = 0;
-            _changeColorDropdown.RefreshShownValue();
-
-            _changeColorButton.onClick.AddListener(() =>
-            {
-                var value = (ColorType)_changeColorDropdown.value;
-                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
-                _streamingClient.Send((int)SignalType.ChangeColor, value, sendOptions);
-                Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] Sent color change signal: {value}</color>");
-            });
-
-            _connectParameters = new LiteNetLibConnectParameters
-            {
-                ConnectionRequestData = Encoding.UTF8.GetBytes(_connectionKey),
+                ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey),
                 ServerAddress = _serverAddress,
                 ServerPort = _port
             };
 
             _connectionButtonText.text = "Connect to server";
-            _connectionButton.onClick.AddListener(delegate
+            _connectionButton.onClick.AddListener(() =>
             {
                 if (_connectionCts != null)
                 {
@@ -166,24 +123,24 @@ namespace SignalStreaming.Samples.StressTest
                 }
             });
 
-            _resetButton.onClick.AddListener(delegate
+            _transmissionButtonText.text = "Start transmission";
+            _transmissionButton.onClick.AddListener(() =>
             {
-                _receivedSignalsPerSecond = 0;
-                _receivedBytes = 0;
-                _previousMeasuredBytes = 0;
-                _receivedBytesPerSecond = 0;
+                _transmissionEnabled = !_transmissionEnabled;
+                _transmissionButtonText.text = _transmissionEnabled ? "Stop transmission" : "Start transmission";
+            });
 
+            _resetButton.onClick.AddListener(() =>
+            {
                 _receivedSignalCount = 0;
                 _previousMeasuredSignalCount = 0;
-
+                _receivedSignalsPerSecond = 0;
                 _receivedSignalCount1 = 0;
                 _previousMeasuredSignalCount1 = 0;
                 _receivedSignalsPerSecond1 = 0;
-
                 _receivedSignalCount2 = 0;
                 _previousMeasuredSignalCount2 = 0;
                 _receivedSignalsPerSecond2 = 0;
-
                 _receivedSignalCount3 = 0;
                 _previousMeasuredSignalCount3 = 0;
                 _receivedSignalsPerSecond3 = 0;
@@ -207,12 +164,20 @@ namespace SignalStreaming.Samples.StressTest
             _transport.Dispose();
         }
 
+        void Start()
+        {
+            if (_autoConnect)
+            {
+                _connectionCts = new CancellationTokenSource();
+                ConnectAsync(_connectionCts.Token);
+                _connectionButtonText.text = "Cancel connection";
+            }
+        }
+
         void Update()
         {
             _transport.DequeueIncomingSignals();
 
-            // _receivedMegaBytesText.text = $"{_receivedBytes / 1000000f:F4} [MB]";
-            _receivedMegaBytesText.text = $"{_receivedBytes} [Bytes]";
             _receivedSignalCountText.text = $"{_receivedSignalCount}";
             _receivedSignalCountText1.text = $"{_receivedSignalCount1}";
             _receivedSignalCountText2.text = $"{_receivedSignalCount2}";
@@ -221,32 +186,68 @@ namespace SignalStreaming.Samples.StressTest
             var currentTimeMilliseconds = _stopwatch.ElapsedMilliseconds;
             if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
             {
-                float deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
-
-                _receivedBytesPerSecond = (_receivedBytes - _previousMeasuredBytes) / deltaTime;
+                var deltaTime = (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds) / 1000f;
                 _receivedSignalsPerSecond = (_receivedSignalCount - _previousMeasuredSignalCount) / deltaTime;
                 _receivedSignalsPerSecond1 = (_receivedSignalCount1 - _previousMeasuredSignalCount1) / deltaTime;
                 _receivedSignalsPerSecond2 = (_receivedSignalCount2 - _previousMeasuredSignalCount2) / deltaTime;
                 _receivedSignalsPerSecond3 = (_receivedSignalCount3 - _previousMeasuredSignalCount3) / deltaTime;
 
                 _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
-                _previousMeasuredBytes = _receivedBytes;
-
                 _previousMeasuredSignalCount = _receivedSignalCount;
                 _previousMeasuredSignalCount1 = _receivedSignalCount1;
                 _previousMeasuredSignalCount2 = _receivedSignalCount2;
                 _previousMeasuredSignalCount3 = _receivedSignalCount3;
 
-                // _receivedMegaBytesPerSecondText.text = $"{_receivedBytesPerSecond / 1000000f:F4} [MB/s]";
-                // _receivedMegaBitsPerSecondText.text = $"{_receivedBytesPerSecond * 8f / 1000000f:F4} [Mbps]";
-                _receivedMegaBytesPerSecondText.text = $"{_receivedBytesPerSecond} [Bytes/s]";
-                _receivedMegaBitsPerSecondText.text = $"{_receivedBytesPerSecond * 8f} [bits/s]";
                 _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
                 _signalsPerSecondText1.text = $"{_receivedSignalsPerSecond1:F2} [signals/sec]";
                 _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
                 _signalsPerSecondText3.text = $"{_receivedSignalsPerSecond3:F2} [signals/sec]";
             }
+
+            if (_transmissionEnabled && _localPlayerMoveController != null)
+            {
+                // var sendOptions = new SendOptions(StreamingType.All, reliable: true);
+                var sendOptions = new SendOptions(StreamingType.All, reliable: false);
+
+                var position = _localPlayerMoveController.transform.position;
+                var rotation = _localPlayerMoveController.transform.rotation;
+                // _streamingClient.Send((int)SignalType.PlayerObjectPosition, position, sendOptions);
+                // _streamingClient.Send((int)SignalType.PlayerObjectRotation, rotation, sendOptions);
+
+                var quantizedPosition = BoundedRange.Quantize(position, _worldBounds);
+                var quantizedRotation = SmallestThree.Quantize(rotation);
+                _streamingClient.Send((int)SignalType.PlayerObjectQuantizedPosition, quantizedPosition, sendOptions);
+                _streamingClient.Send((int)SignalType.PlayerObjectQuantizedRotation, quantizedRotation, sendOptions);
+            }
+
+            if (_localPlayerColorType == ColorType.Rainbow)
+            {
+                _playerColorHue += Time.deltaTime * 0.1f;
+                _playerColorHue %= 1f;
+                _quantizedHue = (byte)(_playerColorHue * 255f);
+                _localPlayerColor = Color.HSVToRGB(_playerColorHue, 1f, 1f);
+                _playerMoveSystem.UpdateColor(_clientId, _localPlayerColor);
+                _colorUpdated = true;
+            }
+
+            if (_transmissionEnabled && _colorUpdated)
+            {
+                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
+                _streamingClient.Send((int)SignalType.PlayerObjectColor, _quantizedHue, sendOptions);
+                _colorUpdated = false;
+            }
         }
+
+        Color GetColor(int colorType) => colorType switch
+        {
+            1 => Color.red,
+            2 => Color.green,
+            3 => Color.blue,
+            4 => Color.cyan,
+            5 => Color.magenta,
+            6 => Color.yellow,
+            _ => Color.white,
+        };
 
         async void ConnectAsync(CancellationToken cancellationToken)
         {
@@ -289,23 +290,72 @@ namespace SignalStreaming.Samples.StressTest
             }
         }
 
-        private void OnConnected(uint clientId)
+        void OnConnected(uint clientId)
         {
             Debug.Log($"[{nameof(SampleClient)}] Connected - ClientId: {clientId}");
             _clientId = clientId;
+            _playerMoveSystem.TryGetOrAdd(clientId, out _localPlayerMoveController);
+            _playerMoveSystem.EnableAutopilot(clientId, true);
+
+            _localPlayerColorType = ColorType.Random;
+
+            _localPlayerColor = GetColor(UnityEngine.Random.Range(1, 7));
+            _playerMoveSystem.UpdateColor(_clientId, _localPlayerColor);
+            _colorUpdated = true;
+
+            Debug.Log($"<color=cyan>[{nameof(SampleClient)}] Update color: {_localPlayerColor}, Type: {_localPlayerColorType}, Updated: {_colorUpdated}</color>");
         }
 
-        private void OnDisconnected(string reason)
+        void OnDisconnected(string reason)
         {
             Debug.Log($"[{nameof(SampleClient)}] Disconnected - Reason: {reason}");
+            _playerMoveSystem.UpdateColor(_clientId, Color.red);
         }
 
-        private void OnIncomingSignalDequeued(int messageId, ReadOnlySequence<byte> payload, uint senderClientId)
+        void OnIncomingSignalDequeued(int messageId, ReadOnlySequence<byte> payload, uint senderClientId)
         {
             _receivedSignalCount++;
-            _receivedBytes = _transport.BytesReceived;
+            if (messageId == (int)SignalType.ChangeStressTestState)
+            {
+                if (senderClientId == _clientId) return;
 
-            if (messageId == (int)SignalType.PlayerObjectColor)
+                var state = MessagePackSerializer.Deserialize<StressTestState>(in payload);
+                if (state == StressTestState.AllSignalEmittersDisabled)
+                {
+                    _transmissionEnabled = false;
+                    _transmissionButtonText.text = "Start transmission";
+                }
+                else if (state == StressTestState.AllSignalEmittersEnabled)
+                {
+                    _transmissionEnabled = true;
+                    _transmissionButtonText.text = "Stop transmission";
+                }
+            }
+            else if (messageId == (int)SignalType.ChangeColor)
+            {
+                if (senderClientId == _clientId) return;
+
+                _localPlayerColorType = MessagePackSerializer.Deserialize<ColorType>(in payload);
+                
+                if (_localPlayerColorType == ColorType.Random)
+                {
+                    _localPlayerColor = GetColor(UnityEngine.Random.Range(1, 7));
+                }
+                else if (_localPlayerColorType == ColorType.Rainbow)
+                {
+                    _playerColorHue = 0f;
+                    _localPlayerColor = Color.HSVToRGB(_playerColorHue, 1f, 1f);
+                }
+                else
+                {
+                    _localPlayerColor = GetColor((int)_localPlayerColorType);
+                }
+
+                _playerMoveSystem.UpdateColor(_clientId, _localPlayerColor);
+                _colorUpdated = true;
+                UnityEngine.Debug.Log(string.Format("<color=cyan>[{0}] Update color: {1}, Type: {2}, Updated: {3}</color>", "SampleClient", _localPlayerColor, _localPlayerColorType, _colorUpdated));
+            }
+            else if (messageId == (int)SignalType.PlayerObjectColor)
             {
                 _receivedSignalCount1++;
 
@@ -337,8 +387,6 @@ namespace SignalStreaming.Samples.StressTest
             {
                 _receivedSignalCount2++;
 
-                // Debug.Log($"PlayerObjectQuantizedRotation - Payload Length: {payload.Length}");
-
                 if (senderClientId == _clientId) return;
 
                 var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(payload);
@@ -349,8 +397,6 @@ namespace SignalStreaming.Samples.StressTest
             else if (messageId == (int)SignalType.PlayerObjectQuantizedRotation)
             {
                 _receivedSignalCount3++;
-
-                // Debug.Log($"PlayerObjectQuantizedRotation - Payload Length: {payload.Length}");
 
                 if (senderClientId == _clientId) return;
 
