@@ -29,11 +29,14 @@ namespace SignalStreaming.Sandbox.StressTest
         [SerializeField] Text _signalsPerSecondText2;
         [SerializeField] Text _receivedSignalCountText3;
         [SerializeField] Text _signalsPerSecondText3;
+        [SerializeField] Text _receivedSignalCountText4;
+        [SerializeField] Text _signalsPerSecondText4;
 
         [SerializeField] Text _outgoingSignalCountText;
         [SerializeField] Text _outgoingSignalCountText1;
         [SerializeField] Text _outgoingSignalCountText2;
         [SerializeField] Text _outgoingSignalCountText3;
+        [SerializeField] Text _outgoingSignalCountText4;
 
         readonly Stopwatch _stopwatch = new();
 
@@ -54,10 +57,15 @@ namespace SignalStreaming.Sandbox.StressTest
         uint _previousMeasuredSignalCount3;
         float _receivedSignalsPerSecond3;
 
+        uint _receivedSignalCount4;
+        uint _previousMeasuredSignalCount4;
+        float _receivedSignalsPerSecond4;
+
         uint _outgoingSignalCount;
         uint _outgoingSignalCount1;
         uint _outgoingSignalCount2;
         uint _outgoingSignalCount3;
+        uint _outgoingSignalCount4;
 
         ISignalSerializer _signalSerializer;
         // BoundedRange[] _worldBounds = new BoundedRange[]
@@ -93,10 +101,15 @@ namespace SignalStreaming.Sandbox.StressTest
                 _previousMeasuredSignalCount3 = 0;
                 _receivedSignalsPerSecond3 = 0;
 
+                _receivedSignalCount4 = 0;
+                _previousMeasuredSignalCount4 = 0;
+                _receivedSignalsPerSecond4 = 0;
+
                 _outgoingSignalCount = 0;
                 _outgoingSignalCount1 = 0;
                 _outgoingSignalCount2 = 0;
                 _outgoingSignalCount3 = 0;
+                _outgoingSignalCount4 = 0;
             });
 
             _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120, maxGroups: 1);
@@ -146,11 +159,13 @@ namespace SignalStreaming.Sandbox.StressTest
             _receivedSignalCountText1.text = $"{_receivedSignalCount1}";
             _receivedSignalCountText2.text = $"{_receivedSignalCount2}";
             _receivedSignalCountText3.text = $"{_receivedSignalCount3}";
+            _receivedSignalCountText4.text = $"{_receivedSignalCount4}";
 
             _outgoingSignalCountText.text = $"{_outgoingSignalCount}";
             _outgoingSignalCountText1.text = $"{_outgoingSignalCount1}";
             _outgoingSignalCountText2.text = $"{_outgoingSignalCount2}";
             _outgoingSignalCountText3.text = $"{_outgoingSignalCount3}";
+            _outgoingSignalCountText4.text = $"{_outgoingSignalCount4}";
 
             var currentTimeMilliseconds = _stopwatch.ElapsedMilliseconds;
             if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
@@ -161,17 +176,20 @@ namespace SignalStreaming.Sandbox.StressTest
                 _receivedSignalsPerSecond1 = (_receivedSignalCount1 - _previousMeasuredSignalCount1) / deltaTime;
                 _receivedSignalsPerSecond2 = (_receivedSignalCount2 - _previousMeasuredSignalCount2) / deltaTime;
                 _receivedSignalsPerSecond3 = (_receivedSignalCount3 - _previousMeasuredSignalCount3) / deltaTime;
+                _receivedSignalsPerSecond4 = (_receivedSignalCount4 - _previousMeasuredSignalCount4) / deltaTime;
     
                 _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
                 _previousMeasuredSignalCount = _receivedSignalCount;
                 _previousMeasuredSignalCount1 = _receivedSignalCount1;
                 _previousMeasuredSignalCount2 = _receivedSignalCount2;
                 _previousMeasuredSignalCount3 = _receivedSignalCount3;
+                _previousMeasuredSignalCount4 = _receivedSignalCount4;
     
                 _signalsPerSecondText.text = $"{_receivedSignalsPerSecond:F2} [signals/sec]";
                 _signalsPerSecondText1.text = $"{_receivedSignalsPerSecond1:F2} [signals/sec]";
                 _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
                 _signalsPerSecondText3.text = $"{_receivedSignalsPerSecond3:F2} [signals/sec]";
+                _signalsPerSecondText4.text = $"{_receivedSignalsPerSecond4:F2} [signals/sec]";
             }
 
             UnityEngine.Profiling.Profiler.EndSample();
@@ -256,21 +274,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
             _receivedSignalCount++;
 
-            if (messageId == 0)
-            {
-                var message = MessagePackSerializer.Deserialize<string>(payload);
-
-                if (sendOptions.StreamingType == StreamingType.All)
-                {
-                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
-                    {
-                        UnityEngine.Profiling.Profiler.EndSample();
-                        return;
-                    }
-                    _streamingHub.Broadcast(groupId, messageId, message, sendOptions.Reliable, senderClientId, 0);
-                }
-            }
-            else if (messageId == (int)SignalType.PlayerObjectColor)
+            if (messageId == (int)SignalType.PlayerObjectColor)
             {
                 _receivedSignalCount1++;
 
@@ -400,7 +404,10 @@ namespace SignalStreaming.Sandbox.StressTest
             }
             else if (messageId == (int)SignalType.QuantizedHumanPose)
             {
+                _receivedSignalCount4++;
+
                 var quantizedHumanPose = _signalSerializer.Deserialize<QuantizedHumanPose>(payload);
+
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
