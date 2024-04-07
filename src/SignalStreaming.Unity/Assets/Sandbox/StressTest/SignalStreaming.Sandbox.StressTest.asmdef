@@ -6,9 +6,8 @@
         "SignalStreaming.MessagePackGenerated",
         "SignalStreaming.Infrastructure.ENet",
         "SignalStreaming.Infrastructure.LiteNetLib",
+        "SignalStreaming.Quantization",
         "SignalStreaming.Serialization",
-        "NetStack.Quantization",
-        "NetStack.Serialization",
         "MessagePack",
         "Ulid"
     ],
