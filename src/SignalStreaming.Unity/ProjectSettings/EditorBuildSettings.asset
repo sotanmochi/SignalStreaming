@@ -6,12 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Samples/SignalStreaming/StressTest/Server/SampleServer.unity
+    path: Assets/Sandbox/StressTest/Server/SampleServer.unity
     guid: e14e2e0f8fcf9d94ca2ccf17c89dd35a
   - enabled: 1
-    path: Assets/Samples/SignalStreaming/StressTest/Client/SampleClient.unity
+    path: Assets/Sandbox/StressTest/Client/SampleClient.unity
     guid: 7e269ddd570e2b04ea42344b86707f7b
   - enabled: 0
-    path: Assets/Samples/SignalStreaming/StressTest/TestManager/StressTestManager.unity
+    path: Assets/Sandbox/StressTest/TestManager/StressTestManager.unity
     guid: 5a400fe945a24024a91776754e987f78
   m_configObjects: {}
