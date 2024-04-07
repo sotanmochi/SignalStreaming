@@ -23,6 +23,8 @@ namespace SignalStreaming.Sandbox.StressTest
         [SerializeField] string _groupId = "01HP8DMTNKAVNQDWCBMG9NWG8S";
 
         [SerializeField] PlayerMoveSystem _playerMoveSystem;
+        [SerializeField] Animator _selfOwnedCharacterPrefab;
+        [SerializeField] Animator _replicatedCharacterPrefab;
 
         [SerializeField] Button _connectionButton;
         [SerializeField] Text _connectionButtonText;
@@ -72,6 +74,9 @@ namespace SignalStreaming.Sandbox.StressTest
         ISignalStreamingClient _streamingClient;
         ISignalTransport _transport;
         LiteNetLibConnectParameters _connectParameters;
+
+        CharacterRepository _characterRepository;
+        CharacterPoseService _characterPoseService;
 
         PlayerMoveController _localPlayerMoveController;
         ColorType _localPlayerColorType;
@@ -152,6 +157,9 @@ namespace SignalStreaming.Sandbox.StressTest
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;
             _streamingClient.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
+
+            _characterRepository = new(_worldBounds, musclePrecision: 0.001f, _selfOwnedCharacterPrefab, _replicatedCharacterPrefab);
+            _characterPoseService = new(_characterRepository, _signalSerializer, _streamingClient);
         }
 
         void OnDestroy()
@@ -162,6 +170,8 @@ namespace SignalStreaming.Sandbox.StressTest
 
             _streamingClient.Dispose();
             _transport.Dispose();
+
+            _characterPoseService.Dispose();
         }
 
         void Start()
@@ -236,6 +246,11 @@ namespace SignalStreaming.Sandbox.StressTest
                 _streamingClient.Send((int)SignalType.PlayerObjectColor, _quantizedHue, sendOptions);
                 _colorUpdated = false;
             }
+        }
+
+        void LateUpdate()
+        {
+            _characterPoseService.LateTick();
         }
 
         Color GetColor(int colorType) => colorType switch

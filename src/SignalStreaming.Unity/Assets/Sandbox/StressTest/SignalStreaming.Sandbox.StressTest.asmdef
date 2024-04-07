@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "SignalStreaming",
+        "SignalStreaming.EngineBridge",
         "SignalStreaming.MessagePackGenerated",
         "SignalStreaming.Infrastructure.ENet",
         "SignalStreaming.Infrastructure.LiteNetLib",

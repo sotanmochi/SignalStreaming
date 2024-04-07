@@ -398,6 +398,19 @@ namespace SignalStreaming.Sandbox.StressTest
                     _streamingHub.Broadcast(groupId, messageId, colorType, sendOptions.Reliable, senderClientId, 0);
                 }
             }
+            else if (messageId == (int)SignalType.QuantizedHumanPose)
+            {
+                var quantizedHumanPose = _signalSerializer.Deserialize<QuantizedHumanPose>(payload);
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+                    _streamingHub.Broadcast(groupId, messageId, quantizedHumanPose, sendOptions.Reliable, senderClientId, 0);
+                }
+            }
 
             // ------------------------------------------------
             // TODO: Fix a bug or remove this code.
