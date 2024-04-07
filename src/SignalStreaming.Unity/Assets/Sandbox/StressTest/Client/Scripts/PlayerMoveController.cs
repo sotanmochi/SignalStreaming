@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace SignalStreaming.Samples.StressTest
+namespace SignalStreaming.Sandbox.StressTest
 {
     public class PlayerMoveController : MonoBehaviour
     {

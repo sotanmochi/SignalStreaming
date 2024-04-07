@@ -1,6 +1,6 @@
 using System;
 
-namespace SignalStreaming.Samples.StressTest
+namespace SignalStreaming.Sandbox.StressTest
 {
     [Serializable]
     public class AppSettings

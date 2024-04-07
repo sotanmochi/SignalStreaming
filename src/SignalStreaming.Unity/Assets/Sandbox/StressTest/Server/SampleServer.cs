@@ -11,7 +11,7 @@ using Button = UnityEngine.UI.Button;
 using Text = UnityEngine.UI.Text;
 using Debug = UnityEngine.Debug;
 
-namespace SignalStreaming.Samples.StressTest
+namespace SignalStreaming.Sandbox.StressTest
 {
     public class SampleServer : MonoBehaviour
     {
