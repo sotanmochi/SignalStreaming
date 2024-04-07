@@ -46,6 +46,8 @@ namespace SignalStreaming.Sandbox.StressTest
         [SerializeField] Text _signalsPerSecondText2;
         [SerializeField] Text _receivedSignalCountText3;
         [SerializeField] Text _signalsPerSecondText3;
+        [SerializeField] Text _receivedSignalCountText4;
+        [SerializeField] Text _signalsPerSecondText4;
 
         readonly Stopwatch _stopwatch = new();
 
@@ -73,6 +75,10 @@ namespace SignalStreaming.Sandbox.StressTest
         uint _previousMeasuredSignalCount3;
         float _receivedSignalsPerSecond3;
 
+        uint _receivedSignalCount4;
+        uint _previousMeasuredSignalCount4;
+        float _receivedSignalsPerSecond4;
+
         ISignalSerializer _signalSerializer;
         BoundedRange[] _worldBounds = new BoundedRange[]
         {
@@ -88,7 +94,6 @@ namespace SignalStreaming.Sandbox.StressTest
         CharacterRepository _characterRepository;
         CharacterPoseService _characterPoseService;
 
-        PlayerMoveController _localPlayerMoveController;
         uint _clientId;
 
         void Awake()
@@ -126,14 +131,14 @@ namespace SignalStreaming.Sandbox.StressTest
             _changeColorDropdown.ClearOptions();
             _changeColorDropdown.AddOptions(new List<string>
             {
+                ColorType.Rainbow.ToString(),
                 ColorType.Random.ToString(),
                 ColorType.Red.ToString(),
                 ColorType.Green.ToString(),
                 ColorType.Blue.ToString(),
                 ColorType.Cyan.ToString(),
                 ColorType.Magenta.ToString(),
-                ColorType.Yellow.ToString(),
-                ColorType.Rainbow.ToString()
+                ColorType.Yellow.ToString()
             });
             _changeColorDropdown.value = 0;
             _changeColorDropdown.RefreshShownValue();
@@ -192,6 +197,10 @@ namespace SignalStreaming.Sandbox.StressTest
                 _receivedSignalCount3 = 0;
                 _previousMeasuredSignalCount3 = 0;
                 _receivedSignalsPerSecond3 = 0;
+
+                _receivedSignalCount4 = 0;
+                _previousMeasuredSignalCount4 = 0;
+                _receivedSignalsPerSecond4 = 0;
             });
 
             _transport = new LiteNetLibTransport(targetFrameRate: 120);
@@ -203,6 +212,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
             _characterRepository = new(_worldBounds, musclePrecision: 0.001f, _selfOwnedCharacterPrefab, _replicatedCharacterPrefab);
             _characterPoseService = new(_characterRepository, _signalSerializer, _streamingClient);
+            _characterPoseService.SetEnableSelfOwnedCharacter(false);
         }
 
         void OnDestroy()
@@ -227,6 +237,7 @@ namespace SignalStreaming.Sandbox.StressTest
             _receivedSignalCountText1.text = $"{_receivedSignalCount1}";
             _receivedSignalCountText2.text = $"{_receivedSignalCount2}";
             _receivedSignalCountText3.text = $"{_receivedSignalCount3}";
+            _receivedSignalCountText4.text = $"{_receivedSignalCount4}";
 
             var currentTimeMilliseconds = _stopwatch.ElapsedMilliseconds;
             if (currentTimeMilliseconds - _previousMeasuredTimeMilliseconds > 1000)
@@ -238,6 +249,7 @@ namespace SignalStreaming.Sandbox.StressTest
                 _receivedSignalsPerSecond1 = (_receivedSignalCount1 - _previousMeasuredSignalCount1) / deltaTime;
                 _receivedSignalsPerSecond2 = (_receivedSignalCount2 - _previousMeasuredSignalCount2) / deltaTime;
                 _receivedSignalsPerSecond3 = (_receivedSignalCount3 - _previousMeasuredSignalCount3) / deltaTime;
+                _receivedSignalsPerSecond4 = (_receivedSignalCount4 - _previousMeasuredSignalCount4) / deltaTime;
 
                 _previousMeasuredTimeMilliseconds = currentTimeMilliseconds;
                 _previousMeasuredBytes = _receivedBytes;
@@ -246,6 +258,7 @@ namespace SignalStreaming.Sandbox.StressTest
                 _previousMeasuredSignalCount1 = _receivedSignalCount1;
                 _previousMeasuredSignalCount2 = _receivedSignalCount2;
                 _previousMeasuredSignalCount3 = _receivedSignalCount3;
+                _previousMeasuredSignalCount4 = _receivedSignalCount4;
 
                 // _receivedMegaBytesPerSecondText.text = $"{_receivedBytesPerSecond / 1000000f:F4} [MB/s]";
                 // _receivedMegaBitsPerSecondText.text = $"{_receivedBytesPerSecond * 8f / 1000000f:F4} [Mbps]";
@@ -255,6 +268,7 @@ namespace SignalStreaming.Sandbox.StressTest
                 _signalsPerSecondText1.text = $"{_receivedSignalsPerSecond1:F2} [signals/sec]";
                 _signalsPerSecondText2.text = $"{_receivedSignalsPerSecond2:F2} [signals/sec]";
                 _signalsPerSecondText3.text = $"{_receivedSignalsPerSecond3:F2} [signals/sec]";
+                _signalsPerSecondText4.text = $"{_receivedSignalsPerSecond4:F2} [signals/sec]";
             }
         }
 
@@ -315,7 +329,11 @@ namespace SignalStreaming.Sandbox.StressTest
             _receivedSignalCount++;
             _receivedBytes = _transport.BytesReceived;
 
-            if (messageId == (int)SignalType.PlayerObjectColor)
+            if (messageId == (int)SignalType.QuantizedHumanPose)
+            {
+                _receivedSignalCount4++;
+            }
+            else if (messageId == (int)SignalType.PlayerObjectColor)
             {
                 _receivedSignalCount1++;
 

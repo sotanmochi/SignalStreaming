@@ -6,6 +6,7 @@ namespace SignalStreaming.Sandbox.StressTest
     public class AppSettings
     {
         public bool AutoConnect { get; set; }
+        public bool UseCharacter { get; set; }
         public string ServerAddress { get; set; }
         public ushort Port { get; set; }
         public string ConnectionKey { get; set; }
@@ -14,6 +15,7 @@ namespace SignalStreaming.Sandbox.StressTest
         public AppSettings()
         {
             AutoConnect = false;
+            UseCharacter = false;
             ServerAddress = "localhost";
             Port = 54970;
             ConnectionKey = "SignalStreaming";

@@ -15,6 +15,9 @@ namespace SignalStreaming.Sandbox.StressTest
 
         readonly QuantizedHumanPose _deserializedData = new(QuantizedHumanPoseHandler.AllMuscleCount, 12);
 
+        bool _enableSelfOwnedCharacter = true;
+        bool _enableTransmission = true;
+
         public CharacterPoseService(
             CharacterRepository characterRepository,
             ISignalSerializer signalSerializer,
@@ -37,8 +40,10 @@ namespace SignalStreaming.Sandbox.StressTest
 
         public void LateTick()
         {
+            if (!_enableSelfOwnedCharacter) return;
+
             var pose = _characterRepository.GetSelfOwnedCharacterPose();
-            if (pose != null)
+            if (pose != null && _enableTransmission)
             {
                 Profiler.BeginSample("CharacterPoseService.Send");
                 _streamingClient.Send((int)SignalType.QuantizedHumanPose, pose, new SendOptions(StreamingType.All, reliable: false));
@@ -46,11 +51,24 @@ namespace SignalStreaming.Sandbox.StressTest
             }
         }
 
+        public void SetEnableTransmission(bool enable)
+        {
+            _enableTransmission = enable;
+        }
+
+        public void SetEnableSelfOwnedCharacter(bool enable)
+        {
+            _enableSelfOwnedCharacter = enable;
+        }
+
         void OnConnected(uint clientId)
         {
+            if (!_enableSelfOwnedCharacter) return;
+
             var posX = UnityEngine.Random.Range(-10f, 10f);            
             var posY = 0f;
             var posZ = UnityEngine.Random.Range(-10f, 10f);
+
             _characterRepository.TryAddSelfOwnedCharacter(clientId, new Vector3(posX, posY, posZ), Quaternion.identity, out var _);
         }
 
