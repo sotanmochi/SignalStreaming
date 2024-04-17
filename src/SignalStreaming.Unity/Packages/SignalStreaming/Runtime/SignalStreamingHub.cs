@@ -7,13 +7,16 @@ using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
 namespace SignalStreaming
 {
-    public sealed class SignalStreamingHub : ISignalStreamingHub
+    public delegate ClientConnectionResponse ConnectionRequestHandler(uint clientId, ClientConnectionRequest connectionRequest);
+    public delegate void OnIncomingSignalDequeuedEventHandler(int signalId, ReadOnlySequence<byte> bytes, SendOptions sendOptions, uint sourceClientId);
+
+    public sealed class SignalStreamingHub
     {
         ISignalTransportHub _transportHub;
         ISignalSerializer _signalSerializer;
 
-        public event ISignalStreamingHub.ConnectionRequestHandler OnClientConnectionRequested;
-        public event ISignalStreamingHub.OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
+        public event ConnectionRequestHandler OnClientConnectionRequested;
+        public event OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
         public event Action<uint> OnClientConnected;
         public event Action<uint> OnClientDisconnected;
         public event Action<uint, GroupJoinRequest> OnGroupJoinRequestReceived;
@@ -57,42 +60,26 @@ namespace SignalStreaming
 
         public void Send<T>(int signalId, T value, bool reliable, uint sourceClientId, uint destinationClientId)
         {
-            var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
-            var serializedMessage = Serialize(signalId, value, sourceClientId);
-            _transportHub.EnqueueOutgoingSignal(destinationClientId, serializedMessage, reliable);
+            var serializedSignal = SerializeSignal(signalId, value, sourceClientId);
+            _transportHub.EnqueueOutgoingSignal(destinationClientId, serializedSignal, reliable);
         }
 
-        public void Send(int signalId, ReadOnlyMemory<byte> rawMessagePackBlock, bool reliable, uint sourceClientId, uint destinationClientId)
+        public void SendRawBytes(int signalId, ReadOnlySequence<byte> bytes, bool reliable, uint sourceClientId, uint destinationClientId)
         {
-            throw new NotImplementedException();
-            // var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
-            // var serializedMessage = Serialize(signalId, rawMessagePackBlock, sourceClientId);
-            // _transportHub.EnqueueOutgoingSignal(destinationClientId, serializedMessage, reliable);
+            var serializedSignal = SerializeRawBytesSignal(signalId, bytes, sourceClientId);
+            _transportHub.EnqueueOutgoingSignal(destinationClientId, serializedSignal, reliable);
         }
 
-        public void Broadcast<T>(string groupId, int signalId, T value, bool reliable, uint sourceClientId, long originTimestamp)
+        public void Broadcast<T>(string groupId, int signalId, T value, bool reliable, uint sourceClientId)
         {
-            var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
-            var serializedMessage = Serialize(signalId, value, sourceClientId);
-            _transportHub.EnqueueOutgoingSignal(groupId, serializedMessage, reliable);
+            var serializedSignal = SerializeSignal(signalId, value, sourceClientId);
+            _transportHub.EnqueueOutgoingSignal(groupId, serializedSignal, reliable);
         }
 
-        public void Broadcast(string groupId, int signalId, ReadOnlyMemory<byte> rawMessagePackBlock, bool reliable, uint sourceClientId, long originTimestamp)
+        public void BroadcastRawBytes(string groupId, int signalId, ReadOnlySequence<byte> bytes, bool reliable, uint sourceClientId)
         {
-            throw new NotImplementedException();
-            // var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
-            // var serializedMessage = Serialize(signalId, rawMessagePackBlock, sourceClientId);
-            // _transportHub.EnqueueOutgoingSignal(groupId, serializedMessage, reliable);
-        }
-
-        public void Broadcast<T>(int messageId, uint senderClientId, long originTimestamp, T data, bool reliable, IReadOnlyList<uint> destinationClientIds)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Broadcast(int messageId, uint senderClientId, long originTimestamp, ReadOnlyMemory<byte> rawMessagePackBlock, bool reliable, IReadOnlyList<uint> destinationClientIds)
-        {
-            throw new NotImplementedException();
+            var serializedSignal = SerializeRawBytesSignal(signalId, bytes, sourceClientId);
+            _transportHub.EnqueueOutgoingSignal(groupId, serializedSignal, reliable);
         }
 
         void OnTransportConnected(uint clientId)
@@ -143,7 +130,7 @@ namespace SignalStreaming
                         message: "No connection request validation.");
 
                 var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
-                var responseMessage = Serialize((int)MessageType.ClientConnectionResponse, response, 0);
+                var responseMessage = SerializeSignal((int)MessageType.ClientConnectionResponse, response, 0);
 
                 _transportHub.Send(destinationClientId: sourceClientId, responseMessage, reliable: true);
 
@@ -172,38 +159,19 @@ namespace SignalStreaming
             }
         }
 
-        // TODO: Fix a bug or remove this method.
-        // byte[] Serialize(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, ReadOnlyMemory<byte> rawMessagePackBlock)
-        // {
-        //     using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
-        //     var writer = new MessagePackWriter(bufferWriter);
-        //     writer.WriteArrayHeader(6);
-        //     writer.Write(messageId);
-        //     writer.Write(senderClientId);
-        //     writer.Write(originTimestamp);
-        //     writer.Write(transmitTimestamp);
-        //     // writer.Write(0);
-        //     writer.WriteRaw(rawMessagePackBlock.Span); // NOTE
-        //     writer.Flush();
-        //     return bufferWriter.WrittenSpan.ToArray();
-        // }
+        byte[] SerializeRawBytesSignal(int signalId, ReadOnlySequence<byte> bytes, uint sourceClientId)
+        {
+            using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
+            var writer = new MessagePackWriter(bufferWriter);
+            writer.WriteArrayHeader(3);
+            writer.Write(signalId);
+            writer.Write(sourceClientId);
+            writer.WriteRaw(bytes);
+            writer.Flush();
+            return bufferWriter.WrittenSpan.ToArray();
+        }
 
-        // byte[] Serialize<T>(int messageId, uint senderClientId, long originTimestamp, long transmitTimestamp, T value)
-        // {
-        //     using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
-        //     var writer = new MessagePackWriter(bufferWriter);
-        //     writer.WriteArrayHeader(6);
-        //     writer.Write(messageId);
-        //     writer.Write(senderClientId);
-        //     writer.Write(originTimestamp);
-        //     writer.Write(transmitTimestamp);
-        //     // writer.Write(0);
-        //     writer.Flush();
-        //     _signalSerializer.Serialize(bufferWriter, value);
-        //     return bufferWriter.WrittenSpan.ToArray();
-        // }
-
-        byte[] Serialize<T>(int signalId, T value, uint sourceClientId)
+        byte[] SerializeSignal<T>(int signalId, T value, uint sourceClientId)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
@@ -215,12 +183,12 @@ namespace SignalStreaming
             return bufferWriter.WrittenSpan.ToArray();
         }
 
-        byte[] SerializeConnectionMessage<T>(int messageId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
+        byte[] SerializeConnectionMessage<T>(int signalId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
             writer.WriteArrayHeader(6);
-            writer.Write(messageId);
+            writer.Write(signalId);
             writer.Write(0); // NOTE: The sender client ID is set to 0, because this message is sent from the hub server.
             writer.Write(originTimestamp);
             writer.Write(transmitTimestamp);
