@@ -75,7 +75,7 @@ namespace SignalStreaming.Sandbox.StressTest
         //     new BoundedRange(-64f, 64f, 0.001f), // Z
         // };
 
-        ISignalStreamingHub _streamingHub;
+        SignalStreamingHub _streamingHub;
         ISignalTransportHub _transportHub;
 
         void Awake()
@@ -229,24 +229,33 @@ namespace SignalStreaming.Sandbox.StressTest
                 if (_streamingHub.TryAddClientToGroup(clientId, groupId))
                 {
                     Debug.Log($"<color=lime>[{nameof(SampleServer)}] AddClientToGroup - GroupId: {group.Id}, GroupName: {group.Name}, ClientId: {clientId}</color>");
-                    _streamingHub.Broadcast(groupId, (int)MessageType.GroupJoinResponse, 
-                        data: new GroupJoinResponse(requestApproved: true, group.Id, groupJoinRequest.ConnectionId),
-                        reliable: true, senderClientId: clientId, originTimestamp: 0);
+                    _streamingHub.Broadcast(
+                        groupId,
+                        signalId: (int)MessageType.GroupJoinResponse,
+                        value: new GroupJoinResponse(requestApproved: true, group.Id, groupJoinRequest.ConnectionId),
+                        reliable: true,
+                        sourceClientId: clientId);
                 }
                 else
                 {
-                    _streamingHub.Send(signalId: (int)MessageType.GroupJoinResponse, 
+                    _streamingHub.Send(
+                        signalId: (int)MessageType.GroupJoinResponse,
                         value: new GroupJoinResponse(requestApproved: false, group.Id, groupJoinRequest.ConnectionId),
-                        reliable: true, sourceClientId: 0, destinationClientId: clientId);
+                        reliable: true,
+                        sourceClientId: 0,
+                        destinationClientId: clientId);
                 }
             }
             else
             {
                 Debug.Log($"<color=orange>[{nameof(SampleServer)}] The group is not found. GroupId: {groupId}</color>");
 
-                _streamingHub.Send(signalId: (int)MessageType.GroupJoinResponse, 
+                _streamingHub.Send(
+                    signalId: (int)MessageType.GroupJoinResponse, 
                     value: new GroupJoinResponse(requestApproved: false, groupId, groupJoinRequest.ConnectionId),
-                    reliable: true, sourceClientId: 0, destinationClientId: clientId);
+                    reliable: true,
+                    sourceClientId: 0,
+                    destinationClientId: clientId);
             }
         }
 
@@ -261,14 +270,17 @@ namespace SignalStreaming.Sandbox.StressTest
                 if (_streamingHub.TryRemoveClientFromGroup(clientId, groupId))
                 {
                     Debug.Log($"<color=lime>[{nameof(SampleServer)}] RemoveClientFromGroup - GroupId: {group.Id}, GroupName: {group.Name}, ClientId: {clientId}</color>");
-                    _streamingHub.Broadcast(groupId, (int)MessageType.GroupLeaveResponse,
-                        data: new GroupLeaveResponse(requestApproved: true, group.Id, groupLeaveRequest.ConnectionId),
-                        reliable: true, senderClientId: clientId, originTimestamp: 0);
+                    _streamingHub.Broadcast(
+                        groupId,
+                        signalId: (int)MessageType.GroupLeaveResponse,
+                        value: new GroupLeaveResponse(requestApproved: true, group.Id, groupLeaveRequest.ConnectionId),
+                        reliable: true,
+                        sourceClientId: clientId);
                 }
             }
         }
 
-        void OnIncomingSignalDequeued(int messageId, ReadOnlySequence<byte> payload, SendOptions sendOptions, uint senderClientId)
+        void OnIncomingSignalDequeued(int messageId, ReadOnlySequence<byte> bytes, SendOptions sendOptions, uint senderClientId)
         {
             UnityEngine.Profiling.Profiler.BeginSample("SampleServer.OnIncomingSignalDequeued");
 
@@ -278,7 +290,7 @@ namespace SignalStreaming.Sandbox.StressTest
             {
                 _receivedSignalCount1++;
 
-                var quantizedHue = MessagePackSerializer.Deserialize<byte>(payload);
+                var quantizedHue = MessagePackSerializer.Deserialize<byte>(bytes);
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
@@ -289,16 +301,16 @@ namespace SignalStreaming.Sandbox.StressTest
 
                     _outgoingSignalCount++;
                     _outgoingSignalCount1++;
-                    _streamingHub.Broadcast(groupId, messageId, quantizedHue, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, quantizedHue, sendOptions.Reliable, senderClientId);
                 }
             }
             else if (messageId == (int)SignalType.PlayerObjectPosition)
             {
                 _receivedSignalCount2++;
 
-                // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectPosition - Payload: {payload.Length} [bytes]");
+                // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectPosition - RawBytes: {bytes.Length} [bytes]");
 
-                var position = MessagePackSerializer.Deserialize<Vector3>(payload);
+                var position = MessagePackSerializer.Deserialize<Vector3>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -310,16 +322,16 @@ namespace SignalStreaming.Sandbox.StressTest
 
                     _outgoingSignalCount++;
                     _outgoingSignalCount2++;
-                    _streamingHub.Broadcast(groupId, messageId, position, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, position, sendOptions.Reliable, senderClientId);
                 }
             }
             else if (messageId == (int)SignalType.PlayerObjectRotation)
             {
                 _receivedSignalCount3++;
 
-                // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectRotation - Payload: {payload.Length} [bytes]</color>");
+                // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectRotation - RawBytes: {bytes.Length} [bytes]</color>");
 
-                var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+                var rotation = MessagePackSerializer.Deserialize<Quaternion>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -331,16 +343,16 @@ namespace SignalStreaming.Sandbox.StressTest
 
                     _outgoingSignalCount++;
                     _outgoingSignalCount3++;
-                    _streamingHub.Broadcast(groupId, messageId, rotation, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, rotation, sendOptions.Reliable, senderClientId);
                 }
             }
             else if (messageId == (int)SignalType.PlayerObjectQuantizedPosition)
             {
                 _receivedSignalCount2++;
 
-                // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectQuantizedPosition - Payload: {payload.Length} [bytes]");
+                // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectQuantizedPosition - RawBytes: {bytes.Length} [bytes]");
 
-                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(payload);
+                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -352,16 +364,16 @@ namespace SignalStreaming.Sandbox.StressTest
 
                     _outgoingSignalCount++;
                     _outgoingSignalCount2++;
-                    _streamingHub.Broadcast(groupId, messageId, quantizedPosition, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, quantizedPosition, sendOptions.Reliable, senderClientId);
                 }
             }
             else if (messageId == (int)SignalType.PlayerObjectQuantizedRotation)
             {
                 _receivedSignalCount3++;
 
-                // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectQuantizedRotation - Payload: {payload.Length} [bytes]</color>");
+                // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectQuantizedRotation - RawBytes: {bytes.Length} [bytes]</color>");
 
-                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(payload);
+                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -373,12 +385,12 @@ namespace SignalStreaming.Sandbox.StressTest
 
                     _outgoingSignalCount++;
                     _outgoingSignalCount3++;
-                    _streamingHub.Broadcast(groupId, messageId, quantizedRotation, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, quantizedRotation, sendOptions.Reliable, senderClientId);
                 }
             }
             else if (messageId == (int)SignalType.ChangeStressTestState)
             {
-                var stressTestState = MessagePackSerializer.Deserialize<StressTestState>(payload);
+                var stressTestState = MessagePackSerializer.Deserialize<StressTestState>(bytes);
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
@@ -386,12 +398,12 @@ namespace SignalStreaming.Sandbox.StressTest
                         UnityEngine.Profiling.Profiler.EndSample();
                         return;
                     }
-                    _streamingHub.Broadcast(groupId, messageId, stressTestState, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, stressTestState, sendOptions.Reliable, senderClientId);
                 }
             }
             else if (messageId == (int)SignalType.ChangeColor)
             {
-                var colorType = MessagePackSerializer.Deserialize<ColorType>(payload);
+                var colorType = MessagePackSerializer.Deserialize<ColorType>(bytes);
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
@@ -399,14 +411,14 @@ namespace SignalStreaming.Sandbox.StressTest
                         UnityEngine.Profiling.Profiler.EndSample();
                         return;
                     }
-                    _streamingHub.Broadcast(groupId, messageId, colorType, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, colorType, sendOptions.Reliable, senderClientId);
                 }
             }
             else if (messageId == (int)SignalType.QuantizedHumanPose)
             {
                 _receivedSignalCount4++;
 
-                var quantizedHumanPose = _signalSerializer.Deserialize<QuantizedHumanPose>(payload);
+                var quantizedHumanPose = _signalSerializer.Deserialize<QuantizedHumanPose>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -415,22 +427,21 @@ namespace SignalStreaming.Sandbox.StressTest
                         UnityEngine.Profiling.Profiler.EndSample();
                         return;
                     }
-                    _streamingHub.Broadcast(groupId, messageId, quantizedHumanPose, sendOptions.Reliable, senderClientId, 0);
+                    _streamingHub.Broadcast(groupId, messageId, quantizedHumanPose, sendOptions.Reliable, senderClientId);
                 }
             }
-
-            // ------------------------------------------------
-            // TODO: Fix a bug or remove this code.
-            // if (sendOptions.StreamingType == StreamingType.All)
-            // {
-            //     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
-            //     {
-            //         UnityEngine.Profiling.Profiler.EndSample();
-            //         return;
-            //     }
-            //     _streamingHub.Broadcast(groupId, messageId, payload, sendOptions.Reliable, senderClientId, 0);
-            // }
-            // ------------------------------------------------
+            else
+            {
+                if (sendOptions.StreamingType == StreamingType.All)
+                {
+                    if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
+                    {
+                        UnityEngine.Profiling.Profiler.EndSample();
+                        return;
+                    }
+                    _streamingHub.BroadcastRawBytes(groupId, messageId, bytes, sendOptions.Reliable, senderClientId);
+                }
+            }
 
             UnityEngine.Profiling.Profiler.EndSample();
         }
