@@ -88,7 +88,7 @@ namespace SignalStreaming
             var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
             var connectionMessage = SerializeConnectionMessage(
                 messageId, originTimestamp: transmitTimestamp, transmitTimestamp, clientId, "ConnectedToHubServer");
-            _transportHub.Send(clientId, connectionMessage, reliable: true);
+            _transportHub.EnqueueOutgoingSignal(clientId, connectionMessage, reliable: true);
         }
 
         void OnTransportDisconnected(uint clientId)
@@ -132,7 +132,7 @@ namespace SignalStreaming
                 var transmitTimestamp = TimestampProvider.GetCurrentTimestamp();
                 var responseMessage = SerializeSignal((int)MessageType.ClientConnectionResponse, response, 0);
 
-                _transportHub.Send(destinationClientId: sourceClientId, responseMessage, reliable: true);
+                _transportHub.EnqueueOutgoingSignal(sourceClientId, responseMessage, reliable: true);
 
                 if (response.RequestApproved)
                 {
@@ -159,7 +159,7 @@ namespace SignalStreaming
             }
         }
 
-        byte[] SerializeRawBytesSignal(int signalId, ReadOnlySequence<byte> bytes, uint sourceClientId)
+        ReadOnlySpan<byte> SerializeRawBytesSignal(int signalId, ReadOnlySequence<byte> bytes, uint sourceClientId)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
@@ -168,10 +168,10 @@ namespace SignalStreaming
             writer.Write(sourceClientId);
             writer.WriteRaw(bytes);
             writer.Flush();
-            return bufferWriter.WrittenSpan.ToArray();
+            return bufferWriter.WrittenSpan;
         }
 
-        byte[] SerializeSignal<T>(int signalId, T value, uint sourceClientId)
+        ReadOnlySpan<byte> SerializeSignal<T>(int signalId, T value, uint sourceClientId)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
@@ -180,10 +180,10 @@ namespace SignalStreaming
             writer.Write(sourceClientId);
             writer.Flush();
             _signalSerializer.Serialize(bufferWriter, value);
-            return bufferWriter.WrittenSpan.ToArray();
+            return bufferWriter.WrittenSpan;
         }
 
-        byte[] SerializeConnectionMessage<T>(int signalId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
+        ReadOnlySpan<byte>  SerializeConnectionMessage<T>(int signalId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
@@ -195,7 +195,7 @@ namespace SignalStreaming
             writer.Write(connectingClientId);
             writer.Flush();
             _signalSerializer.Serialize(bufferWriter, value);
-            return bufferWriter.WrittenSpan.ToArray();
+            return bufferWriter.WrittenSpan;
         }
     }
 }
