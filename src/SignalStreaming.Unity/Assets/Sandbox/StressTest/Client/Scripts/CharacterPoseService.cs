@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using SignalStreaming.EngineBridge;
 using SignalStreaming.Quantization;
+using SignalStreaming.Serialization;
 using UnityEngine.Profiling;
 using UnityEngine;
 
@@ -84,7 +85,7 @@ namespace SignalStreaming.Sandbox.StressTest
                 Profiler.BeginSample("CharacterPoseService.Deserialize");
                 //-------------------------
                 // Avoid GC allocation
-                _signalSerializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, payload);
+                SignalSerializerV2.DeserializeTo<QuantizedHumanPose>(_deserializedData, payload);
                 _characterRepository.SetReplicatedCharacterPose(senderClientId, _deserializedData);
                 //-------------------------
                 Profiler.EndSample();
