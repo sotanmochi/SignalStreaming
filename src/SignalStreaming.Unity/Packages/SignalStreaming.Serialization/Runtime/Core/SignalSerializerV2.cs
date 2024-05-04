@@ -1,24 +1,15 @@
 using System.Buffers;
-using MessagePack;
-using SignalStreaming.Quantization;
 
 namespace SignalStreaming.Serialization
 {
     public static class SignalSerializerV2
     {
         static SignalSerializerOptions signalSerializerOptions;
-        static MessagePackSerializerOptions messagePackSerializerOptions;
 
         public static SignalSerializerOptions SignalSerializerOptions
         {
             get => signalSerializerOptions ??= SignalSerializerOptions.Default;
             set => signalSerializerOptions = value;
-        }
-
-        public static MessagePackSerializerOptions MessagePackSerializerOptions
-        {
-            get => messagePackSerializerOptions;
-            set => messagePackSerializerOptions = value;
         }
 
         public static void Serialize<T>(IBufferWriter<byte> writer, in T value)
@@ -30,7 +21,7 @@ namespace SignalStreaming.Serialization
             }
             else
             {
-                MessagePackSerializer.Serialize(writer, value, MessagePackSerializerOptions);
+                throw new System.ArgumentException($"Type {typeof(T)} is not supported");
             }
         }
 
@@ -43,7 +34,7 @@ namespace SignalStreaming.Serialization
             }
             else
             {
-                return MessagePackSerializer.Deserialize<T>(bytes, MessagePackSerializerOptions);
+                throw new System.ArgumentException($"Type {typeof(T)} is not supported");
             }
         }
 
