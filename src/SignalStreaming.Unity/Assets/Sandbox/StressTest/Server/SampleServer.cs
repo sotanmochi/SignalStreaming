@@ -352,7 +352,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectQuantizedPosition - RawBytes: {bytes.Length} [bytes]");
 
-                var quantizedPosition = _signalSerializer.Deserialize<QuantizedVector3>(bytes);
+                var quantizedPosition = SignalSerializerV2.Deserialize<QuantizedVector3>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -373,7 +373,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectQuantizedRotation - RawBytes: {bytes.Length} [bytes]</color>");
 
-                var quantizedRotation = _signalSerializer.Deserialize<QuantizedQuaternion>(bytes);
+                var quantizedRotation = SignalSerializerV2.Deserialize<QuantizedQuaternion>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -418,7 +418,7 @@ namespace SignalStreaming.Sandbox.StressTest
             {
                 _receivedSignalCount4++;
 
-                var quantizedHumanPose = _signalSerializer.Deserialize<QuantizedHumanPose>(bytes);
+                var quantizedHumanPose = SignalSerializerV2.Deserialize<QuantizedHumanPose>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
