@@ -10,7 +10,7 @@ namespace SignalStreaming
     public delegate ClientConnectionResponse ConnectionRequestHandler(uint clientId, ClientConnectionRequest connectionRequest);
     public delegate void OnIncomingSignalDequeuedEventHandler(int signalId, ReadOnlySequence<byte> bytes, SendOptions sendOptions, uint sourceClientId);
 
-    public sealed class SignalStreamingHub
+    public sealed class SignalStreamingHub : IDisposable
     {
         ISignalTransportHub _transportHub;
         ISignalSerializer _signalSerializer;
@@ -116,7 +116,7 @@ namespace SignalStreaming
             var payloadOffset = (int)reader.Consumed;
             var payloadLength = data.Length - (int)reader.Consumed;
             var payload = data.Slice(payloadOffset, payloadLength);
-            
+
             if (signalId == (int)MessageType.ClientConnectionRequest)
             {
                 var connectionRequest = MessagePackSerializer.Deserialize<ClientConnectionRequest>(payload);
@@ -183,7 +183,7 @@ namespace SignalStreaming
             return bufferWriter.WrittenSpan;
         }
 
-        ReadOnlySpan<byte>  SerializeConnectionMessage<T>(int signalId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
+        ReadOnlySpan<byte> SerializeConnectionMessage<T>(int signalId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
