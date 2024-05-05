@@ -1,3 +1,6 @@
+// The original source code is available on GitHub.
+// https://github.com/nxrighthere/NetStack/blob/master/Source/NetStack.Serialization/BitBuffer.cs
+
 /*
  *  Copyright (c) 2018 Stanislav Denisov, Maxim Munnig
  *
