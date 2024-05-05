@@ -1,4 +1,9 @@
 /*
+ *  The original source code is available on GitHub.
+ *  https://github.com/nxrighthere/NetStack/blob/master/Source/NetStack.Quantization/BoundedRange.cs
+ *
+ *  ---
+ *
  *  Copyright (c) 2024 Soichiro Sugimoto
  *  Copyright (c) 2018 Stanislav Denisov
  *

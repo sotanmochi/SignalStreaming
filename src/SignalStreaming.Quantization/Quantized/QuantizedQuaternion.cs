@@ -1,4 +1,9 @@
 /*
+ *  The original source code is available on GitHub.
+ *  https://github.com/nxrighthere/NetStack/blob/master/Source/NetStack.Quantization/SmallestThree.cs
+ *
+ *  ---
+ *
  *  Copyright (c) 2020 Stanislav Denisov, Maxim Munning, Davin Carten
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy

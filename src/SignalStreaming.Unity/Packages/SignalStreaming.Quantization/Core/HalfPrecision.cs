@@ -1,4 +1,9 @@
 ﻿/*
+ *  The original source code is available on GitHub.
+ *  https://github.com/nxrighthere/NetStack/blob/master/Source/NetStack.Quantization/HalfPrecision.cs
+ *
+ *  ---
+ *
  *  Copyright (c) 2018 Stanislav Denisov
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
