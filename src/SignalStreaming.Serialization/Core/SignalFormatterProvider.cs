@@ -15,7 +15,7 @@ namespace SignalStreaming.Serialization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static ISignalFormatter<T> GetFormatter<T>()
+        public static ISignalFormatter<T> GetFormatter<T>()
         {
             return Cache<T>.Formatter;
         }
