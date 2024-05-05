@@ -7,19 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MessagePack" Version="2.5.140" />
         <ProjectReference Include="..\SignalStreaming.Quantization\SignalStreaming.Quantization.csproj" />
     </ItemGroup>
 
     <!-- Copy files for Unity -->
-    <PropertyGroup>
-        <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming.Serialization\Runtime</DestinationRoot>
+    <!-- <PropertyGroup>
+        <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming.Serialization</DestinationRoot>
     </PropertyGroup>
     <ItemGroup>
         <TargetFiles Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*" />
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="@(TargetFiles)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />
-    </Target>
+    </Target> -->
 
 </Project>
