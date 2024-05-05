@@ -18,7 +18,7 @@
     </PropertyGroup>
 
     <!-- Copy files for Unity -->
-    <PropertyGroup>
+    <!-- <PropertyGroup>
         <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming.Infrastructure\Runtime\ENet</DestinationRoot>
     </PropertyGroup>
     <ItemGroup>
@@ -26,6 +26,6 @@
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="@(TargetFiles)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />
-    </Target>
+    </Target> -->
 
 </Project>
