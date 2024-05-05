@@ -19,7 +19,6 @@ namespace SignalStreaming.Samples
 
         QuantizedHumanPoseHandler _srcPoseHandler;
         QuantizedHumanPoseHandler _dstPoseHandler;
-        SignalSerializer _serializer = new SignalSerializer();
         QuantizedHumanPose _deserializedData;
 
         BoundedRange[] _worldBounds = new BoundedRange[]
@@ -54,7 +53,7 @@ namespace SignalStreaming.Samples
 
             Profiler.BeginSample("HumanPoseTransferTest.Serialize");
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
-            _serializer.Serialize(bufferWriter, sourcePose);
+            SignalSerializerV2.Serialize(bufferWriter, sourcePose);
             var serializedDataMemory = bufferWriter.WrittenMemory;
             Profiler.EndSample();
 
@@ -63,11 +62,11 @@ namespace SignalStreaming.Samples
             Profiler.BeginSample("HumanPoseTransferTest.Deserialize");
             // --------------------
             // GC allocation occurs
-            // var deserializedData = _serializer.Deserialize<QuantizedHumanPose>(new ReadOnlySequence<byte>(serializedData));
+            // var deserializedData = SignalSerializerV2.Deserialize<QuantizedHumanPose>(new ReadOnlySequence<byte>(serializedData));
             // _dstPoseHandler.SetHumanPose(deserializedData);
             // --------------------
             // Avoid GC allocation
-            _serializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, new ReadOnlySequence<byte>(serializedDataMemory));
+            SignalSerializerV2.DeserializeTo<QuantizedHumanPose>(_deserializedData, new ReadOnlySequence<byte>(serializedDataMemory));
             _dstPoseHandler.SetHumanPose(_deserializedData);
             // --------------------
             Profiler.EndSample();
