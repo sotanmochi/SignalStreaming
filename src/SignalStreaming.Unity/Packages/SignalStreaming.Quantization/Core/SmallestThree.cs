@@ -30,22 +30,6 @@ using System.Numerics;
 
 namespace SignalStreaming.Quantization
 {
-    public struct QuantizedQuaternion
-    {
-        public uint m;
-        public uint a;
-        public uint b;
-        public uint c;
-
-        public QuantizedQuaternion(uint m, uint a, uint b, uint c)
-        {
-            this.m = m;
-            this.a = a;
-            this.b = b;
-            this.c = c;
-        }
-    }
-
     public static class SmallestThree
     {
         private const float smallestThreeUnpack = 0.70710678118654752440084436210485f + 0.0000001f;
