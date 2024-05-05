@@ -69,7 +69,6 @@ namespace SignalStreaming.Sandbox.StressTest
         uint _previousMeasuredSignalCount4;
         float _receivedSignalsPerSecond4;
 
-        ISignalSerializer _signalSerializer;
         BoundedRange[] _worldBounds = new BoundedRange[]
         {
             new BoundedRange(-64f, 64f, 0.001f), // X
@@ -164,14 +163,13 @@ namespace SignalStreaming.Sandbox.StressTest
             });
 
             _transport = new LiteNetLibTransport(targetFrameRate: 120);
-            _signalSerializer = new SignalSerializer(MessagePackSerializer.DefaultOptions);
-            _streamingClient = new SignalStreamingClient(_transport, _signalSerializer);
+            _streamingClient = new SignalStreamingClient(_transport);
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;
             _streamingClient.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
 
             _characterRepository = new(_worldBounds, musclePrecision: 0.001f, _selfOwnedCharacterPrefab, _replicatedCharacterPrefab);
-            _characterPoseService = new(_characterRepository, _signalSerializer, _streamingClient);
+            _characterPoseService = new(_characterRepository, _streamingClient);
             _characterPoseService.SetEnableSelfOwnedCharacter(_useCharacter);
         }
 

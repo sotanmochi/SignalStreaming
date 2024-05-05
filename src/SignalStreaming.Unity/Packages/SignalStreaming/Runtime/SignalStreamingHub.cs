@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MessagePack;
+using SignalStreaming.Serialization;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
 namespace SignalStreaming
@@ -13,7 +14,6 @@ namespace SignalStreaming
     public sealed class SignalStreamingHub : IDisposable
     {
         ISignalTransportHub _transportHub;
-        ISignalSerializer _signalSerializer;
 
         public event ConnectionRequestHandler OnClientConnectionRequested;
         public event OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
@@ -22,9 +22,8 @@ namespace SignalStreaming
         public event Action<uint, GroupJoinRequest> OnGroupJoinRequestReceived;
         public event Action<uint, GroupLeaveRequest> OnGroupLeaveRequestReceived;
 
-        public SignalStreamingHub(ISignalTransportHub transportHub, ISignalSerializer signalSerializer)
+        public SignalStreamingHub(ISignalTransportHub transportHub)
         {
-            _signalSerializer = signalSerializer;
             _transportHub = transportHub;
             _transportHub.OnConnected += OnTransportConnected;
             _transportHub.OnDisconnected += OnTransportDisconnected;
@@ -37,7 +36,6 @@ namespace SignalStreaming
             _transportHub.OnDisconnected -= OnTransportDisconnected;
             _transportHub.OnIncomingSignalDequeued -= OnIncomingSignalDequeuedInternal;
             _transportHub = null;
-            _signalSerializer = null;
         }
 
         public bool TryGetGroupId(uint clientId, out string groupId)
@@ -179,7 +177,7 @@ namespace SignalStreaming
             writer.Write(signalId);
             writer.Write(sourceClientId);
             writer.Flush();
-            _signalSerializer.Serialize(bufferWriter, value);
+            SignalSerializerV2.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan;
         }
 
@@ -194,7 +192,7 @@ namespace SignalStreaming
             writer.Write(transmitTimestamp);
             writer.Write(connectingClientId);
             writer.Flush();
-            _signalSerializer.Serialize(bufferWriter, value);
+            SignalSerializerV2.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan;
         }
     }

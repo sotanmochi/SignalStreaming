@@ -11,7 +11,6 @@ namespace SignalStreaming.Sandbox.StressTest
     public sealed class CharacterPoseService : IDisposable
     {
         readonly CharacterRepository _characterRepository;
-        readonly ISignalSerializer _signalSerializer;
         readonly ISignalStreamingClient _streamingClient;
 
         readonly QuantizedHumanPose _deserializedData = new(QuantizedHumanPoseHandler.AllMuscleCount, 12);
@@ -21,11 +20,9 @@ namespace SignalStreaming.Sandbox.StressTest
 
         public CharacterPoseService(
             CharacterRepository characterRepository,
-            ISignalSerializer signalSerializer,
             ISignalStreamingClient streamingClient)
         {
             _characterRepository = characterRepository;
-            _signalSerializer = signalSerializer;
             _streamingClient = streamingClient;
             _streamingClient.OnConnected += OnConnected;
             _streamingClient.OnDisconnected += OnDisconnected;

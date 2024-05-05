@@ -8,9 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="MessagePack" Version="2.5.140" />
-        <ProjectReference Include="..\SignalStreaming\SignalStreaming.csproj" />
         <ProjectReference Include="..\SignalStreaming.Quantization\SignalStreaming.Quantization.csproj" />
-        <ProjectReference Include="..\ThirdParty\NetStack\Serialization\NetStack.Serialization.csproj" />
     </ItemGroup>
 
     <!-- Copy files for Unity -->

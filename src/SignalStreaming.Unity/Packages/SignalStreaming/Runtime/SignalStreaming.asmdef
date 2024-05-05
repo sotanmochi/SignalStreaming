@@ -3,7 +3,8 @@
     "rootNamespace": "SignalStreaming",
     "references": [
         "MessagePack",
-        "MessagePack.Annotations"
+        "MessagePack.Annotations",
+        "SignalStreaming.Serialization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
