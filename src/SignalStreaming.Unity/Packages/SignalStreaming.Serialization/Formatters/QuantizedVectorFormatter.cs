@@ -6,38 +6,22 @@ namespace SignalStreaming.Serialization.Formatters
 {
     public sealed class QuantizedVector3Formatter : ISignalFormatter<QuantizedVector3>
     {
-        public void Serialize(IBufferWriter<byte> writer, in QuantizedVector3 value, SignalSerializerOptions options)
+        public void Serialize(BitBuffer bitBuffer, in QuantizedVector3 value)
         {
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-
             bitBuffer.AddUInt(value.x);
             bitBuffer.AddUInt(value.y);
             bitBuffer.AddUInt(value.z);
-
-            var span = writer.GetSpan();
-            var length = bitBuffer.ToSpan(ref span);
-            writer.Advance(length);
         }
 
-        public QuantizedVector3 Deserialize(in ReadOnlySequence<byte> byteSequence, SignalSerializerOptions options)
+        public QuantizedVector3 Deserialize(BitBuffer bitBuffer)
         {
-            var reader = new SequenceReader<byte>(byteSequence);
-            var span = reader.CurrentSpan;
-
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-            bitBuffer.FromSpan(ref span, (int)byteSequence.Length);
-            // TODO: Multisegments
-
             var x = bitBuffer.ReadUInt();
             var y = bitBuffer.ReadUInt();
             var z = bitBuffer.ReadUInt();
-
             return new QuantizedVector3(x, y, z);
         }
 
-        public void DeserializeTo(ref QuantizedVector3 output, in ReadOnlySequence<byte> byteSequence, SignalSerializerOptions options)
+        public void DeserializeTo(ref QuantizedVector3 output, BitBuffer bitBuffer)
         {
             throw new NotImplementedException();
         }
@@ -45,11 +29,8 @@ namespace SignalStreaming.Serialization.Formatters
 
     public sealed class QuantizedVectorFormatter : ISignalFormatter<QuantizedVector>
     {
-        public void Serialize(IBufferWriter<byte> writer, in QuantizedVector value, SignalSerializerOptions options)
+        public void Serialize(BitBuffer bitBuffer, in QuantizedVector value)
         {
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-
             if (value.Size > bitBuffer.Length)
             {
                 throw new ArgumentException($"QuantizedVector size {value.Size} is greater than the buffer size {bitBuffer.Length}");
@@ -62,22 +43,10 @@ namespace SignalStreaming.Serialization.Formatters
             {
                 bitBuffer.Add(requiredBitsPerElement, value.Elements[i]); // Optimized
             }
-
-            var span = writer.GetSpan();
-            var length = bitBuffer.ToSpan(ref span);
-            writer.Advance(length);
         }
 
-        public QuantizedVector Deserialize(in ReadOnlySequence<byte> byteSequence, SignalSerializerOptions options)
+        public QuantizedVector Deserialize(BitBuffer bitBuffer)
         {
-            var reader = new SequenceReader<byte>(byteSequence);
-            var span = reader.CurrentSpan;
-
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-            bitBuffer.FromSpan(ref span, (int)byteSequence.Length);
-            // TODO: Multisegments
-
             var size = bitBuffer.ReadByte(); // Optimized
             var requiredBitsPerElement = bitBuffer.ReadByte(); // Optimized
 
@@ -91,16 +60,8 @@ namespace SignalStreaming.Serialization.Formatters
             return quantizedVector;
         }
 
-        public void DeserializeTo(ref QuantizedVector output, in ReadOnlySequence<byte> byteSequence, SignalSerializerOptions options)
+        public void DeserializeTo(ref QuantizedVector output, BitBuffer bitBuffer)
         {
-            var reader = new SequenceReader<byte>(byteSequence);
-            var span = reader.CurrentSpan;
-
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-            bitBuffer.FromSpan(ref span, (int)byteSequence.Length);
-            // TODO: Multisegments
-
             var size = bitBuffer.ReadByte(); // Optimized
             if (size != output.Size)
             {

@@ -4,8 +4,8 @@ namespace SignalStreaming.Serialization
 {
     public interface ISignalFormatter<T>
     {
-        void Serialize(IBufferWriter<byte> writer, in T value, SignalSerializerOptions options);
-        T Deserialize(in ReadOnlySequence<byte> bytes, SignalSerializerOptions options);
-        void DeserializeTo(ref T output, in ReadOnlySequence<byte> bytes, SignalSerializerOptions options);
+        void Serialize(BitBuffer buffer, in T value);
+        T Deserialize(BitBuffer buffer);
+        void DeserializeTo(ref T output, BitBuffer buffer);
     }
 }
