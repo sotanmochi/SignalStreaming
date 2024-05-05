@@ -4,12 +4,14 @@ namespace SignalStreaming.Serialization
 {
     public static class SignalSerializer
     {
-        static SignalSerializerOptions signalSerializerOptions;
+        public static readonly BitBuffer DefaultBitBuffer = new(256); // BufferSize = ChunkCount * 4 [bytes]
 
-        public static SignalSerializerOptions SignalSerializerOptions
+        static BitBuffer bitBuffer;
+
+        public static BitBuffer BitBuffer
         {
-            get => signalSerializerOptions ??= SignalSerializerOptions.Default;
-            set => signalSerializerOptions = value;
+            get => bitBuffer ??= DefaultBitBuffer;
+            set => bitBuffer = value;
         }
 
         public static void Serialize<T>(IBufferWriter<byte> writer, in T value)
@@ -17,7 +19,13 @@ namespace SignalStreaming.Serialization
             var formatter = SignalFormatterProvider.GetFormatter<T>();
             if (formatter != null)
             {
-                formatter.Serialize(writer, value, SignalSerializerOptions);
+                BitBuffer.Clear();
+
+                formatter.Serialize(BitBuffer, value);
+
+                var span = writer.GetSpan();
+                var length = BitBuffer.ToSpan(ref span);
+                writer.Advance(length);
             }
             else
             {
@@ -30,7 +38,10 @@ namespace SignalStreaming.Serialization
             var formatter = SignalFormatterProvider.GetFormatter<T>();
             if (formatter != null)
             {
-                return formatter.Deserialize(bytes, SignalSerializerOptions);
+                var reader = new SequenceReader<byte>(bytes);
+                var span = reader.CurrentSpan;
+                BitBuffer.FromSpan(ref span, (int)bytes.Length);
+                return formatter.Deserialize(BitBuffer);
             }
             else
             {
@@ -38,12 +49,15 @@ namespace SignalStreaming.Serialization
             }
         }
 
-        public static void DeserializeTo<T>(T to, in ReadOnlySequence<byte> bytes) where T : class
+        public static void DeserializeTo<T>(T output, in ReadOnlySequence<byte> bytes) where T : class
         {
             var formatter = SignalFormatterProvider.GetFormatter<T>();
             if (formatter != null)
             {
-                formatter.DeserializeTo(ref to, bytes, SignalSerializerOptions);
+                var reader = new SequenceReader<byte>(bytes);
+                var span = reader.CurrentSpan;
+                BitBuffer.FromSpan(ref span, (int)bytes.Length);
+                formatter.DeserializeTo(ref output, BitBuffer);
             }
             else
             {

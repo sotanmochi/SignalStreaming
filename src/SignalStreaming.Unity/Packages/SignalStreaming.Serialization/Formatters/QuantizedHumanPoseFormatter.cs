@@ -6,11 +6,8 @@ namespace SignalStreaming.Serialization.Formatters
 {
     public sealed class QuantizedHumanPoseFormatter : ISignalFormatter<QuantizedHumanPose>
     {
-        public void Serialize(IBufferWriter<byte> writer, in QuantizedHumanPose value, SignalSerializerOptions options)
+        public void Serialize(BitBuffer bitBuffer, in QuantizedHumanPose value)
         {
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-
             // BodyPosition
             bitBuffer.AddUInt(value.BodyPosition.x);
             bitBuffer.AddUInt(value.BodyPosition.y);
@@ -30,22 +27,10 @@ namespace SignalStreaming.Serialization.Formatters
             {
                 bitBuffer.Add(requiredBitsPerElement, value.Muscles.Elements[i]); // Optimized
             }
-
-            var span = writer.GetSpan();
-            var length = bitBuffer.ToSpan(ref span);
-            writer.Advance(length);
         }
 
-        public QuantizedHumanPose Deserialize(in ReadOnlySequence<byte> byteSequence, SignalSerializerOptions options)
+        public QuantizedHumanPose Deserialize(BitBuffer bitBuffer)
         {
-            var reader = new SequenceReader<byte>(byteSequence);
-            var span = reader.CurrentSpan;
-
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-            bitBuffer.FromSpan(ref span, (int)byteSequence.Length);
-            // TODO: Multisegments
-
             // BodyPosition
             var x = bitBuffer.ReadUInt();
             var y = bitBuffer.ReadUInt();
@@ -72,16 +57,8 @@ namespace SignalStreaming.Serialization.Formatters
             return quantizedHumanPose;
         }
 
-        public void DeserializeTo(ref QuantizedHumanPose output, in ReadOnlySequence<byte> byteSequence, SignalSerializerOptions options)
+        public void DeserializeTo(ref QuantizedHumanPose output, BitBuffer bitBuffer)
         {
-            var reader = new SequenceReader<byte>(byteSequence);
-            var span = reader.CurrentSpan;
-
-            var bitBuffer = options.BitBuffer;
-            bitBuffer.Clear();
-            bitBuffer.FromSpan(ref span, (int)byteSequence.Length);
-            // TODO: Multisegments
-
             // BodyPosition
             var x = bitBuffer.ReadUInt();
             var y = bitBuffer.ReadUInt();
