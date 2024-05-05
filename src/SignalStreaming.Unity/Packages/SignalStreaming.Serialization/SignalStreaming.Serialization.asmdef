@@ -2,7 +2,6 @@
     "name": "SignalStreaming.Serialization",
     "rootNamespace": "",
     "references": [
-        "MessagePack",
         "SignalStreaming.Quantization"
     ],
     "includePlatforms": [],
