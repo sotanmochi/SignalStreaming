@@ -2,7 +2,7 @@ using System.Buffers;
 
 namespace SignalStreaming.Serialization
 {
-    public static class SignalSerializerV2
+    public static class SignalSerializer
     {
         static SignalSerializerOptions signalSerializerOptions;
 

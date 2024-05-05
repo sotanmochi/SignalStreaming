@@ -177,7 +177,7 @@ namespace SignalStreaming
             writer.Write(signalId);
             writer.Write(sourceClientId);
             writer.Flush();
-            SignalSerializerV2.Serialize(bufferWriter, value);
+            SignalSerializer.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan;
         }
 
@@ -192,7 +192,7 @@ namespace SignalStreaming
             writer.Write(transmitTimestamp);
             writer.Write(connectingClientId);
             writer.Flush();
-            SignalSerializerV2.Serialize(bufferWriter, value);
+            SignalSerializer.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan;
         }
     }

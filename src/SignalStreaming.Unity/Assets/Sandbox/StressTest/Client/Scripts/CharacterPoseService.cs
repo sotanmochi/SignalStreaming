@@ -82,7 +82,7 @@ namespace SignalStreaming.Sandbox.StressTest
                 Profiler.BeginSample("CharacterPoseService.Deserialize");
                 //-------------------------
                 // Avoid GC allocation
-                SignalSerializerV2.DeserializeTo<QuantizedHumanPose>(_deserializedData, payload);
+                SignalSerializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, payload);
                 _characterRepository.SetReplicatedCharacterPose(senderClientId, _deserializedData);
                 //-------------------------
                 Profiler.EndSample();
