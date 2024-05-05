@@ -53,7 +53,7 @@ namespace SignalStreaming.Samples
 
             Profiler.BeginSample("HumanPoseTransferTest.Serialize");
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
-            SignalSerializerV2.Serialize(bufferWriter, sourcePose);
+            SignalSerializer.Serialize(bufferWriter, sourcePose);
             var serializedDataMemory = bufferWriter.WrittenMemory;
             Profiler.EndSample();
 
@@ -62,11 +62,11 @@ namespace SignalStreaming.Samples
             Profiler.BeginSample("HumanPoseTransferTest.Deserialize");
             // --------------------
             // GC allocation occurs
-            // var deserializedData = SignalSerializerV2.Deserialize<QuantizedHumanPose>(new ReadOnlySequence<byte>(serializedData));
+            // var deserializedData = SignalSerializer.Deserialize<QuantizedHumanPose>(new ReadOnlySequence<byte>(serializedData));
             // _dstPoseHandler.SetHumanPose(deserializedData);
             // --------------------
             // Avoid GC allocation
-            SignalSerializerV2.DeserializeTo<QuantizedHumanPose>(_deserializedData, new ReadOnlySequence<byte>(serializedDataMemory));
+            SignalSerializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, new ReadOnlySequence<byte>(serializedDataMemory));
             _dstPoseHandler.SetHumanPose(_deserializedData);
             // --------------------
             Profiler.EndSample();

@@ -290,7 +290,7 @@ namespace SignalStreaming
         //     writer.Write((byte)sendOptions.StreamingType);
         //     writer.Write(sendOptions.Reliable);
         //     writer.Flush();
-        //     SignalSerializerV2.Serialize(bufferWriter, value);
+        //     SignalSerializer.Serialize(bufferWriter, value);
         //     return bufferWriter.WrittenSpan.ToArray();
         // }
 
@@ -304,7 +304,7 @@ namespace SignalStreaming
             writer.Write((byte)sendOptions.StreamingType);
             writer.Write(sendOptions.Reliable);
             writer.Flush();
-            SignalSerializerV2.Serialize(bufferWriter, value);
+            SignalSerializer.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan.ToArray();
         }
     }
