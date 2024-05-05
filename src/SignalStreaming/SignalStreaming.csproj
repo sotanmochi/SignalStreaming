@@ -9,8 +9,12 @@
         <PackageReference Include="MessagePack" Version="2.5.140" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\SignalStreaming.Serialization\SignalStreaming.Serialization.csproj" />
+    </ItemGroup>
+
     <!-- Copy files for Unity -->
-    <PropertyGroup>
+    <!-- <PropertyGroup>
         <DestinationRoot>$(MSBuildProjectDirectory)\..\SignalStreaming.Unity\Packages\SignalStreaming\Runtime\</DestinationRoot>
     </PropertyGroup>
     <ItemGroup>
@@ -18,6 +22,6 @@
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Copy SourceFiles="@(TargetFiles)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />
-    </Target>
+    </Target> -->
 
 </Project>

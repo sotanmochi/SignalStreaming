@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MessagePack;
+using SignalStreaming.Serialization;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
 namespace SignalStreaming
@@ -10,10 +11,9 @@ namespace SignalStreaming
     public delegate ClientConnectionResponse ConnectionRequestHandler(uint clientId, ClientConnectionRequest connectionRequest);
     public delegate void OnIncomingSignalDequeuedEventHandler(int signalId, ReadOnlySequence<byte> bytes, SendOptions sendOptions, uint sourceClientId);
 
-    public sealed class SignalStreamingHub
+    public sealed class SignalStreamingHub : IDisposable
     {
         ISignalTransportHub _transportHub;
-        ISignalSerializer _signalSerializer;
 
         public event ConnectionRequestHandler OnClientConnectionRequested;
         public event OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
@@ -22,9 +22,8 @@ namespace SignalStreaming
         public event Action<uint, GroupJoinRequest> OnGroupJoinRequestReceived;
         public event Action<uint, GroupLeaveRequest> OnGroupLeaveRequestReceived;
 
-        public SignalStreamingHub(ISignalTransportHub transportHub, ISignalSerializer signalSerializer)
+        public SignalStreamingHub(ISignalTransportHub transportHub)
         {
-            _signalSerializer = signalSerializer;
             _transportHub = transportHub;
             _transportHub.OnConnected += OnTransportConnected;
             _transportHub.OnDisconnected += OnTransportDisconnected;
@@ -37,7 +36,6 @@ namespace SignalStreaming
             _transportHub.OnDisconnected -= OnTransportDisconnected;
             _transportHub.OnIncomingSignalDequeued -= OnIncomingSignalDequeuedInternal;
             _transportHub = null;
-            _signalSerializer = null;
         }
 
         public bool TryGetGroupId(uint clientId, out string groupId)
@@ -116,7 +114,7 @@ namespace SignalStreaming
             var payloadOffset = (int)reader.Consumed;
             var payloadLength = data.Length - (int)reader.Consumed;
             var payload = data.Slice(payloadOffset, payloadLength);
-            
+
             if (signalId == (int)MessageType.ClientConnectionRequest)
             {
                 var connectionRequest = MessagePackSerializer.Deserialize<ClientConnectionRequest>(payload);
@@ -179,11 +177,11 @@ namespace SignalStreaming
             writer.Write(signalId);
             writer.Write(sourceClientId);
             writer.Flush();
-            _signalSerializer.Serialize(bufferWriter, value);
+            SignalSerializerV2.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan;
         }
 
-        ReadOnlySpan<byte>  SerializeConnectionMessage<T>(int signalId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
+        ReadOnlySpan<byte> SerializeConnectionMessage<T>(int signalId, long originTimestamp, long transmitTimestamp, uint connectingClientId, T value)
         {
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
             var writer = new MessagePackWriter(bufferWriter);
@@ -194,7 +192,7 @@ namespace SignalStreaming
             writer.Write(transmitTimestamp);
             writer.Write(connectingClientId);
             writer.Flush();
-            _signalSerializer.Serialize(bufferWriter, value);
+            SignalSerializerV2.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan;
         }
     }

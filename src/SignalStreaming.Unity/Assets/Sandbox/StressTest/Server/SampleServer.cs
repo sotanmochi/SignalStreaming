@@ -67,7 +67,6 @@ namespace SignalStreaming.Sandbox.StressTest
         uint _outgoingSignalCount3;
         uint _outgoingSignalCount4;
 
-        ISignalSerializer _signalSerializer;
         // BoundedRange[] _worldBounds = new BoundedRange[]
         // {
         //     new BoundedRange(-64f, 64f, 0.001f), // X
@@ -113,8 +112,7 @@ namespace SignalStreaming.Sandbox.StressTest
             });
 
             _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120, maxGroups: 1);
-            _signalSerializer = new SignalSerializer(MessagePackSerializer.DefaultOptions);
-            _streamingHub = new SignalStreamingHub(_transportHub, _signalSerializer);
+            _streamingHub = new SignalStreamingHub(_transportHub);
 
             _streamingHub.OnClientConnectionRequested += OnClientConnectionRequested;
             _streamingHub.OnClientConnected += OnConnected;

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
 using MessagePack;
+using SignalStreaming.Serialization;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
 namespace SignalStreaming
@@ -11,7 +12,6 @@ namespace SignalStreaming
     {
         static readonly string DefaultDisconnectionReason = "Disconnected from server";
 
-        ISignalSerializer _signalSerializer;
         ISignalTransport _transport;
         string _connectionId = "";
 
@@ -36,9 +36,8 @@ namespace SignalStreaming
         public bool IsConnecting => _connecting;
         public bool IsConnected => _connected;
 
-        public SignalStreamingClient(ISignalTransport transport, ISignalSerializer signalSerializer)
+        public SignalStreamingClient(ISignalTransport transport)
         {
-            _signalSerializer = signalSerializer;
             _transport = transport;
             _transport.OnDisconnected += OnTransportDisconnected;
             _transport.OnIncomingSignalDequeued += OnTransportIncomingSignalDequeued;
@@ -50,7 +49,6 @@ namespace SignalStreaming
             _transport.OnDisconnected -= OnTransportDisconnected;
             _transport.OnIncomingSignalDequeued -= OnTransportIncomingSignalDequeued;
             _transport = null;
-            _signalSerializer = null;
         }
 
         public async Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters
@@ -292,7 +290,7 @@ namespace SignalStreaming
         //     writer.Write((byte)sendOptions.StreamingType);
         //     writer.Write(sendOptions.Reliable);
         //     writer.Flush();
-        //     _signalSerializer.Serialize(bufferWriter, value);
+        //     SignalSerializerV2.Serialize(bufferWriter, value);
         //     return bufferWriter.WrittenSpan.ToArray();
         // }
 
@@ -306,7 +304,7 @@ namespace SignalStreaming
             writer.Write((byte)sendOptions.StreamingType);
             writer.Write(sendOptions.Reliable);
             writer.Flush();
-            _signalSerializer.Serialize(bufferWriter, value);
+            SignalSerializerV2.Serialize(bufferWriter, value);
             return bufferWriter.WrittenSpan.ToArray();
         }
     }
