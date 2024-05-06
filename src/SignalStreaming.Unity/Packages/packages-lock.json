@@ -248,7 +248,7 @@
       "dependencies": {}
     },
     "jp.sotanmochi.signalstreaming.infrastructure": {
-      "version": "file:SignalStreaming.Infrastructure",
+      "version": "file:SignalStreaming.Transports",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}

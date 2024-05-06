@@ -9,8 +9,8 @@
 
     <ItemGroup>
         <PackageReference Include="ENet-CSharp" Version="2.4.8" />
-        <ProjectReference Include="..\SignalStreaming\SignalStreaming.csproj" />
-        <ProjectReference Include="..\SignalStreaming.Collections\SignalStreaming.Collections.csproj" />
+        <ProjectReference Include="..\..\SignalStreaming\SignalStreaming.csproj" />
+        <ProjectReference Include="..\..\SignalStreaming.Collections\SignalStreaming.Collections.csproj" />
     </ItemGroup>
 
     <PropertyGroup>

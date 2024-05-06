@@ -8,8 +8,8 @@
 
     <ItemGroup>
         <PackageReference Include="LiteNetLib" Version="1.2.0" />
-        <ProjectReference Include="..\SignalStreaming\SignalStreaming.csproj" />
-        <ProjectReference Include="..\SignalStreaming.Collections\SignalStreaming.Collections.csproj" />
+        <ProjectReference Include="..\..\SignalStreaming\SignalStreaming.csproj" />
+        <ProjectReference Include="..\..\SignalStreaming.Collections\SignalStreaming.Collections.csproj" />
     </ItemGroup>
 
     <!-- Copy files for Unity -->
