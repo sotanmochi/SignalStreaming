@@ -356,7 +356,7 @@ namespace SignalStreaming.Sandbox.StressTest
             {
                 if (senderClientId == _clientId) return;
 
-                var state = MessagePackSerializer.Deserialize<StressTestState>(in payload);
+                var state = SignalSerializer.Deserialize<StressTestState>(in payload);
                 if (state == StressTestState.AllSignalEmittersDisabled)
                 {
                     _transmissionEnabled = false;
@@ -374,7 +374,7 @@ namespace SignalStreaming.Sandbox.StressTest
             {
                 if (senderClientId == _clientId) return;
 
-                _localPlayerColorType = MessagePackSerializer.Deserialize<ColorType>(in payload);
+                _localPlayerColorType = SignalSerializer.Deserialize<ColorType>(in payload);
                 
                 if (_localPlayerColorType == ColorType.Random)
                 {
@@ -404,7 +404,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 if (senderClientId == _clientId) return;
 
-                var quantizedHue = MessagePackSerializer.Deserialize<byte>(payload);
+                var quantizedHue = SignalSerializer.Deserialize<byte>(payload);
                 var color = Color.HSVToRGB(quantizedHue / 255f, 1f, 1f);
                 _playerMoveSystem.UpdateColor(senderClientId, color);
             }
@@ -414,7 +414,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 if (senderClientId == _clientId) return;
 
-                var position = MessagePackSerializer.Deserialize<Vector3>(payload);
+                var position = SignalSerializer.Deserialize<Vector3>(payload);
                 _playerMoveSystem.UpdatePosition(senderClientId, position);
             }
             else if (messageId == (int)SignalType.PlayerObjectRotation)
@@ -423,7 +423,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 if (senderClientId == _clientId) return;
 
-                var rotation = MessagePackSerializer.Deserialize<Quaternion>(payload);
+                var rotation = SignalSerializer.Deserialize<Quaternion>(payload);
                 _playerMoveSystem.UpdateRotation(senderClientId, rotation);
             }
             else if (messageId == (int)SignalType.PlayerObjectQuantizedPosition)

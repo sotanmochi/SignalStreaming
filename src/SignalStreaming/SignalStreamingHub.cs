@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using MessagePack;
 using SignalStreaming.Serialization;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
@@ -117,7 +115,7 @@ namespace SignalStreaming
 
             if (signalId == (int)MessageType.ClientConnectionRequest)
             {
-                var connectionRequest = MessagePackSerializer.Deserialize<ClientConnectionRequest>(payload);
+                var connectionRequest = SignalSerializer.Deserialize<ClientConnectionRequest>(payload);
 
                 var response = OnClientConnectionRequested != null
                     ? OnClientConnectionRequested.Invoke(sourceClientId, connectionRequest)
@@ -143,12 +141,12 @@ namespace SignalStreaming
             }
             else if (signalId == (int)MessageType.GroupJoinRequest)
             {
-                var joinRequest = MessagePackSerializer.Deserialize<GroupJoinRequest>(payload);
+                var joinRequest = SignalSerializer.Deserialize<GroupJoinRequest>(payload);
                 OnGroupJoinRequestReceived?.Invoke(sourceClientId, joinRequest);
             }
             else if (signalId == (int)MessageType.GroupLeaveRequest)
             {
-                var leaveRequest = MessagePackSerializer.Deserialize<GroupLeaveRequest>(payload);
+                var leaveRequest = SignalSerializer.Deserialize<GroupLeaveRequest>(payload);
                 OnGroupLeaveRequestReceived?.Invoke(sourceClientId, leaveRequest);
             }
             else
