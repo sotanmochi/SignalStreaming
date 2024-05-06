@@ -21,7 +21,6 @@ namespace SignalStreaming.Sandbox.StressTest
             // Currently, CompositeResolver doesn't work on Unity IL2CPP build.
             // Use StaticCompositeResolver instead of it.
             StaticCompositeResolver.Instance.Register(
-                SignalStreamingGeneratedResolver.Instance,
                 BuiltinResolver.Instance,
                 PrimitiveObjectResolver.Instance,
                 StandardResolver.Instance
