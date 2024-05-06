@@ -219,7 +219,7 @@ namespace SignalStreaming
 
         void HandleConnectionResponse(ReadOnlySequence<byte> data)
         {
-            var response = MessagePackSerializer.Deserialize<ClientConnectionResponse>(data);
+            var response = SignalSerializer.Deserialize<ClientConnectionResponse>(data);
             DebugLogger.Log($"<color=cyan>[{nameof(SignalStreamingClient)}] Connection result: {response.Message}</color>");
 
             if (response.RequestApproved)
@@ -239,7 +239,7 @@ namespace SignalStreaming
 
         void HandleGroupJoinResponse(ReadOnlySequence<byte> data)
         {
-            var response = MessagePackSerializer.Deserialize<GroupJoinResponse>(data);
+            var response = SignalSerializer.Deserialize<GroupJoinResponse>(data);
 
             if (_joining)
             {
@@ -255,7 +255,7 @@ namespace SignalStreaming
 
         void HandleGroupLeaveResponse(ReadOnlySequence<byte> data)
         {
-            var response = MessagePackSerializer.Deserialize<GroupLeaveResponse>(data);
+            var response = SignalSerializer.Deserialize<GroupLeaveResponse>(data);
             if (response.RequestApproved)
             {
                 OnGroupLeaveResponseReceived?.Invoke(response);

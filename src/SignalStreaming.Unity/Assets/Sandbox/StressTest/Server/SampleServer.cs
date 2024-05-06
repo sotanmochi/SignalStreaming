@@ -288,7 +288,7 @@ namespace SignalStreaming.Sandbox.StressTest
             {
                 _receivedSignalCount1++;
 
-                var quantizedHue = MessagePackSerializer.Deserialize<byte>(bytes);
+                var quantizedHue = SignalSerializer.Deserialize<byte>(bytes);
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
@@ -308,7 +308,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 // Debug.Log($"[{nameof(SampleServer)}] PlayerObjectPosition - RawBytes: {bytes.Length} [bytes]");
 
-                var position = MessagePackSerializer.Deserialize<Vector3>(bytes);
+                var position = SignalSerializer.Deserialize<Vector3>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -329,7 +329,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 // Debug.Log($"<color=cyan>[{nameof(SampleServer)}] PlayerObjectRotation - RawBytes: {bytes.Length} [bytes]</color>");
 
-                var rotation = MessagePackSerializer.Deserialize<Quaternion>(bytes);
+                var rotation = SignalSerializer.Deserialize<Quaternion>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -388,7 +388,7 @@ namespace SignalStreaming.Sandbox.StressTest
             }
             else if (messageId == (int)SignalType.ChangeStressTestState)
             {
-                var stressTestState = MessagePackSerializer.Deserialize<StressTestState>(bytes);
+                var stressTestState = SignalSerializer.Deserialize<StressTestState>(bytes);
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
@@ -401,7 +401,7 @@ namespace SignalStreaming.Sandbox.StressTest
             }
             else if (messageId == (int)SignalType.ChangeColor)
             {
-                var colorType = MessagePackSerializer.Deserialize<ColorType>(bytes);
+                var colorType = SignalSerializer.Deserialize<ColorType>(bytes);
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
                     if (!_streamingHub.TryGetGroupId(senderClientId, out var groupId))
