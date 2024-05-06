@@ -19,7 +19,8 @@ namespace SignalStreaming.Samples
 
         QuantizedHumanPoseHandler _srcPoseHandler;
         QuantizedHumanPoseHandler _dstPoseHandler;
-        QuantizedHumanPose _deserializedData;
+        HumanoidActorPose _sourceData;
+        HumanoidActorPose _deserializedData;
 
         BoundedRange[] _worldBounds = new BoundedRange[]
         {
@@ -30,10 +31,22 @@ namespace SignalStreaming.Samples
 
         void Start()
         {
+            SignalFormatterProvider.Register(new HumanoidActorPoseFormatter());
+
             var musclePrecision = Mathf.Pow(10, _musclePrecisionSlider.value);
             _srcPoseHandler = new(_srcAnimator, _worldBounds, musclePrecision);
             _dstPoseHandler = new(_dstAnimator, _worldBounds, musclePrecision);
-            _deserializedData = new(_srcPoseHandler.MuscleCount, _srcPoseHandler.RequiredBitsPerMuscleElement);
+
+            _sourceData = new()
+            {
+                InstanceId = 0,
+                HumanPose = new QuantizedHumanPose(_srcPoseHandler.MuscleCount, _srcPoseHandler.RequiredBitsPerMuscleElement),
+            };
+            _deserializedData = new()
+            {
+                InstanceId = 0,
+                HumanPose = new QuantizedHumanPose(_srcPoseHandler.MuscleCount, _srcPoseHandler.RequiredBitsPerMuscleElement),
+            };
         }
 
         void Update()
@@ -43,31 +56,36 @@ namespace SignalStreaming.Samples
             _srcPoseHandler.MusclePrecision = musclePrecision;
             _dstPoseHandler.MusclePrecision = musclePrecision;
 
+            Profiler.BeginSample("HumanPoseTransferTest.SetText");
             _musclePrecisionText.text = $"Muscle Precision: {_srcPoseHandler.MusclePrecision}";
             _requiredBitsText.text = $"Required Bits Per Muscle: {_srcPoseHandler.RequiredBitsPerMuscleElement}";
+            Profiler.EndSample();
         }
 
         void LateUpdate()
         {
-            var sourcePose = _srcPoseHandler.GetHumanPose();
+            _sourceData.InstanceId = (uint)Random.Range(1, 1000);
+            _sourceData.HumanPose = _srcPoseHandler.GetHumanPose();
 
             Profiler.BeginSample("HumanPoseTransferTest.Serialize");
             using var bufferWriter = ArrayPoolBufferWriter.RentThreadStaticWriter();
-            SignalSerializer.Serialize(bufferWriter, sourcePose);
+            SignalSerializer.Serialize(bufferWriter, _sourceData);
             var serializedDataMemory = bufferWriter.WrittenMemory;
             Profiler.EndSample();
 
+            Profiler.BeginSample("HumanPoseTransferTest.SetText");
             _serializedDataSizeText.text = $"Serialized Data Size: {serializedDataMemory.Length} [bytes]";
+            Profiler.EndSample();
 
             Profiler.BeginSample("HumanPoseTransferTest.Deserialize");
             // --------------------
             // GC allocation occurs
-            // var deserializedData = SignalSerializer.Deserialize<QuantizedHumanPose>(new ReadOnlySequence<byte>(serializedData));
-            // _dstPoseHandler.SetHumanPose(deserializedData);
+            // var deserializedData = SignalSerializer.Deserialize<HumanoidActorPose>(new ReadOnlySequence<byte>(serializedDataMemory));
+            // _dstPoseHandler.SetHumanPose(deserializedData.HumanPose);
             // --------------------
             // Avoid GC allocation
-            SignalSerializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, new ReadOnlySequence<byte>(serializedDataMemory));
-            _dstPoseHandler.SetHumanPose(_deserializedData);
+            SignalSerializer.DeserializeTo<HumanoidActorPose>(_deserializedData, new ReadOnlySequence<byte>(serializedDataMemory));
+            _dstPoseHandler.SetHumanPose(_deserializedData.HumanPose);
             // --------------------
             Profiler.EndSample();
         }
