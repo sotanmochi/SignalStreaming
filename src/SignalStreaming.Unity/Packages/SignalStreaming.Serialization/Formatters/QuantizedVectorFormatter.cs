@@ -31,11 +31,6 @@ namespace SignalStreaming.Serialization.Formatters
     {
         public void Serialize(BitBuffer bitBuffer, in QuantizedVector value)
         {
-            if (value.Size > bitBuffer.Length)
-            {
-                throw new ArgumentException($"QuantizedVector size {value.Size} is greater than the buffer size {bitBuffer.Length}");
-            }
-
             var requiredBitsPerElement = value.RequiredBitsPerElement;
             bitBuffer.AddByte(value.Size); // Optimized
             bitBuffer.AddByte(requiredBitsPerElement); // Optimized
