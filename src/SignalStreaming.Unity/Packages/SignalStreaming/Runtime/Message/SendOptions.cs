@@ -1,13 +1,8 @@
-using MessagePack;
-
 namespace SignalStreaming
 {
-    [MessagePackObject]
     public struct SendOptions
     {
-        [Key(0)]
         public readonly StreamingType StreamingType;
-        [Key(1)]
         public readonly bool Reliable;
         
         public SendOptions(StreamingType streamingType, bool reliable)
