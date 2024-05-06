@@ -7,6 +7,7 @@ namespace SignalStreaming.Serialization
         static SignalFormatterProvider()
         {
             RegisterQuantizedDataFormatters();
+            RegisterWellKnownTypeFormatters();
         }
 
         public static void Register<T>(ISignalFormatter<T> formatter)
