@@ -60,12 +60,14 @@ namespace SignalStreaming.SerializationTest
             Console.WriteLine("");
 
             var deserializedQq = MessagePackSerializer.Deserialize<QuantizedQuaternion>(serializedQq, options);
-            var dequantizedQ = SmallestThree.Dequantize(deserializedQq).ToUnityQuaternion();
-            var angle = Angle(q, dequantizedQ);
+            System.Numerics.Quaternion dequantizedQ = default;
+            SmallestThree.DequantizeTo(ref dequantizedQ, deserializedQq);
+            var dequantizedUnityQuaternion = dequantizedQ.ToUnityQuaternion();
+            var angle = Angle(q, dequantizedUnityQuaternion);
 
             Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] q: ({q.x}, {q.y}, {q.z}, {q.w})");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] dequantizedQ: ({dequantizedQ.x}, {dequantizedQ.y}, {dequantizedQ.z}, {dequantizedQ.w})");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Dot(q, dequantizedQ): {Dot(q, dequantizedQ)}");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] dequantizedQ: ({dequantizedQ.X}, {dequantizedQ.Y}, {dequantizedQ.Z}, {dequantizedQ.W})");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Dot(q, dequantizedQ): {Dot(q, dequantizedUnityQuaternion)}");
             Console.WriteLine($"[{nameof(QuantizedQuaternionTest)}] Angle(q, dequantizedQ): {angle} [deg]");
             Console.WriteLine("----------------------------------------");
         }
@@ -113,12 +115,14 @@ namespace SignalStreaming.SerializationTest
             bitBuffer.FromSpan(ref bytesQqReadOnlySpan, serializedQqLength);
 
             var deserializedQq = new QuantizedQuaternion(bitBuffer.ReadUInt(), bitBuffer.ReadUInt(), bitBuffer.ReadUInt(), bitBuffer.ReadUInt());
-            var dequantizedQ = SmallestThree.Dequantize(deserializedQq).ToUnityQuaternion();
-            var angle = Angle(q, dequantizedQ);
+            System.Numerics.Quaternion dequantizedQ = default;
+            SmallestThree.DequantizeTo(ref dequantizedQ, deserializedQq);
+            var dequantizedUnityQuaternion = dequantizedQ.ToUnityQuaternion();
+            var angle = Angle(q, dequantizedUnityQuaternion);
 
             Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] q: ({q.x}, {q.y}, {q.z}, {q.w})");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] dequantizedQ: ({dequantizedQ.x}, {dequantizedQ.y}, {dequantizedQ.z}, {dequantizedQ.w})");
-            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Dot(q, dequantizedQ): {Dot(q, dequantizedQ)}");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] dequantizedQ: ({dequantizedQ.X}, {dequantizedQ.Y}, {dequantizedQ.Z}, {dequantizedQ.W})");
+            Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Dot(q, dequantizedQ): {Dot(q, dequantizedUnityQuaternion)}");
             Console.WriteLine($"[{nameof(QuantizedQuaternionTest2)}] Angle(q, dequantizedQ): {angle} [deg]");
             Console.WriteLine("----------------------------------------");
         }
@@ -157,8 +161,9 @@ namespace SignalStreaming.SerializationTest
             Console.WriteLine("");
 
             var deserializedQv = MessagePackSerializer.Deserialize<QuantizedVector3>(serializedQv, options);
-            var dequantizedQ = BoundedRange.Dequantize(deserializedQv, worldBounds);
-            var dequantizedPosition = dequantizedQ.ToUnityVector3();
+            System.Numerics.Vector3 dequantizedVector = default;
+            BoundedRange.DequantizeTo(ref dequantizedVector, deserializedQv, worldBounds);
+            var dequantizedPosition = dequantizedVector.ToUnityVector3();
 
             Console.WriteLine($"[{nameof(QuantizedPositionTest)}] position: ({position.x}, {position.y}, {position.z})");
             Console.WriteLine($"[{nameof(QuantizedPositionTest)}] dequantizedPosition: ({dequantizedPosition.x}, {dequantizedPosition.y}, {dequantizedPosition.z})");
@@ -227,8 +232,9 @@ namespace SignalStreaming.SerializationTest
             bitBuffer.FromSpan(ref bytesQvReadOnlySpan, serializedQvLength);
 
             var deserializedQv = new QuantizedVector3(bitBuffer.ReadUInt(), bitBuffer.ReadUInt(), bitBuffer.ReadUInt());
-            var dequantizedQ = BoundedRange.Dequantize(deserializedQv, worldBounds);
-            var dequantizedPosition = dequantizedQ.ToUnityVector3();
+            System.Numerics.Vector3 dequantizedVector = default;
+            BoundedRange.DequantizeTo(ref dequantizedVector, deserializedQv, worldBounds);
+            var dequantizedPosition = dequantizedVector.ToUnityVector3();
 
             Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] position: ({position.x}, {position.y}, {position.z})");
             Console.WriteLine($"[{nameof(QuantizedPositionTest2)}] dequantizedPosition: ({dequantizedPosition.x}, {dequantizedPosition.y}, {dequantizedPosition.z})");
