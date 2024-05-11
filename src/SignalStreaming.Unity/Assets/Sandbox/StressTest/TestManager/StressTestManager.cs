@@ -367,8 +367,9 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 if (senderClientId == _clientId) return;
 
+                var position = new Vector3();
                 var quantizedPosition = SignalSerializer.Deserialize<QuantizedVector3>(payload);
-                var position = BoundedRange.Dequantize(quantizedPosition, _worldBounds);
+                BoundedRange.DequantizeTo(ref position, quantizedPosition, _worldBounds);
                 
                 _playerMoveSystem.UpdatePosition(senderClientId, position);
             }
@@ -380,8 +381,9 @@ namespace SignalStreaming.Sandbox.StressTest
 
                 if (senderClientId == _clientId) return;
 
+                var rotation = new Quaternion();
                 var quantizedRotation = SignalSerializer.Deserialize<QuantizedQuaternion>(payload);
-                var rotation = SmallestThree.Dequantize(quantizedRotation);
+                SmallestThree.DequantizeTo(ref rotation, quantizedRotation);
                 
                 _playerMoveSystem.UpdateRotation(senderClientId, rotation);
             }
