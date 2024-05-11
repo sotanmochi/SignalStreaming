@@ -95,8 +95,8 @@ namespace SignalStreaming.EngineBridge
                 throw new System.ArgumentException("Mismatched joint count");
             }
 
-            output.bodyPosition = BoundedRange.Dequantize(quantizedHumanPose.BodyPosition, positionBoundedRange);
-            output.bodyRotation = SmallestThree.Dequantize(quantizedHumanPose.BodyRotation);
+            BoundedRange.DequantizeTo(ref output.bodyPosition, quantizedHumanPose.BodyPosition, positionBoundedRange);
+            SmallestThree.DequantizeTo(ref output.bodyRotation, quantizedHumanPose.BodyRotation);
             muscleBoundedRange.Dequantize(quantizedHumanPose.Muscles, output.muscles);
         }
     }

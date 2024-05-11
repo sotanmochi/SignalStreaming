@@ -26,14 +26,12 @@
  *  SOFTWARE.
  */
 
+#if ENABLE_MONO || ENABLE_IL2CPP
+#define UNITY_ENGINE
+#endif
+
 using System;
 using System.Runtime.CompilerServices;
-
-#if !(ENABLE_MONO || ENABLE_IL2CPP)
-using System.Numerics;
-#else
-using UnityEngine;
-#endif
 
 namespace SignalStreaming.Quantization
 {
@@ -126,73 +124,125 @@ namespace SignalStreaming.Quantization
             }
         }
 
-        public static QuantizedVector2 Quantize(Vector2 vector2, BoundedRange[] boundedRange)
+#if UNITY_ENGINE
+        public static QuantizedVector2 Quantize(UnityEngine.Vector2 vector2, BoundedRange[] boundedRange)
         {
             QuantizedVector2 data = default(QuantizedVector2);
 
-#if ENABLE_MONO || ENABLE_IL2CPP
             data.x = boundedRange[0].Quantize(vector2.x);
             data.y = boundedRange[1].Quantize(vector2.y);
-#else
+
+            return data;
+        }
+#endif
+
+        public static QuantizedVector2 Quantize(System.Numerics.Vector2 vector2, BoundedRange[] boundedRange)
+        {
+            QuantizedVector2 data = default(QuantizedVector2);
+
             data.x = boundedRange[0].Quantize(vector2.X);
             data.y = boundedRange[1].Quantize(vector2.Y);
-#endif
 
             return data;
         }
 
-        public static QuantizedVector3 Quantize(Vector3 vector3, BoundedRange[] boundedRange)
+#if UNITY_ENGINE
+        public static QuantizedVector3 Quantize(UnityEngine.Vector3 vector3, BoundedRange[] boundedRange)
         {
             QuantizedVector3 data = default(QuantizedVector3);
 
-#if ENABLE_MONO || ENABLE_IL2CPP
             data.x = boundedRange[0].Quantize(vector3.x);
             data.y = boundedRange[1].Quantize(vector3.y);
             data.z = boundedRange[2].Quantize(vector3.z);
-#else
+
+            return data;
+        }
+#endif
+
+        public static QuantizedVector3 Quantize(System.Numerics.Vector3 vector3, BoundedRange[] boundedRange)
+        {
+            QuantizedVector3 data = default(QuantizedVector3);
+
             data.x = boundedRange[0].Quantize(vector3.X);
             data.y = boundedRange[1].Quantize(vector3.Y);
             data.z = boundedRange[2].Quantize(vector3.Z);
-#endif
 
             return data;
         }
 
-        public static QuantizedVector4 Quantize(Vector4 vector4, BoundedRange[] boundedRange)
+#if UNITY_ENGINE
+        public static QuantizedVector4 Quantize(UnityEngine.Vector4 vector4, BoundedRange[] boundedRange)
         {
             QuantizedVector4 data = default(QuantizedVector4);
 
-#if ENABLE_MONO || ENABLE_IL2CPP
             data.x = boundedRange[0].Quantize(vector4.x);
             data.y = boundedRange[1].Quantize(vector4.y);
             data.z = boundedRange[2].Quantize(vector4.z);
             data.w = boundedRange[3].Quantize(vector4.w);
-#else
+
+            return data;
+        }
+#endif
+
+        public static QuantizedVector4 Quantize(System.Numerics.Vector4 vector4, BoundedRange[] boundedRange)
+        {
+            QuantizedVector4 data = default(QuantizedVector4);
+
             data.x = boundedRange[0].Quantize(vector4.X);
             data.y = boundedRange[1].Quantize(vector4.Y);
             data.z = boundedRange[2].Quantize(vector4.Z);
             data.w = boundedRange[3].Quantize(vector4.W);
-#endif
 
             return data;
         }
 
-        public static Vector2 Dequantize(QuantizedVector2 data, BoundedRange[] boundedRange)
+        public static void DequantizeTo(ref System.Numerics.Vector2 output, QuantizedVector2 data, BoundedRange[] boundedRange)
         {
-            return new Vector2(boundedRange[0].Dequantize(data.x), boundedRange[1].Dequantize(data.y));
+            output.X = boundedRange[0].Dequantize(data.x);
+            output.Y = boundedRange[1].Dequantize(data.y);
         }
 
-        public static Vector3 Dequantize(QuantizedVector3 data, BoundedRange[] boundedRange)
+#if UNITY_ENGINE
+        public static void DequantizeTo(ref UnityEngine.Vector2 output, QuantizedVector2 data, BoundedRange[] boundedRange)
         {
-            return new Vector3(boundedRange[0].Dequantize(data.x), boundedRange[1].Dequantize(data.y),
-                boundedRange[2].Dequantize(data.z));
+            output.x = boundedRange[0].Dequantize(data.x);
+            output.y = boundedRange[1].Dequantize(data.y);
+        }
+#endif
+
+        public static void DequantizeTo(ref System.Numerics.Vector3 output, QuantizedVector3 data, BoundedRange[] boundedRange)
+        {
+            output.X = boundedRange[0].Dequantize(data.x);
+            output.Y = boundedRange[1].Dequantize(data.y);
+            output.Z = boundedRange[2].Dequantize(data.z);
         }
 
-        public static Vector4 Dequantize(QuantizedVector4 data, BoundedRange[] boundedRange)
+#if UNITY_ENGINE
+        public static void DequantizeTo(ref UnityEngine.Vector3 output, QuantizedVector3 data, BoundedRange[] boundedRange)
         {
-            return new Vector4(boundedRange[0].Dequantize(data.x), boundedRange[1].Dequantize(data.y),
-                boundedRange[2].Dequantize(data.z), boundedRange[3].Dequantize(data.w));
+            output.x = boundedRange[0].Dequantize(data.x);
+            output.y = boundedRange[1].Dequantize(data.y);
+            output.z = boundedRange[2].Dequantize(data.z);
         }
+#endif
+
+        public static void DequantizeTo(ref System.Numerics.Vector4 output, QuantizedVector4 data, BoundedRange[] boundedRange)
+        {
+            output.X = boundedRange[0].Dequantize(data.x);
+            output.Y = boundedRange[1].Dequantize(data.y);
+            output.Z = boundedRange[2].Dequantize(data.z);
+            output.W = boundedRange[3].Dequantize(data.w);
+        }
+
+#if UNITY_ENGINE
+        public static void DequantizeTo(ref UnityEngine.Vector4 output, QuantizedVector4 data, BoundedRange[] boundedRange)
+        {
+            output.x = boundedRange[0].Dequantize(data.x);
+            output.y = boundedRange[1].Dequantize(data.y);
+            output.z = boundedRange[2].Dequantize(data.z);
+            output.w = boundedRange[3].Dequantize(data.w);
+        }
+#endif
     }
 
     public static class DeBruijn
