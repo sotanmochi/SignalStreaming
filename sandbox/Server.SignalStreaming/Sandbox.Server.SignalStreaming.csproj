@@ -11,8 +11,14 @@
     <IntermediateOutputPath>.\build~\obj</IntermediateOutputPath>
   </PropertyGroup>
 
- <ItemGroup>
-   <ProjectReference Include="..\EngineLooper\EngineLooper.csproj" />
- </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Ulid" Version="1.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EngineLooper\EngineLooper.csproj" />
+    <ProjectReference Include="..\..\src\SignalStreaming\SignalStreaming.csproj" />
+    <ProjectReference Include="..\..\src\SignalStreaming.Transports\LiteNetLib\SignalStreaming.Infrastructure.LiteNetLib.csproj" />
+  </ItemGroup>
 
 </Project>

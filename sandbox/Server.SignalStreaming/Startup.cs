@@ -28,7 +28,8 @@ public class Startup
 
         services.Configure<SignalStreamingOptions>(options =>
         {
-            options.Port = 50030;
+            // options.Port = 50030;
+            options.Port = 54970;
         })
         .AddSingleton<SignalStreamingEngine>();
     }
