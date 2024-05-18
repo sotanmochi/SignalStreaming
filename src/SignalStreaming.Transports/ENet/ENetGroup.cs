@@ -1,7 +1,7 @@
 using System;
 using ENet;
 
-namespace SignalStreaming.Infrastructure.ENet
+namespace SignalStreaming.Transports.ENet
 {
     public sealed class ENetGroup : IGroup
     {

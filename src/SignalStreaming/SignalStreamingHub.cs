@@ -2,6 +2,7 @@
 using System.Buffers;
 using MessagePack;
 using SignalStreaming.Serialization;
+using SignalStreaming.Transports;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
 namespace SignalStreaming

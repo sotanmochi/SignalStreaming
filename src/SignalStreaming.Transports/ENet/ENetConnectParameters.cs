@@ -1,4 +1,4 @@
-namespace SignalStreaming.Infrastructure.ENet
+namespace SignalStreaming.Transports.ENet
 {
     public sealed class ENetConnectParameters : IConnectParameters
     {

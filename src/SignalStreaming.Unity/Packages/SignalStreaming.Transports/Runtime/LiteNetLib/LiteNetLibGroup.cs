@@ -1,7 +1,7 @@
 using System;
 using LiteNetLib;
 
-namespace SignalStreaming.Infrastructure.LiteNetLib
+namespace SignalStreaming.Transports.LiteNetLib
 {
     public sealed class LiteNetLibGroup : IGroup
     {

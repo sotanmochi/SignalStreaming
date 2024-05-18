@@ -1,4 +1,4 @@
-namespace SignalStreaming.Infrastructure.LiteNetLib
+namespace SignalStreaming.Transports.LiteNetLib
 {
     public sealed class LiteNetLibConnectParameters : IConnectParameters
     {

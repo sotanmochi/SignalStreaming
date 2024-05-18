@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using SignalStreaming.Collections;
-using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
+using DebugLogger = SignalStreaming.Transports.LiteNetLib.DevelopmentOnlyLogger;
 
-namespace SignalStreaming.Infrastructure.LiteNetLib
+namespace SignalStreaming.Transports.LiteNetLib
 {
     /// <summary>
     /// Client implementation using LiteNetLib

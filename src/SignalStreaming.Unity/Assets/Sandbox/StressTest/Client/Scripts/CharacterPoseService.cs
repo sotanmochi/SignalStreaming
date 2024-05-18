@@ -3,6 +3,7 @@ using System.Buffers;
 using SignalStreaming.EngineBridge;
 using SignalStreaming.Quantization;
 using SignalStreaming.Serialization;
+using SignalStreaming.Transports;
 using UnityEngine.Profiling;
 using UnityEngine;
 
