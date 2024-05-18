@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1;net6.0;net8.0</TargetFrameworks>
+        <Configurations>Debug;Release</Configurations>
+        <LangVersion>9</LangVersion>
+    </PropertyGroup>
+
+    <!-- Copy files for Unity -->
+    <!-- <PropertyGroup>
+        <DestinationRoot>$(MSBuildProjectDirectory)\..\..\SignalStreaming.Unity\Packages\SignalStreaming.Transports\Runtime\Abstractions</DestinationRoot>
+    </PropertyGroup>
+    <ItemGroup>
+        <TargetFiles Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="**\bin\**\*.*;**\obj\**\*.*" />
+    </ItemGroup>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Copy SourceFiles="@(TargetFiles)" DestinationFiles="$(DestinationRoot)\%(RecursiveDir)%(Filename)%(Extension)" SkipUnchangedFiles="true" />
+    </Target> -->
+
+</Project>
