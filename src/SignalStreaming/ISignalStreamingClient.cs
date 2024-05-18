@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Threading;
 using System.Threading.Tasks;
+using SignalStreaming.Transports;
 
 namespace SignalStreaming
 {

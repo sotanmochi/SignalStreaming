@@ -9,10 +9,9 @@ using System.Net.Sockets;
 using System.Threading;
 using LiteNetLib;
 using SignalStreaming.Collections;
-using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
+using DebugLogger = SignalStreaming.Transports.LiteNetLib.DevelopmentOnlyLogger;
 
-
-namespace SignalStreaming.Infrastructure.LiteNetLib
+namespace SignalStreaming.Transports.LiteNetLib
 {
     /// <summary>
     /// Server implementation using LiteNetLib

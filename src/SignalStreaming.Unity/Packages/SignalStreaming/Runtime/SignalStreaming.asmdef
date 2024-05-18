@@ -4,7 +4,8 @@
     "references": [
         "MessagePack",
         "MessagePack.Annotations",
-        "SignalStreaming.Serialization"
+        "SignalStreaming.Serialization",
+        "SignalStreaming.Infrastructure"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

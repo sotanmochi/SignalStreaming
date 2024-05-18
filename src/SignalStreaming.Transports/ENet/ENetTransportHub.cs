@@ -10,9 +10,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using ENet;
 using SignalStreaming.Collections;
-using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
+using DebugLogger = SignalStreaming.Transports.ENet.DevelopmentOnlyLogger;
 
-namespace SignalStreaming.Infrastructure.ENet
+namespace SignalStreaming.Transports.ENet
 {
     /// <summary>
     /// Server implementation of ENet-CSharp

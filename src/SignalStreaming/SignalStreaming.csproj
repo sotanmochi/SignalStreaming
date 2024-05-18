@@ -10,6 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\SignalStreaming.Transports\Abstractions\SignalStreaming.Transports.Abstractions.csproj" />
         <ProjectReference Include="..\SignalStreaming.Serialization\SignalStreaming.Serialization.csproj" />
     </ItemGroup>
 

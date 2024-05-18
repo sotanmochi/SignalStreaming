@@ -4,7 +4,7 @@
     "references": [
         "SignalStreaming",
         "SignalStreaming.EngineBridge",
-        "SignalStreaming.MessagePackGenerated",
+        "SignalStreaming.Infrastructure",
         "SignalStreaming.Infrastructure.ENet",
         "SignalStreaming.Infrastructure.LiteNetLib",
         "SignalStreaming.Quantization",

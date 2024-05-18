@@ -1,10 +1,7 @@
 {
     "name": "SignalStreaming.Infrastructure",
     "rootNamespace": "SignalStreaming.Infrastructure",
-    "references": [
-        "SignalStreaming",
-        "SignalStreaming.Infrastructure.ENet"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

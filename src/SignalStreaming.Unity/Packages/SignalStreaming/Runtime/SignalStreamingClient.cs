@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MessagePack;
 using SignalStreaming.Serialization;
+using SignalStreaming.Transports;
 using DebugLogger = SignalStreaming.DevelopmentOnlyLogger;
 
 namespace SignalStreaming

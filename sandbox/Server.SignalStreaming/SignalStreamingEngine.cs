@@ -4,7 +4,8 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SignalStreaming;
-using SignalStreaming.Infrastructure.LiteNetLib;
+using SignalStreaming.Transports;
+using SignalStreaming.Transports.LiteNetLib;
 using Sandbox.EngineLooper;
 
 namespace Sandbox.Server.SignalStreaming
