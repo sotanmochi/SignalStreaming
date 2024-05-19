@@ -185,7 +185,7 @@ namespace Sandbox.StressTest.Client
 
             if (_transmissionEnabled && _colorUpdated)
             {
-                var sendOptions = new SendOptions(StreamingType.All, reliable: true);
+                var sendOptions = new SendOptions(StreamingType.All, reliable: false);
                 _streamingClient.Send((int)SignalType.PlayerObjectColor, _quantizedColorHue, sendOptions);
                 _colorUpdated = false;
             }
