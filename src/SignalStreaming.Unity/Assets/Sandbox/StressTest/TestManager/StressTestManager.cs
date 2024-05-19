@@ -101,15 +101,18 @@ namespace SignalStreaming.Sandbox.StressTest
             Application.targetFrameRate = 60;
             _stopwatch.Start();
 
-            var appSettingsFilePath = $"{Application.streamingAssetsPath}/appsettings.json";
-            var appSettings = JsonConvert.DeserializeObject<AppSettings>(System.IO.File.ReadAllText(appSettingsFilePath));
+            if (!Application.isEditor)
+            {
+                var appSettingsFilePath = $"{Application.streamingAssetsPath}/appsettings.json";
+                var appSettings = JsonConvert.DeserializeObject<AppSettings>(System.IO.File.ReadAllText(appSettingsFilePath));
 
-            Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] ServerAddress: {appSettings.ServerAddress}, Port: {appSettings.Port}, ConnectionKey: {appSettings.ConnectionKey}, GroupId: {appSettings.GroupId}</color>");
+                Debug.Log($"<color=cyan>[{nameof(StressTestManager)}] ServerAddress: {appSettings.ServerAddress}, Port: {appSettings.Port}, ConnectionKey: {appSettings.ConnectionKey}, GroupId: {appSettings.GroupId}</color>");
 
-            _serverAddress = appSettings.ServerAddress;
-            _port = appSettings.Port;
-            _connectionKey = appSettings.ConnectionKey;
-            _groupId = appSettings.GroupId;
+                _serverAddress = appSettings.ServerAddress;
+                _port = appSettings.Port;
+                _connectionKey = appSettings.ConnectionKey;
+                _groupId = appSettings.GroupId;
+            }
 
             _testStateDropdown.ClearOptions();
             _testStateDropdown.AddOptions(new List<string>
