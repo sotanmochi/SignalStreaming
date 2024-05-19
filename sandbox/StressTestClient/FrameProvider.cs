@@ -5,26 +5,30 @@ namespace Sandbox.StressTest.Client
     public interface IFrameProvider
     {
         ulong FrameCount { get; }
-        long LastFrameDeltaTimeMilliseconds { get; }
+        int LastFrameProcessingTimeMilliseconds { get; }
+        int LastFrameDeltaTimeMilliseconds { get; }
     }
 
     public sealed class LooperFrameProvider : IFrameProvider, IFrameTimingObserver
     {
         ulong _frameCount;
-        long _lastFrameDeltaTimeMilliseconds;
+        int _lastFrameProcessingTimeMilliseconds;
+        int _lastFrameDeltaTimeMilliseconds;
 
         public ulong FrameCount => _frameCount;
-        public long LastFrameDeltaTimeMilliseconds => _lastFrameDeltaTimeMilliseconds;
+        public int LastFrameProcessingTimeMilliseconds => _lastFrameProcessingTimeMilliseconds;
+        public int LastFrameDeltaTimeMilliseconds => _lastFrameDeltaTimeMilliseconds;
 
         public void OnBeginFrame(ulong frameCount)
         {
             _frameCount = frameCount;
         }
 
-        public void OnEndFrame(ulong frameCount, long elapsedMilliseconds)
+        public void OnEndFrame(ulong frameCount, int frameProcessingTimeMilliseconds, int frameDeltaTimeMilliseconds)
         {
             _frameCount = frameCount;
-            _lastFrameDeltaTimeMilliseconds = elapsedMilliseconds;
+            _lastFrameProcessingTimeMilliseconds = frameProcessingTimeMilliseconds;
+            _lastFrameDeltaTimeMilliseconds = frameDeltaTimeMilliseconds;
         }
     }
 }

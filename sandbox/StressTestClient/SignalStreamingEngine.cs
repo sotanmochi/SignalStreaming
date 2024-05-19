@@ -25,8 +25,8 @@ namespace Sandbox.StressTest.Client
         bool _disposed;
 
         // Metrics
-        int _minFrameDeltaTimeMs = int.MaxValue;
-        int _maxFrameDeltaTimeMs = int.MinValue;
+        int _minFrameProcessingTimeMs = int.MaxValue;
+        int _maxFrameProcessingTimeMs = int.MinValue;
         ulong _incomingSignalCount;
         ulong _lastObservedIncomingSignalCount;
 
@@ -129,20 +129,20 @@ namespace Sandbox.StressTest.Client
             _transport.DequeueIncomingSignals();
 
             // Metrics
-            var frameDeltaTimeMs = (int)_frameProvider.LastFrameDeltaTimeMilliseconds;
-            if (frameDeltaTimeMs < _minFrameDeltaTimeMs) _minFrameDeltaTimeMs = frameDeltaTimeMs;
-            if (frameDeltaTimeMs > _maxFrameDeltaTimeMs) _maxFrameDeltaTimeMs = frameDeltaTimeMs;
+            var frameProcessingTimeMs = _frameProvider.LastFrameProcessingTimeMilliseconds;
+            if (frameProcessingTimeMs < _minFrameProcessingTimeMs) _minFrameProcessingTimeMs = frameProcessingTimeMs;
+            if (frameProcessingTimeMs > _maxFrameProcessingTimeMs) _maxFrameProcessingTimeMs = frameProcessingTimeMs;
 
             // Log metrics every 60 seconds
             if (_stopwatch.ElapsedMilliseconds >= 60000)
             {
                 var incomingSignalCountDiff = _incomingSignalCount - _lastObservedIncomingSignalCount;
 
-                LogInfo($"Metrics snapshot (last 60 seconds) - MinFrameDeltaTime: {_minFrameDeltaTimeMs}[ms], MaxFrameDeltaTime: {_maxFrameDeltaTimeMs}[ms]");
+                LogInfo($"Metrics snapshot (last 60 seconds) - MinFrameProcessingTime: {_minFrameProcessingTimeMs}[ms], MaxFrameProcessingTime: {_maxFrameProcessingTimeMs}[ms]");
                 LogInfo($"Metrics snapshot (last 60 seconds) - IncomingSignalCount: {incomingSignalCountDiff}, IncomingSignalRate: {(incomingSignalCountDiff) / 60f}[signals/sec]");
 
-                _minFrameDeltaTimeMs = int.MaxValue;
-                _maxFrameDeltaTimeMs = int.MinValue;
+                _minFrameProcessingTimeMs = int.MaxValue;
+                _maxFrameProcessingTimeMs = int.MinValue;
                 _lastObservedIncomingSignalCount = _incomingSignalCount;
 
                 _stopwatch.Restart();
