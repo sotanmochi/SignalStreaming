@@ -9,6 +9,31 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        var serverAddress = "localhost";
+        var serverPort = 54970;
+        var connectionKey = "SignalStreaming";
+        var groupId = "01HP8DMTNKAVNQDWCBMG9NWG8S";
+
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--server" && i + 1 < args.Length)
+            {
+                serverAddress = args[i + 1];
+            }
+            else if (args[i] == "--port" && i + 1 < args.Length)
+            {
+                serverPort = ushort.Parse(args[i + 1]);
+            }
+            else if (args[i] == "--key" && i + 1 < args.Length)
+            {
+                connectionKey = args[i + 1];
+            }
+            else if (args[i] == "--group" && i + 1 < args.Length)
+            {
+                groupId = args[i + 1];
+            }
+        }
+
         await Host.CreateDefaultBuilder()
             .ConfigureServices((hostContext, services) =>
             {
@@ -27,10 +52,10 @@ public static class Program
 
                 services.Configure<SignalStreamingOptions>(options =>
                 {
-                    options.ServerAddress = "localhost";
-                    options.ServerPort = 54970;
-                    options.ConnectionKey = "SignalStreaming";
-                    options.GroupId = "01HP8DMTNKAVNQDWCBMG9NWG8S";
+                    options.ServerAddress = serverAddress;
+                    options.ServerPort = (ushort)serverPort;
+                    options.ConnectionKey = connectionKey;
+                    options.GroupId = groupId;
                 });
 
                 services.Configure<StressTestWorkerOptions>(options =>
