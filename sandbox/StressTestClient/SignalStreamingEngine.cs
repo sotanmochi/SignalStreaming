@@ -49,6 +49,7 @@ namespace Sandbox.StressTest.Client
         public SignalStreamingEngine(
             Looper engineLooper,
             IFrameProvider frameProvider,
+            IFrameTimingObserver frameTimingObserver,
             ILogger<SignalStreamingEngine> logger)
         {
             _frameProvider = frameProvider;
@@ -62,6 +63,7 @@ namespace Sandbox.StressTest.Client
             _streamingClient.OnIncomingSignalDequeued += OnIncomingSignalDequeued;
 
             engineLooper.Register(this);
+            engineLooper.Register(frameTimingObserver);
         }
 
         public void Dispose()
