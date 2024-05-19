@@ -40,6 +40,7 @@ namespace Sandbox.StressTest.Client
         };
 
         ObjectPoseCalculator _poseCalculator = new();
+        Random _random = new();
 
         bool _colorUpdated;
         ColorType _localPlayerColorType = ColorType.Rainbow;
@@ -64,6 +65,9 @@ namespace Sandbox.StressTest.Client
 
             engineLooper.Register(this);
             engineLooper.Register(frameTimingObserver);
+
+            SignalFormatterProvider.Register(new ColorTypeFormatter());
+            SignalFormatterProvider.Register(new StressTestStateFormatter());
         }
 
         public void Dispose()
@@ -163,7 +167,6 @@ namespace Sandbox.StressTest.Client
                 var deltaTime = (float)_frameProvider.LastFrameDeltaTimeMilliseconds / 1000f;
                 _localPlayerColorHue += deltaTime * 0.1f;
                 _localPlayerColorHue %= 1f;
-                _quantizedColorHue = (byte)(_localPlayerColorHue * 255f);
                 _colorUpdated = true;
             }
         }
@@ -186,6 +189,7 @@ namespace Sandbox.StressTest.Client
             if (_transmissionEnabled && _colorUpdated)
             {
                 var sendOptions = new SendOptions(StreamingType.All, reliable: false);
+                _quantizedColorHue = (byte)(_localPlayerColorHue * 255f);
                 _streamingClient.Send((int)SignalType.PlayerObjectColor, _quantizedColorHue, sendOptions);
                 _colorUpdated = false;
             }
@@ -207,7 +211,39 @@ namespace Sandbox.StressTest.Client
                     _transmissionEnabled = true;
                 }
             }
+            else if (signalId == (int)SignalType.ChangeColor)
+            {
+                _localPlayerColorType = SignalSerializer.Deserialize<ColorType>(in bytes);
+                
+                if (_localPlayerColorType == ColorType.Random)
+                {
+                    _localPlayerColorHue = GetColorHue(_random.Next(1, 7));
+                }
+                else if (_localPlayerColorType == ColorType.Rainbow)
+                {
+                    _localPlayerColorHue = 0f;
+                }
+                else
+                {
+                    _localPlayerColorHue = GetColorHue((int)_localPlayerColorType);
+                }
+
+                _colorUpdated = true;
+
+                LogInfo($"Color changed to: {_localPlayerColorType}, Hue: {_localPlayerColorHue}");
+            }
         }
+
+        float GetColorHue(int colorType) => colorType switch
+        {
+            1 => 0f, // Red
+            2 => 0.333f, // Green
+            3 => 0.666f, // Blue
+            4 => 0.5f, // Cyan
+            5 => 0.833f, // Magenta
+            6 => 0.167f, // Yellow
+            _ => 0f,
+        };
 
         void OnConnected(uint clientId)
         {

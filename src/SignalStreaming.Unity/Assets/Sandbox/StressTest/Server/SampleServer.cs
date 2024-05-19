@@ -112,6 +112,9 @@ namespace SignalStreaming.Sandbox.StressTest
                 _outgoingSignalCount4 = 0;
             });
 
+            SignalFormatterProvider.Register(new ColorTypeFormatter());
+            SignalFormatterProvider.Register(new StressTestStateFormatter());
+
             _transportHub = new LiteNetLibTransportHub(_port, targetFrameRate: 120, maxGroups: 1);
             _streamingHub = new SignalStreamingHub(_transportHub);
 
