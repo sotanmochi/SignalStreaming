@@ -99,8 +99,8 @@ namespace Sandbox.Server.SignalStreaming
             {
                 var incomingSignalCountDiff = _incomingSignalCount - _lastObservedIncomingSignalCount;
 
-                LogInfo($"Metrics (last 60 seconds) - MinFrameDeltaTime: {_minFrameDeltaTimeMs}[ms], MaxFrameDeltaTime: {_maxFrameDeltaTimeMs}[ms]");
-                LogInfo($"Metrics (last 60 seconds) - IncomingSignalCount: {incomingSignalCountDiff}, IncomingSignalRate: {(incomingSignalCountDiff) / 60f}[signals/sec]");
+                LogInfo($"Metrics snapshot (last 60 seconds) - MinFrameDeltaTime: {_minFrameDeltaTimeMs}[ms], MaxFrameDeltaTime: {_maxFrameDeltaTimeMs}[ms]");
+                LogInfo($"Metrics snapshot (last 60 seconds) - IncomingSignalCount: {incomingSignalCountDiff}, IncomingSignalRate: {(incomingSignalCountDiff) / 60f}[signals/sec]");
 
                 _minFrameDeltaTimeMs = int.MaxValue;
                 _maxFrameDeltaTimeMs = int.MinValue;
