@@ -163,6 +163,9 @@ namespace SignalStreaming.Sandbox.StressTest
                 _receivedSignalsPerSecond4 = 0;
             });
 
+            SignalFormatterProvider.Register(new ColorTypeFormatter());
+            SignalFormatterProvider.Register(new StressTestStateFormatter());
+
             _transport = new LiteNetLibTransport(targetFrameRate: 120);
             _streamingClient = new SignalStreamingClient(_transport);
             _streamingClient.OnConnected += OnConnected;

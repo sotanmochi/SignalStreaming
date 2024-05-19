@@ -131,14 +131,14 @@ namespace SignalStreaming.Sandbox.StressTest
             _changeColorDropdown.ClearOptions();
             _changeColorDropdown.AddOptions(new List<string>
             {
-                ColorType.Rainbow.ToString(),
                 ColorType.Random.ToString(),
                 ColorType.Red.ToString(),
                 ColorType.Green.ToString(),
                 ColorType.Blue.ToString(),
                 ColorType.Cyan.ToString(),
                 ColorType.Magenta.ToString(),
-                ColorType.Yellow.ToString()
+                ColorType.Yellow.ToString(),
+                ColorType.Rainbow.ToString()
             });
             _changeColorDropdown.value = 0;
             _changeColorDropdown.RefreshShownValue();
@@ -202,6 +202,9 @@ namespace SignalStreaming.Sandbox.StressTest
                 _previousMeasuredSignalCount4 = 0;
                 _receivedSignalsPerSecond4 = 0;
             });
+
+            SignalFormatterProvider.Register(new ColorTypeFormatter());
+            SignalFormatterProvider.Register(new StressTestStateFormatter());
 
             _transport = new LiteNetLibTransport(targetFrameRate: 120);
             _streamingClient = new SignalStreamingClient(_transport);
