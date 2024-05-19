@@ -1,0 +1,53 @@
+using System;
+using System.Diagnostics;
+using UnityEngine; // MessagePack.UnityShims
+
+namespace Sandbox.StressTest.Client
+{
+    public class ObjectPoseCalculator
+    {
+        readonly Stopwatch stopwatch = new Stopwatch();
+
+        float a = 10.0f;
+        float b = 10.0f;
+        Vector3 offsetPosition;
+        float offsetAngle;
+
+        float previousTime;
+        float t;
+
+        public int MinA { get; set; } = 5;
+        public int MaxA { get; set; } = 50;
+        public int MinB { get; set; } = 5;
+        public int MaxB { get; set; } = 50;
+
+        public Vector3 Position { get; private set; }
+        public Quaternion Rotation { get; private set; }
+
+        public void Startup()
+        {
+            var random = new System.Random();
+            stopwatch.Start();
+            a = random.Next(MinA, MaxA);
+            b = random.Next(MinB, MaxB);
+            offsetPosition = (a > b) ? new Vector3(a / 2f, 0, 0) : new Vector3(0, 0, b / 2f);
+            offsetAngle = 360 * (float)random.NextDouble();
+        }
+
+        public void Tick()
+        {
+            var currentTimeMilliseconds = stopwatch.ElapsedMilliseconds;
+            var deltaTime = (currentTimeMilliseconds - previousTime) / 1000.0f;
+            previousTime = currentTimeMilliseconds;
+
+            var x = offsetPosition.x + a * (float)Math.Sin(t);
+            var y = offsetPosition.y;
+            var z = offsetPosition.z + b * (float)Math.Cos(t);
+
+            Position = UnityShimsExtensions.CreateQuaternion(0, offsetAngle, 0).Rotate(new Vector3(x, y, z));
+            Rotation = UnityShimsExtensions.CreateQuaternion(0, 360 * t, 0);
+
+            t += deltaTime;
+        }
+    }
+}
