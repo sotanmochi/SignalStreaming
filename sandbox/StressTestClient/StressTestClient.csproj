@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ConsoleAppFramework " Version="4.2.4" />
+        <PackageReference Include="MessagePack.UnityShims" Version="2.5.140" />
+        <ProjectReference Include="..\EngineLooper\EngineLooper.csproj" />
+        <ProjectReference Include="..\..\src\SignalStreaming\SignalStreaming.csproj" />
+        <ProjectReference Include="..\..\src\SignalStreaming.Quantization\SignalStreaming.Quantization.csproj" />
+        <ProjectReference Include="..\..\src\SignalStreaming.Serialization\SignalStreaming.Serialization.csproj" />
+        <ProjectReference Include="..\..\src\SignalStreaming.Transports\Abstractions\SignalStreaming.Transports.Abstractions.csproj" />
+        <!-- <ProjectReference Include="..\..\src\SignalStreaming.Transports\LiteNetLib\SignalStreaming.Transports.LiteNetLib.csproj" /> -->
+        <ProjectReference Include="..\..\src\SignalStreaming.Transports\LiteNetLib\SignalStreaming.Infrastructure.LiteNetLib.csproj" />
+    </ItemGroup>
+
+</Project>
