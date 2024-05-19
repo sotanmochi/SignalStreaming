@@ -206,14 +206,18 @@ namespace Sandbox.EngineLooper
                 var elapsedTicks = (end - begin) * TimestampsToTicks;
                 var elapsedMilliseconds = (long)elapsedTicks / TimeSpan.TicksPerMillisecond;
 
-                _frameCount++;
-                OnEndFrame(_frameCount, elapsedMilliseconds);
+                var frameProcessingTimeMilliseconds = (int)elapsedMilliseconds;
+                var frameDeltaTimeMilliseconds = frameProcessingTimeMilliseconds;
 
                 var waitForNextFrameMilliseconds = (int)(_targetFrameTimeMilliseconds - elapsedMilliseconds);
                 if (waitForNextFrameMilliseconds > 0)
                 {
                     Thread.Sleep(waitForNextFrameMilliseconds);
+                    frameDeltaTimeMilliseconds = _targetFrameTimeMilliseconds;
                 }
+
+                _frameCount++;
+                OnEndFrame(_frameCount, frameProcessingTimeMilliseconds, frameDeltaTimeMilliseconds);
             }
 
             LogInfo($"[{nameof(Looper)}] RunLoop cancelled.");
@@ -229,11 +233,11 @@ namespace Sandbox.EngineLooper
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void OnEndFrame(ulong frameCount, long elapsedMilliseconds)
+        void OnEndFrame(ulong frameCount, int frameProcessingTimeMilliseconds, int frameDeltaTimeMilliseconds)
         {
             for (var i = 0; i < _frameTimingObservers.Count; i++)
             {
-                _frameTimingObservers[i].OnEndFrame(frameCount, elapsedMilliseconds);
+                _frameTimingObservers[i].OnEndFrame(frameCount, frameProcessingTimeMilliseconds, frameDeltaTimeMilliseconds);
             }
         }
 
