@@ -27,6 +27,9 @@ namespace Sandbox.Server.SignalStreaming
         int _maxFrameProcessingTimeMs = int.MinValue;
         ulong _incomingSignalCount;
         ulong _lastObservedIncomingSignalCount;
+        int _connectedClientCount;
+        int _minConnectedClientCount;
+        int _maxConnectedClientCount;
 
         public SignalStreamingEngine(
             IOptions<SignalStreamingOptions> options,
@@ -44,7 +47,7 @@ namespace Sandbox.Server.SignalStreaming
             _frameProvider = frameProvider;
             _logger = logger;
 
-            _transportHub = new LiteNetLibTransportHub(options.Port, targetFrameRate: 120, maxGroups: 32);
+            _transportHub = new LiteNetLibTransportHub(options.Port, targetFrameRate: 120, maxClients: 32768 , maxGroups: 4);
             _streamingHub = new SignalStreamingHub(_transportHub);
 
             _streamingHub.OnClientConnectionRequested += OnClientConnectionRequested;
@@ -99,12 +102,16 @@ namespace Sandbox.Server.SignalStreaming
             {
                 var incomingSignalCountDiff = _incomingSignalCount - _lastObservedIncomingSignalCount;
 
+                LogInfo($"Metrics snapshot (last 60 seconds) - MinConnectedClientCount: {_minConnectedClientCount}, MaxConnectedClientCount: {_maxConnectedClientCount}");
                 LogInfo($"Metrics snapshot (last 60 seconds) - MinFrameProcessingTime: {_minFrameProcessingTimeMs}[ms], MaxFrameProcessingTime: {_maxFrameProcessingTimeMs}[ms]");
                 LogInfo($"Metrics snapshot (last 60 seconds) - IncomingSignalCount: {incomingSignalCountDiff}, IncomingSignalRate: {(incomingSignalCountDiff) / 60f}[signals/sec]");
 
                 _minFrameProcessingTimeMs = int.MaxValue;
                 _maxFrameProcessingTimeMs = int.MinValue;
                 _lastObservedIncomingSignalCount = _incomingSignalCount;
+
+                _minConnectedClientCount = _connectedClientCount;
+                _maxConnectedClientCount = _connectedClientCount;
 
                 _stopwatch.Restart();
             }
@@ -146,11 +153,15 @@ namespace Sandbox.Server.SignalStreaming
         void OnClientConnected(uint clientId)
         {
             LogInfo($"Client connected. Client[{clientId}]");
+            _connectedClientCount++;
+            if (_connectedClientCount > _maxConnectedClientCount) _maxConnectedClientCount = _connectedClientCount;
         }
 
         void OnClientDisconnected(uint clientId)
         {
             LogInfo($"Client disconnected. Client[{clientId}]");
+            _connectedClientCount--;
+            if (_connectedClientCount < _minConnectedClientCount) _minConnectedClientCount = _connectedClientCount;
         }
 
         void OnGroupJoinRequestReceived(uint clientId, GroupJoinRequest groupJoinRequest)
