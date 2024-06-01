@@ -313,9 +313,10 @@ namespace SignalStreaming.Transports.ENet
         {
             var client = _connectedClients[destinationClientId];
             {
+                // TODO: No allocation
                 var flags = reliable
-                    ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
-                    : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+                    ? PacketFlags.Reliable // Reliable Sequenced
+                    : PacketFlags.None; // Unreliable Sequenced
 
                 var packet = default(Packet);
                 packet.Create(data.Array, data.Count, flags);
@@ -328,9 +329,10 @@ namespace SignalStreaming.Transports.ENet
         {
             if (_activeGroups.TryGetValue(groupId, out var enetGroup))
             {
+                // TODO: No allocation
                 var flags = reliable
-                    ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
-                    : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+                    ? PacketFlags.Reliable // Reliable Sequenced
+                    : PacketFlags.None; // Unreliable Sequenced
 
                 var packet = default(Packet);
                 packet.Create(data.Array, data.Count, flags);
@@ -341,9 +343,10 @@ namespace SignalStreaming.Transports.ENet
 
         public void Broadcast(IReadOnlyList<uint> destinationClientIds, ArraySegment<byte> data, bool reliable)
         {
+            // TODO: No allocation
             var flags = reliable
-                ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
-                : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+                ? PacketFlags.Reliable // Reliable Sequenced
+                : PacketFlags.None; // Unreliable Sequenced
 
             var packet = default(Packet);
             packet.Create(data.Array, data.Count, flags);
@@ -358,9 +361,10 @@ namespace SignalStreaming.Transports.ENet
 
         public void Broadcast(ArraySegment<byte> data, bool reliable)
         {
+            // TODO: No allocation
             var flags = reliable
-                ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
-                : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+                ? PacketFlags.Reliable // Reliable Sequenced
+                : PacketFlags.None; // Unreliable Sequenced
 
             var packet = default(Packet);
             packet.Create(data.Array, data.Count, flags);
@@ -484,9 +488,10 @@ namespace SignalStreaming.Transports.ENet
                     var bufferLength = dispatchRequest.BufferLength;
                     var reliable = dispatchRequest.Reliable;
 
+                    // TODO: No allocation
                     var flags = reliable
-                        ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
-                        : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+                        ? PacketFlags.Reliable // Reliable Sequenced
+                        : PacketFlags.None; // Unreliable Sequenced
 
                     var packet = default(Packet);
                     _outgoingSignalsBuffer.TryBulkDequeue(new Span<byte>(_signalDispatcherBuffer, 0, bufferLength));
