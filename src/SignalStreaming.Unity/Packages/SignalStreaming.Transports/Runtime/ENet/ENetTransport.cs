@@ -63,7 +63,7 @@ namespace SignalStreaming.Transports.ENet
         public long BytesReceived => -1;
         public long BytesSent => -1;
 
-        public ENetTransport(bool useAnotherThread, int targetFrameRate, bool isBackground)
+        public ENetTransport(int targetFrameRate)
         {
             _incomingSignalsBuffer = new ConcurrentRingBuffer<byte>(1024 * 4 * 4096); // 16MB
             _outgoingSignalsBuffer = new ConcurrentRingBuffer<byte>(1024 * 4 * 4096); // 16MB
@@ -74,19 +74,16 @@ namespace SignalStreaming.Transports.ENet
             _client = new Host();
             _client.Create();
 
-            // if (useAnotherThread)
+            _targetFrameTimeMilliseconds = (int)(1000 / (double)targetFrameRate);
+
+            _transportThreadLoopCts = new CancellationTokenSource();
+            _transportThread = new Thread(RunTransportThreadLoop)
             {
-                _targetFrameTimeMilliseconds = (int)(1000 / (double)targetFrameRate);
+                Name = $"{nameof(ENetTransport)}",
+                IsBackground = true,
+            };
 
-                _transportThreadLoopCts = new CancellationTokenSource();
-                _transportThread = new Thread(RunTransportThreadLoop)
-                {
-                    Name = $"{nameof(ENetTransport)}",
-                    IsBackground = isBackground,
-                };
-
-                _transportThread.Start();
-            }
+            _transportThread.Start();
         }
 
         public void Dispose()
@@ -238,7 +235,6 @@ namespace SignalStreaming.Transports.ENet
                     case EventType.Disconnect:
                         // _connectionTcs?.SetResult(false); // REVIEW
                         OnDisconnected?.Invoke();
-                        break;
                     case EventType.Timeout:
                         // No Operation
                         // _connectionTcs?.SetResult(false); // REVIEW
