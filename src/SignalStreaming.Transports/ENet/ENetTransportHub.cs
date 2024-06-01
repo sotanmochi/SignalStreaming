@@ -45,10 +45,10 @@ namespace SignalStreaming.Transports.ENet
             public string GroupId;
         }
 
-        static readonly double TimestampsToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
+        public static readonly int MaxClients = 4000; // ENet.Library.maxPeers = 4095
 
-        readonly int _maxClients = 4000;
-        readonly int _maxGroups = 500;
+        static readonly double TimestampsToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
+        readonly int _maxGroups;
         readonly int _maxClientsPerGroup;
         readonly int _maxSignalSize = 1024 * 4; // 4KB
 
@@ -73,14 +73,18 @@ namespace SignalStreaming.Transports.ENet
         public event Action<uint> OnTimeout;
         public event ISignalTransportHub.OnIncomingSignalDequeuedEventHandler OnIncomingSignalDequeued;
 
-        public int ConnectionCapacity => _maxClients;
+        public int ConnectionCapacity => MaxClients;
         public int ConnectionCount => _connectedClients.Length; // TODO: Fix
-        public long BytesReceived => -1;
-        public long BytesSent => -1;
 
-        public ENetTransportHub(ushort port, bool useAnotherThread, int targetFrameRate, bool isBackground)
+        public long PacketsReceived => _server.PacketsReceived;
+        public long PacketsSent => _server.PacketsSent;
+        public long BytesReceived => _server.BytesReceived;
+        public long BytesSent => _server.BytesSent;
+
+        public ENetTransportHub(ushort port, int targetFrameRate, ushort maxClientsPerGroup)
         {
-            _maxClientsPerGroup = _maxClients / _maxGroups;
+            _maxClientsPerGroup = Math.Min(maxClientsPerGroup, MaxClients);
+            _maxGroups = MaxClients / _maxClientsPerGroup;
 
             _groups = new ENetGroup[_maxGroups];
             for (var i = 0; i < _groups.Length; i++)
@@ -94,7 +98,7 @@ namespace SignalStreaming.Transports.ENet
                 };
             }
 
-            _connectedClients = new ENetClient[_maxClients];
+            _connectedClients = new ENetClient[MaxClients];
             for (var i = 0; i < _connectedClients.Length; i++)
             {
                 _connectedClients[i] = new ENetClient()
@@ -110,19 +114,16 @@ namespace SignalStreaming.Transports.ENet
 
             Library.Initialize();
             _server = new Host();
-            _server.Create(new Address(){ Port = port }, _maxClients);
+            _server.Create(new Address(){ Port = port }, MaxClients);
 
-            // if (useAnotherThread)
+            _targetFrameTimeMilliseconds = (int)(1000 / (double)targetFrameRate);
+
+            _transportThreadLoopCts = new CancellationTokenSource();
+            _transportThread = new Thread(RunTransportThreadLoop)
             {
-                _targetFrameTimeMilliseconds = (int)(1000 / (double)targetFrameRate);
-
-                _transportThreadLoopCts = new CancellationTokenSource();
-                _transportThread = new Thread(RunTransportThreadLoop)
-                {
-                    Name = $"{nameof(ENetTransportHub)}",
-                    IsBackground = isBackground,
-                };
-            }
+                Name = $"{nameof(ENetTransportHub)}",
+                IsBackground = true,
+            };
         }
 
         public void Dispose()
