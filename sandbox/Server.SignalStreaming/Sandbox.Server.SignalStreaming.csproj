@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EngineLooper\EngineLooper.csproj" />
     <ProjectReference Include="..\..\src\SignalStreaming\SignalStreaming.csproj" />
+    <ProjectReference Include="..\..\src\SignalStreaming.Transports\ENet\SignalStreaming.Infrastructure.ENet.csproj" />
     <ProjectReference Include="..\..\src\SignalStreaming.Transports\LiteNetLib\SignalStreaming.Infrastructure.LiteNetLib.csproj" />
   </ItemGroup>
 
