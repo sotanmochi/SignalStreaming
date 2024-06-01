@@ -14,6 +14,7 @@
         <ProjectReference Include="..\..\src\SignalStreaming.Quantization\SignalStreaming.Quantization.csproj" />
         <ProjectReference Include="..\..\src\SignalStreaming.Serialization\SignalStreaming.Serialization.csproj" />
         <ProjectReference Include="..\..\src\SignalStreaming.Transports\Abstractions\SignalStreaming.Transports.Abstractions.csproj" />
+        <ProjectReference Include="..\..\src\SignalStreaming.Transports\ENet\SignalStreaming.Infrastructure.ENet.csproj" />
         <!-- <ProjectReference Include="..\..\src\SignalStreaming.Transports\LiteNetLib\SignalStreaming.Transports.LiteNetLib.csproj" /> -->
         <ProjectReference Include="..\..\src\SignalStreaming.Transports\LiteNetLib\SignalStreaming.Infrastructure.LiteNetLib.csproj" />
     </ItemGroup>
