@@ -156,9 +156,10 @@ namespace SignalStreaming.Transports.ENet
 
         public void Send(ArraySegment<byte> data, SendOptions sendOptions, uint[] destinationClientIds = null)
         {
+            // TODO: No allocation
             var flags = sendOptions.Reliable
-                ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
-                : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+                ? PacketFlags.Reliable // Reliable Sequenced
+                : PacketFlags.None; // Unreliable Sequenced
 
             var packet = default(Packet);
             packet.Create(data.Array, data.Count, flags);
@@ -260,9 +261,10 @@ namespace SignalStreaming.Transports.ENet
                     var bufferLength = dispatchRequest.BufferLength;
                     var reliable = dispatchRequest.Reliable;
 
+                    // TODO: No allocation
                     var flags = reliable
-                        ? (PacketFlags.Reliable | PacketFlags.NoAllocate) // Reliable Sequenced
-                        : (PacketFlags.None | PacketFlags.NoAllocate); // Unreliable Sequenced
+                        ? PacketFlags.Reliable // Reliable Sequenced
+                        : PacketFlags.None; // Unreliable Sequenced
 
                     var packet = default(Packet);
                     _outgoingSignalsBuffer.TryBulkDequeue(new Span<byte>(_signalDispatcherBuffer, 0, bufferLength));
