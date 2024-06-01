@@ -60,8 +60,10 @@ namespace SignalStreaming.Transports.ENet
         public event Action<ReadOnlySequence<byte>> OnIncomingSignalDequeued;
 
         public bool IsConnected => _connected;
-        public long BytesReceived => -1;
-        public long BytesSent => -1;
+        public long PacketsReceived => _client.PacketsReceived;
+        public long PacketsSent => _client.PacketsSent;
+        public long BytesReceived => _client.BytesReceived;
+        public long BytesSent => _client.BytesSent;
 
         public ENetTransport(int targetFrameRate)
         {
