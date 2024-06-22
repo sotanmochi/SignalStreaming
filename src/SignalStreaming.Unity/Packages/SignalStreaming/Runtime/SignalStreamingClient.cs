@@ -62,8 +62,7 @@ namespace SignalStreaming
             try
             {
                 _connectionRequestData = connectParameters.ConnectionRequestData;
-                var connected = await _transport.ConnectAsync(connectParameters, cancellationToken);
-                _connectionTcs.SetResult(connected);
+                await _transport.ConnectAsync(connectParameters, cancellationToken);
             }
             catch (Exception e)
             {
@@ -85,7 +84,6 @@ namespace SignalStreaming
             _connected = false;
         }
 
-        // WIP
         public async Task<bool> JoinGroupAsync(string groupId, CancellationToken cancellationToken = default)
         {
             if (_joining) return await _joinTcs.Task;
