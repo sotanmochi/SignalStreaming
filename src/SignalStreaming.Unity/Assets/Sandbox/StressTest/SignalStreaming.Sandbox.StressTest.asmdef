@@ -4,9 +4,9 @@
     "references": [
         "SignalStreaming",
         "SignalStreaming.EngineBridge",
-        "SignalStreaming.Infrastructure",
-        "SignalStreaming.Infrastructure.ENet",
-        "SignalStreaming.Infrastructure.LiteNetLib",
+        "SignalStreaming.Transports",
+        "SignalStreaming.Transports.ENet",
+        "SignalStreaming.Transports.LiteNetLib",
         "SignalStreaming.Quantization",
         "SignalStreaming.Serialization",
         "MessagePack",
