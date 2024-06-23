@@ -44,9 +44,6 @@ namespace SignalStreaming.Transports.ENet
         readonly ConcurrentRingBuffer<byte> _outgoingSignalsBuffer;
         readonly byte[] _signalDispatcherBuffer;
 
-        string _serverAddress;
-        ushort _serverPort;
-
         Address _address;
         Host _client;
         Peer _peer;
@@ -104,7 +101,7 @@ namespace SignalStreaming.Transports.ENet
             DebugLogger.Log($"[{nameof(ENetTransportHub)}] Disposed.");
         }
 
-        public async Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters
+        public async Task<bool> ConnectAsync<T>(T options, CancellationToken cancellationToken = default) where T : TransportConnectionOptions
         {
             if (_connected || _connecting) return await _connectionTcs.Task;
 
@@ -113,18 +110,8 @@ namespace SignalStreaming.Transports.ENet
 
             try
             {
-                if (connectParameters is ENetConnectParameters enetConnectParameters)
-                {
-                    _serverAddress = enetConnectParameters.ServerAddress;
-                    _serverPort = enetConnectParameters.ServerPort;
-                }
-                else
-                {
-                    throw new ArgumentException($"Invalid type of {nameof(connectParameters)}");
-                }
-
-                _address.SetHost(_serverAddress);
-                _address.Port = _serverPort;
+                _address.SetHost(options.ServerAddress);
+                _address.Port = options.ServerPort;
                 _peer = _client.Connect(_address, channelLimit: 4);
 
                 await _connectionTcs.Task;
