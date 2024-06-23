@@ -1,6 +1,6 @@
 {
-    "name": "SignalStreaming.Infrastructure",
-    "rootNamespace": "SignalStreaming.Infrastructure",
+    "name": "SignalStreaming.Transports",
+    "rootNamespace": "SignalStreaming.Transports",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

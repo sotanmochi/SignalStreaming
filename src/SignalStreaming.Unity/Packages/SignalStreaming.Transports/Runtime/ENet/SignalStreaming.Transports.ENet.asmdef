@@ -1,9 +1,9 @@
 {
-    "name": "SignalStreaming.Infrastructure.ENet",
-    "rootNamespace": "SignalStreaming.Infrastructure.ENet",
+    "name": "SignalStreaming.Transports.ENet",
+    "rootNamespace": "SignalStreaming.Transports.ENet",
     "references": [
         "SignalStreaming.Collections",
-        "SignalStreaming.Infrastructure",
+        "SignalStreaming.Transports",
         "ENet-CSharp"
     ],
     "includePlatforms": [],

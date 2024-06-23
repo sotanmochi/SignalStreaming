@@ -1,6 +1,6 @@
 {
-    "name": "jp.sotanmochi.signalstreaming.infrastructure",
+    "name": "jp.sotanmochi.signalstreaming.transports",
     "version": "0.2.0-dev",
-    "displayName": "SignalStreaming.Infrastructure",
+    "displayName": "SignalStreaming.Transports",
     "license": "MIT"
 }

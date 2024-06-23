@@ -5,7 +5,7 @@
         "MessagePack",
         "MessagePack.Annotations",
         "SignalStreaming.Serialization",
-        "SignalStreaming.Infrastructure"
+        "SignalStreaming.Transports"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

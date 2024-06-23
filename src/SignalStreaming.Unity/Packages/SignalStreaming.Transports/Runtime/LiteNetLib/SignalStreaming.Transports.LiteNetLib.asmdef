@@ -1,9 +1,9 @@
 {
-    "name": "SignalStreaming.Infrastructure.LiteNetLib",
+    "name": "SignalStreaming.Transports.LiteNetLib",
     "rootNamespace": "",
     "references": [
         "SignalStreaming.Collections",
-        "SignalStreaming.Infrastructure"
+        "SignalStreaming.Transports"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

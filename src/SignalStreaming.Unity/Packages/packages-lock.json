@@ -247,12 +247,6 @@
       "source": "embedded",
       "dependencies": {}
     },
-    "jp.sotanmochi.signalstreaming.infrastructure": {
-      "version": "file:SignalStreaming.Transports",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "jp.sotanmochi.signalstreaming.quantization": {
       "version": "file:SignalStreaming.Quantization",
       "depth": 0,
@@ -261,6 +255,12 @@
     },
     "jp.sotanmochi.signalstreaming.serialization": {
       "version": "file:SignalStreaming.Serialization",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
+    "jp.sotanmochi.signalstreaming.transports": {
+      "version": "file:SignalStreaming.Transports",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
