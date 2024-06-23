@@ -62,7 +62,8 @@ namespace SignalStreaming
             try
             {
                 _connectionRequestData = options.ConnectionRequestData;
-                await _transport.ConnectAsync(options, cancellationToken);
+                var connected = await _transport.ConnectAsync(options, cancellationToken);
+                if (!connected) return false;
             }
             catch (Exception e)
             {

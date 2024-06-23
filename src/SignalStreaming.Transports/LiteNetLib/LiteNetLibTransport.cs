@@ -264,6 +264,12 @@ namespace SignalStreaming.Transports.LiteNetLib
         void INetEventListener.OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
             DebugLogger.Log($"[{nameof(LiteNetLibTransport)}] Peer disconnected. Reason: {disconnectInfo.Reason}");
+            if (_connecting)
+            {
+                DebugLogger.Log($"[{nameof(LiteNetLibTransport)}] Connection failed.");
+                _connecting = false;
+                _connectionTcs.SetResult(false);
+            }
             OnDisconnected?.Invoke();
         }
 
