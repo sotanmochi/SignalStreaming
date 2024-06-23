@@ -52,7 +52,7 @@ namespace SignalStreaming
             _transport = null;
         }
 
-        public async Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters
+        public async Task<bool> ConnectAsync<T>(T options, CancellationToken cancellationToken = default) where T : TransportConnectionOptions
         {
             if (_connected || _connecting) return await _connectionTcs.Task;
 
@@ -61,8 +61,8 @@ namespace SignalStreaming
 
             try
             {
-                _connectionRequestData = connectParameters.ConnectionRequestData;
-                await _transport.ConnectAsync(connectParameters, cancellationToken);
+                _connectionRequestData = options.ConnectionRequestData;
+                await _transport.ConnectAsync(options, cancellationToken);
             }
             catch (Exception e)
             {

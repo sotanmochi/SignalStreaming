@@ -97,7 +97,7 @@ namespace SignalStreaming.Transports.LiteNetLib
             DebugLogger.Log($"[{nameof(LiteNetLibTransport)}] Disposed.");
         }
 
-        public async Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters
+        public async Task<bool> ConnectAsync<T>(T options, CancellationToken cancellationToken = default) where T : TransportConnectionOptions
         {
             if (_connected || _connecting) return await _connectionTcs.Task;
 
@@ -106,18 +106,8 @@ namespace SignalStreaming.Transports.LiteNetLib
 
             try
             {
-                if (connectParameters is LiteNetLibConnectParameters LiteNetLibConnectParameters)
-                {
-                    var serverAddress = LiteNetLibConnectParameters.ServerAddress;
-                    var serverPort = LiteNetLibConnectParameters.ServerPort;
-                    var connectionKey = System.Text.Encoding.UTF8.GetString(LiteNetLibConnectParameters.ConnectionRequestData);
-                    _peer = _client.Connect(serverAddress, serverPort, connectionKey);
-                }
-                else
-                {
-                    throw new ArgumentException($"Invalid type of {nameof(connectParameters)}");
-                }
-
+                var connectionKey = System.Text.Encoding.UTF8.GetString(options.ConnectionRequestData);
+                _peer = _client.Connect(options.ServerAddress, options.ServerPort, connectionKey);
                 await _connectionTcs.Task;
             }
             catch (Exception e)

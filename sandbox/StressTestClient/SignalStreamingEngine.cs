@@ -93,7 +93,7 @@ namespace Sandbox.StressTest.Client
             var joined = false;
 
             var groupId = options.GroupId;
-            var connectionOptions = new LiteNetLibConnectParameters()
+            var connectionOptions = new TransportConnectionOptions()
             {
                 ServerAddress = options.ServerAddress,
                 ServerPort = options.ServerPort,

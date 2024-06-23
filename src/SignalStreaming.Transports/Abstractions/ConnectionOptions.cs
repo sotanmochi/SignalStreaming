@@ -1,9 +1,18 @@
 namespace SignalStreaming.Transports
 {
-    public interface IConnectParameters
+    public class TransportConnectionOptions
     {
-        string ServerAddress { get; set; }
-        ushort ServerPort { get; set; }
-        byte[] ConnectionRequestData { get; }
+        public string ServerAddress { get; set; } = "localhost";
+        public ushort ServerPort { get; set; } = 54970;
+        public byte[] ConnectionRequestData { get; set; } = new byte[0];
+
+        public TransportConnectionOptions()
+        {
+        }
+
+        public TransportConnectionOptions(string connectionRequestData)
+        {
+            ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(connectionRequestData);
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace SignalStreaming
         bool IsConnecting { get; }
         bool IsConnected { get; }
 
-        Task<bool> ConnectAsync<T>(T connectParameters, CancellationToken cancellationToken = default) where T : IConnectParameters;
+        Task<bool> ConnectAsync<T>(T options, CancellationToken cancellationToken = default) where T : TransportConnectionOptions;
         Task DisconnectAsync(CancellationToken cancellationToken = default);
 
         Task<bool> JoinGroupAsync(string groupId, CancellationToken cancellationToken = default);
