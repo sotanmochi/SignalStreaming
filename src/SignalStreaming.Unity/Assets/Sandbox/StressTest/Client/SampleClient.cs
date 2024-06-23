@@ -79,7 +79,7 @@ namespace SignalStreaming.Sandbox.StressTest
 
         ISignalStreamingClient _streamingClient;
         ISignalTransport _transport;
-        LiteNetLibConnectParameters _connectParameters;
+        TransportConnectionOptions _connectionOptions;
 
         CharacterRepository _characterRepository;
         CharacterPoseService _characterPoseService;
@@ -114,7 +114,7 @@ namespace SignalStreaming.Sandbox.StressTest
                 _groupId = appSettings.GroupId;
             }
 
-            _connectParameters = new LiteNetLibConnectParameters()
+            _connectionOptions = new TransportConnectionOptions()
             {
                 ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey),
                 ServerAddress = _serverAddress,
@@ -293,10 +293,10 @@ namespace SignalStreaming.Sandbox.StressTest
             var connected = false;
             var joined = false;
 
-            _connectParameters.ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey);
-            _connectParameters.ServerAddress = _serverAddress;
-            _connectParameters.ServerPort = _port;
-            connected = await _streamingClient.ConnectAsync(_connectParameters, cancellationToken);
+            _connectionOptions.ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(_connectionKey);
+            _connectionOptions.ServerAddress = _serverAddress;
+            _connectionOptions.ServerPort = _port;
+            connected = await _streamingClient.ConnectAsync(_connectionOptions, cancellationToken);
             if (connected)
             {
                 Debug.Log($"[{nameof(SampleClient)}] Connected to server. (Thread: {Thread.CurrentThread.ManagedThreadId})");
