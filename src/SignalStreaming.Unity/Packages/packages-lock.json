@@ -21,6 +21,13 @@
       "dependencies": {},
       "hash": "eefc9079d12c476f95a12ccb4c1a18bf0f9aa03c"
     },
+    "com.neuecc.unirx": {
+      "version": "https://github.com/neuecc/UniRx.git?path=Assets/Plugins/UniRx/Scripts",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "6baeccf6c544c155497164327cca72f28163a578"
+    },
     "com.nxrighthere.enet-csharp": {
       "version": "file:../../ThirdParty/ENet-CSharp",
       "depth": 0,
@@ -228,6 +235,20 @@
       "source": "git",
       "dependencies": {},
       "hash": "afe348bd6997af9dd78ab628f8bf5868bc7563ab"
+    },
+    "jp.keijiro.libsoundio": {
+      "version": "https://github.com/keijiro/jp.keijiro.libsoundio.git?path=Packages/jp.keijiro.libsoundio#1.0.5",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "2cf1d07e4f0312578914776161d3249c40f4e022"
+    },
+    "jp.sotanmochi.audioutilitytoolkit": {
+      "version": "https://github.com/sotanmochi/AudioUtilityToolkit-Unity.git?path=AudioUtilityToolkit-Unity/Assets/AudioUtilityToolkit",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "c02f0191fff5e39080fef1d0cf943ca6a5029fce"
     },
     "jp.sotanmochi.signalstreaming": {
       "version": "file:SignalStreaming",
