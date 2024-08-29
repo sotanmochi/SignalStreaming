@@ -2,7 +2,8 @@
     "name": "UnityAudioToolkit",
     "rootNamespace": "",
     "references": [
-        "R3.Unity"
+        "R3.Unity",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
