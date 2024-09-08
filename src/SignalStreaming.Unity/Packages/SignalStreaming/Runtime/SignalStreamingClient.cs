@@ -49,7 +49,13 @@ namespace SignalStreaming
             DisconnectAsync();
             _transport.OnDisconnected -= OnTransportDisconnected;
             _transport.OnIncomingSignalDequeued -= OnTransportIncomingSignalDequeued;
+            _transport.Dispose();
             _transport = null;
+        }
+
+        public void Tick()
+        {
+            _transport.DequeueIncomingSignals();
         }
 
         public async Task<bool> ConnectAsync<T>(T options, CancellationToken cancellationToken = default) where T : TransportConnectionOptions
