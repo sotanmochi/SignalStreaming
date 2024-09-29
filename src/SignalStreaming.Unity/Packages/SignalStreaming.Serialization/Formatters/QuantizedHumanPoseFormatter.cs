@@ -8,16 +8,16 @@ namespace SignalStreaming.Serialization.Formatters
     {
         public void Serialize(BitBuffer bitBuffer, in QuantizedHumanPose value)
         {
-            // BodyPosition
-            bitBuffer.AddUInt(value.BodyPosition.x);
-            bitBuffer.AddUInt(value.BodyPosition.y);
-            bitBuffer.AddUInt(value.BodyPosition.z);
+            // RootBonePosition
+            bitBuffer.AddUInt(value.RootBonePosition.x);
+            bitBuffer.AddUInt(value.RootBonePosition.y);
+            bitBuffer.AddUInt(value.RootBonePosition.z);
 
-            // BodyRotation
-            bitBuffer.AddUInt(value.BodyRotation.m);
-            bitBuffer.AddUInt(value.BodyRotation.a);
-            bitBuffer.AddUInt(value.BodyRotation.b);
-            bitBuffer.AddUInt(value.BodyRotation.c);
+            // RootBoneRotation
+            bitBuffer.AddUInt(value.RootBoneRotation.m);
+            bitBuffer.AddUInt(value.RootBoneRotation.a);
+            bitBuffer.AddUInt(value.RootBoneRotation.b);
+            bitBuffer.AddUInt(value.RootBoneRotation.c);
 
             // Muscles
             var requiredBitsPerElement = value.Muscles.RequiredBitsPerElement;
@@ -31,12 +31,12 @@ namespace SignalStreaming.Serialization.Formatters
 
         public QuantizedHumanPose Deserialize(BitBuffer bitBuffer)
         {
-            // BodyPosition
+            // RootBonePosition
             var x = bitBuffer.ReadUInt();
             var y = bitBuffer.ReadUInt();
             var z = bitBuffer.ReadUInt();
 
-            // BodyRotation
+            // RootBoneRotation
             var m = bitBuffer.ReadUInt();
             var a = bitBuffer.ReadUInt();
             var b = bitBuffer.ReadUInt();
@@ -51,20 +51,20 @@ namespace SignalStreaming.Serialization.Formatters
             {
                 quantizedHumanPose.Muscles.Elements[i] = bitBuffer.Read(requiredBitsPerElement); // Optimized
             }
-            quantizedHumanPose.BodyPosition = new QuantizedVector3(x, y, z);
-            quantizedHumanPose.BodyRotation = new QuantizedQuaternion(m, a, b, c);
+            quantizedHumanPose.RootBonePosition = new QuantizedVector3(x, y, z);
+            quantizedHumanPose.RootBoneRotation = new QuantizedQuaternion(m, a, b, c);
 
             return quantizedHumanPose;
         }
 
         public void DeserializeTo(ref QuantizedHumanPose output, BitBuffer bitBuffer)
         {
-            // BodyPosition
+            // RootBonePosition
             var x = bitBuffer.ReadUInt();
             var y = bitBuffer.ReadUInt();
             var z = bitBuffer.ReadUInt();
 
-            // BodyRotation
+            // RootBoneRotation
             var m = bitBuffer.ReadUInt();
             var a = bitBuffer.ReadUInt();
             var b = bitBuffer.ReadUInt();
@@ -82,8 +82,8 @@ namespace SignalStreaming.Serialization.Formatters
             {
                 output.Muscles.Elements[i] = bitBuffer.Read(requiredBitsPerElement); // Optimized
             }
-            output.BodyPosition = new QuantizedVector3(x, y, z);
-            output.BodyRotation = new QuantizedQuaternion(m, a, b, c);
+            output.RootBonePosition = new QuantizedVector3(x, y, z);
+            output.RootBoneRotation = new QuantizedQuaternion(m, a, b, c);
         }
     }
 }
