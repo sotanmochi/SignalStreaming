@@ -14,7 +14,7 @@ namespace SignalStreaming.Sandbox.StressTest
         readonly CharacterRepository _characterRepository;
         readonly ISignalStreamingClient _streamingClient;
 
-        readonly QuantizedHumanPose _deserializedData = new(QuantizedHumanPoseHandler.AllMuscleCount, 12);
+        readonly QuantizedHumanoidPose _deserializedData = new(QuantizedHumanoidPoseHandler.AllMuscleCount, 12);
 
         bool _enableSelfOwnedCharacter = true;
         bool _enableTransmission = true;
@@ -45,7 +45,7 @@ namespace SignalStreaming.Sandbox.StressTest
             if (pose != null && _enableTransmission)
             {
                 Profiler.BeginSample("CharacterPoseService.Send");
-                _streamingClient.Send((int)SignalType.QuantizedHumanPose, pose, new SendOptions(StreamingType.All, reliable: false));
+                _streamingClient.Send((int)SignalType.QuantizedHumanoidPose, pose, new SendOptions(StreamingType.All, reliable: false));
                 Profiler.EndSample();
             }
         }
@@ -78,12 +78,12 @@ namespace SignalStreaming.Sandbox.StressTest
 
         void OnIncomingSignalDequeued(int signalId, ReadOnlySequence<byte> payload, uint senderClientId)
         {
-            if (signalId == (int)SignalType.QuantizedHumanPose)
+            if (signalId == (int)SignalType.QuantizedHumanoidPose)
             {
                 Profiler.BeginSample("CharacterPoseService.Deserialize");
                 //-------------------------
                 // Avoid GC allocation
-                SignalSerializer.DeserializeTo<QuantizedHumanPose>(_deserializedData, payload);
+                SignalSerializer.DeserializeTo<QuantizedHumanoidPose>(_deserializedData, payload);
                 _characterRepository.SetReplicatedCharacterPose(senderClientId, _deserializedData);
                 //-------------------------
                 Profiler.EndSample();

@@ -9,45 +9,45 @@ namespace SignalStreaming.Samples
     {
         public void Serialize(BitBuffer bitBuffer, in HumanoidActorPose value)
         {
-            var quantizedHumanPoseFormatter = SignalFormatterProvider.GetFormatter<QuantizedHumanPose>();
-            if (quantizedHumanPoseFormatter == null)
+            var QuantizedHumanoidPoseFormatter = SignalFormatterProvider.GetFormatter<QuantizedHumanoidPose>();
+            if (QuantizedHumanoidPoseFormatter == null)
             {
-                throw new System.ArgumentException($"Type {typeof(QuantizedHumanPose)} is not supported");
+                throw new System.ArgumentException($"Type {typeof(QuantizedHumanoidPose)} is not supported");
             }
 
             bitBuffer.AddUInt(value.InstanceId);
-            quantizedHumanPoseFormatter.Serialize(bitBuffer, value.HumanPose);
+            QuantizedHumanoidPoseFormatter.Serialize(bitBuffer, value.HumanPose);
         }
 
         public HumanoidActorPose Deserialize(BitBuffer bitBuffer)
         {
-            var quantizedHumanPoseFormatter = SignalFormatterProvider.GetFormatter<QuantizedHumanPose>();
-            if (quantizedHumanPoseFormatter == null)
+            var QuantizedHumanoidPoseFormatter = SignalFormatterProvider.GetFormatter<QuantizedHumanoidPose>();
+            if (QuantizedHumanoidPoseFormatter == null)
             {
-                throw new System.ArgumentException($"ype {typeof(QuantizedHumanPose)} is not supported");
+                throw new System.ArgumentException($"ype {typeof(QuantizedHumanoidPose)} is not supported");
             }
 
             var instanceId = bitBuffer.ReadUInt();
-            var quantizedHumanPose = quantizedHumanPoseFormatter.Deserialize(bitBuffer); // Allocation
+            var QuantizedHumanoidPose = QuantizedHumanoidPoseFormatter.Deserialize(bitBuffer); // Allocation
 
             return new HumanoidActorPose
             {
                 InstanceId = instanceId,
-                HumanPose = quantizedHumanPose
+                HumanPose = QuantizedHumanoidPose
             };
         }
 
         public void DeserializeTo(ref HumanoidActorPose output, BitBuffer bitBuffer)
         {
-            var quantizedHumanPoseFormatter = SignalFormatterProvider.GetFormatter<QuantizedHumanPose>();
-            if (quantizedHumanPoseFormatter == null)
+            var QuantizedHumanoidPoseFormatter = SignalFormatterProvider.GetFormatter<QuantizedHumanoidPose>();
+            if (QuantizedHumanoidPoseFormatter == null)
             {
-                throw new System.ArgumentException($"Type {typeof(QuantizedHumanPose)} is not supported");
+                throw new System.ArgumentException($"Type {typeof(QuantizedHumanoidPose)} is not supported");
             }
 
             var humanPoseOutput = output.HumanPose;
             output.InstanceId = bitBuffer.ReadUInt();
-            quantizedHumanPoseFormatter.DeserializeTo(ref humanPoseOutput, bitBuffer);
+            QuantizedHumanoidPoseFormatter.DeserializeTo(ref humanPoseOutput, bitBuffer);
         }
     }
 }

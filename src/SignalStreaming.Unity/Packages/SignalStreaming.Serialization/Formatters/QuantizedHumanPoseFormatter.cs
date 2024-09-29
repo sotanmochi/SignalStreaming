@@ -4,9 +4,9 @@ using SignalStreaming.Quantization;
 
 namespace SignalStreaming.Serialization.Formatters
 {
-    public sealed class QuantizedHumanPoseFormatter : ISignalFormatter<QuantizedHumanPose>
+    public sealed class QuantizedHumanoidPoseFormatter : ISignalFormatter<QuantizedHumanoidPose>
     {
-        public void Serialize(BitBuffer bitBuffer, in QuantizedHumanPose value)
+        public void Serialize(BitBuffer bitBuffer, in QuantizedHumanoidPose value)
         {
             // RootBonePosition
             bitBuffer.AddUInt(value.RootBonePosition.x);
@@ -29,7 +29,7 @@ namespace SignalStreaming.Serialization.Formatters
             }
         }
 
-        public QuantizedHumanPose Deserialize(BitBuffer bitBuffer)
+        public QuantizedHumanoidPose Deserialize(BitBuffer bitBuffer)
         {
             // RootBonePosition
             var x = bitBuffer.ReadUInt();
@@ -45,19 +45,19 @@ namespace SignalStreaming.Serialization.Formatters
             var muscleCount = bitBuffer.ReadByte(); // Optimized
             var requiredBitsPerElement = bitBuffer.ReadByte(); // Optimized
 
-            var quantizedHumanPose = new QuantizedHumanPose(muscleCount, requiredBitsPerElement); // Allocation
+            var QuantizedHumanoidPose = new QuantizedHumanoidPose(muscleCount, requiredBitsPerElement); // Allocation
 
             for (var i = 0; i < muscleCount; i++)
             {
-                quantizedHumanPose.Muscles.Elements[i] = bitBuffer.Read(requiredBitsPerElement); // Optimized
+                QuantizedHumanoidPose.Muscles.Elements[i] = bitBuffer.Read(requiredBitsPerElement); // Optimized
             }
-            quantizedHumanPose.RootBonePosition = new QuantizedVector3(x, y, z);
-            quantizedHumanPose.RootBoneRotation = new QuantizedQuaternion(m, a, b, c);
+            QuantizedHumanoidPose.RootBonePosition = new QuantizedVector3(x, y, z);
+            QuantizedHumanoidPose.RootBoneRotation = new QuantizedQuaternion(m, a, b, c);
 
-            return quantizedHumanPose;
+            return QuantizedHumanoidPose;
         }
 
-        public void DeserializeTo(ref QuantizedHumanPose output, BitBuffer bitBuffer)
+        public void DeserializeTo(ref QuantizedHumanoidPose output, BitBuffer bitBuffer)
         {
             // RootBonePosition
             var x = bitBuffer.ReadUInt();

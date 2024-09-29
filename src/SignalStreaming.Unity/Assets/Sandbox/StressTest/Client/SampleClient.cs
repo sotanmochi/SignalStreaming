@@ -401,7 +401,7 @@ namespace SignalStreaming.Sandbox.StressTest
                 _colorUpdated = true;
                 UnityEngine.Debug.Log(string.Format("<color=cyan>[{0}] Update color: {1}, Type: {2}, Updated: {3}</color>", "SampleClient", _localPlayerColor, _localPlayerColorType, _colorUpdated));
             }
-            else if (messageId == (int)SignalType.QuantizedHumanPose)
+            else if (messageId == (int)SignalType.QuantizedHumanoidPose)
             {
                 _receivedSignalCount4++;
             }

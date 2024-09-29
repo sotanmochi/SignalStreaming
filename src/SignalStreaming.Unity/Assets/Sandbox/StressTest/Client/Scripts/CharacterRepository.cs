@@ -11,11 +11,11 @@ namespace SignalStreaming.Sandbox.StressTest
         readonly Animator _replicatedCharacterPrefab;
         readonly BoundedRange[] _worldBounds;
 
-        readonly Dictionary<uint, QuantizedHumanPoseHandler> _replicatedCharacters = new();
+        readonly Dictionary<uint, QuantizedHumanoidPoseHandler> _replicatedCharacters = new();
         readonly Dictionary<uint, GameObject> _replicatedCharacterObjects = new();
 
         uint _selfOwnedCharacterId;
-        QuantizedHumanPoseHandler _selfOwnedCharacter;
+        QuantizedHumanoidPoseHandler _selfOwnedCharacter;
         GameObject _selfOwnedCharacterObject;
 
         float _musclePrecision;
@@ -32,7 +32,7 @@ namespace SignalStreaming.Sandbox.StressTest
             _replicatedCharacterPrefab = replicatedCharacterPrefab;
         }
 
-        public bool TryAddSelfOwnedCharacter(uint id, Vector3 position, Quaternion rotation, out QuantizedHumanPoseHandler characterPoseHandler)
+        public bool TryAddSelfOwnedCharacter(uint id, Vector3 position, Quaternion rotation, out QuantizedHumanoidPoseHandler characterPoseHandler)
         {
             if (_selfOwnedCharacter == null)
             {
@@ -55,12 +55,12 @@ namespace SignalStreaming.Sandbox.StressTest
             }
         }
 
-        public QuantizedHumanPose GetSelfOwnedCharacterPose()
+        public QuantizedHumanoidPose GetSelfOwnedCharacterPose()
         {
             return _selfOwnedCharacter?.GetHumanPose();
         }
 
-        public void SetReplicatedCharacterPose(uint id, QuantizedHumanPose pose)
+        public void SetReplicatedCharacterPose(uint id, QuantizedHumanoidPose pose)
         {
             if (TryGetOrAddReplicatedCharacter(id, out var characterPoseHandler))
             {
@@ -90,7 +90,7 @@ namespace SignalStreaming.Sandbox.StressTest
             }
         }
 
-        bool TryGetOrAddReplicatedCharacter(uint id, out QuantizedHumanPoseHandler characterPoseHandler)
+        bool TryGetOrAddReplicatedCharacter(uint id, out QuantizedHumanoidPoseHandler characterPoseHandler)
         {
             if (!_replicatedCharacters.TryGetValue(id, out characterPoseHandler) && id != _selfOwnedCharacterId)
             {

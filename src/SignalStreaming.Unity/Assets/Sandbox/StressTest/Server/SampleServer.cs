@@ -416,11 +416,11 @@ namespace SignalStreaming.Sandbox.StressTest
                     _streamingHub.Broadcast(groupId, messageId, colorType, sendOptions.Reliable, senderClientId);
                 }
             }
-            else if (messageId == (int)SignalType.QuantizedHumanPose)
+            else if (messageId == (int)SignalType.QuantizedHumanoidPose)
             {
                 _receivedSignalCount4++;
 
-                var quantizedHumanPose = SignalSerializer.Deserialize<QuantizedHumanPose>(bytes);
+                var QuantizedHumanoidPose = SignalSerializer.Deserialize<QuantizedHumanoidPose>(bytes);
 
                 if (sendOptions.StreamingType == StreamingType.All)
                 {
@@ -429,7 +429,7 @@ namespace SignalStreaming.Sandbox.StressTest
                         UnityEngine.Profiling.Profiler.EndSample();
                         return;
                     }
-                    _streamingHub.Broadcast(groupId, messageId, quantizedHumanPose, sendOptions.Reliable, senderClientId);
+                    _streamingHub.Broadcast(groupId, messageId, QuantizedHumanoidPose, sendOptions.Reliable, senderClientId);
                 }
             }
             else

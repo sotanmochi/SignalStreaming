@@ -334,7 +334,7 @@ namespace SignalStreaming.Sandbox.StressTest
             _receivedSignalCount++;
             _receivedBytes = _transport.BytesReceived;
 
-            if (messageId == (int)SignalType.QuantizedHumanPose)
+            if (messageId == (int)SignalType.QuantizedHumanoidPose)
             {
                 _receivedSignalCount4++;
             }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SignalStreaming.EngineBridge
 {
-    public sealed class QuantizedHumanPoseHandler
+    public sealed class QuantizedHumanoidPoseHandler
     {
         public enum MuscleType
         {
@@ -16,12 +16,12 @@ namespace SignalStreaming.EngineBridge
         readonly BoundedRange[] _worldBounds;
         readonly BoundedRange _muscleBound;
 
-        QuantizedHumanPose _quantizedHumanPose;
+        QuantizedHumanoidPose _QuantizedHumanoidPose;
         HumanPose _humanPose;
         HumanPoseHandler _humanPoseHandler;
 
         public bool IsAvailable { get; private set; }
-        public byte MuscleCount => (byte)_quantizedHumanPose.Muscles.Size;
+        public byte MuscleCount => (byte)_QuantizedHumanoidPose.Muscles.Size;
         public byte RequiredBitsPerMuscleElement => (byte)_muscleBound.RequiredBits;
         public float MusclePrecision
         {
@@ -29,11 +29,11 @@ namespace SignalStreaming.EngineBridge
             set
             {
                 _muscleBound.Precision = value;
-                _quantizedHumanPose.Muscles.RequiredBitsPerElement = (byte)_muscleBound.RequiredBits;
+                _QuantizedHumanoidPose.Muscles.RequiredBitsPerElement = (byte)_muscleBound.RequiredBits;
             }
         }
 
-        public QuantizedHumanPoseHandler(Animator animator, BoundedRange[] worldBounds,
+        public QuantizedHumanoidPoseHandler(Animator animator, BoundedRange[] worldBounds,
             float musclePrecision = 0.001f, MuscleType muscleType = MuscleType.All)
         {
             var muscleCount = muscleType switch
@@ -44,38 +44,38 @@ namespace SignalStreaming.EngineBridge
 
             _worldBounds = worldBounds;
             _muscleBound = new(-1f, 1f, musclePrecision);
-            _quantizedHumanPose = new((byte)muscleCount, (byte)_muscleBound.RequiredBits);
+            _QuantizedHumanoidPose = new((byte)muscleCount, (byte)_muscleBound.RequiredBits);
 
             if (animator != null)
             {
                 _humanPoseHandler = new HumanPoseHandler(animator.avatar, animator.transform);
                 _humanPoseHandler.GetHumanPose(ref _humanPose);
-                Quantize(ref _humanPose, _worldBounds, _muscleBound, _quantizedHumanPose);
+                Quantize(ref _humanPose, _worldBounds, _muscleBound, _QuantizedHumanoidPose);
                 IsAvailable = true;
             }
         }
 
-        public QuantizedHumanPose GetHumanPose()
+        public QuantizedHumanoidPose GetHumanPose()
         {
             if (IsAvailable)
             {
                 _humanPoseHandler.GetHumanPose(ref _humanPose);
-                Quantize(ref _humanPose, _worldBounds, _muscleBound, _quantizedHumanPose);
+                Quantize(ref _humanPose, _worldBounds, _muscleBound, _QuantizedHumanoidPose);
             }
-            return _quantizedHumanPose;
+            return _QuantizedHumanoidPose;
         }
 
-        public void SetHumanPose(QuantizedHumanPose quantizedHumanPose)
+        public void SetHumanPose(QuantizedHumanoidPose QuantizedHumanoidPose)
         {
             if (IsAvailable)
             {
-                Dequantize(quantizedHumanPose, _worldBounds, _muscleBound, ref _humanPose);
+                Dequantize(QuantizedHumanoidPose, _worldBounds, _muscleBound, ref _humanPose);
                 _humanPoseHandler.SetHumanPose(ref _humanPose);
             }
         }
 
         public static void Quantize(ref HumanPose humanPose,
-            BoundedRange[] positionBoundedRange, BoundedRange muscleBoundedRange, QuantizedHumanPose output)
+            BoundedRange[] positionBoundedRange, BoundedRange muscleBoundedRange, QuantizedHumanoidPose output)
         {
             if (humanPose.muscles.Length != output.Muscles.Size)
             {
@@ -87,17 +87,17 @@ namespace SignalStreaming.EngineBridge
             muscleBoundedRange.Quantize(humanPose.muscles, output.Muscles);
         }
 
-        public static void Dequantize(QuantizedHumanPose quantizedHumanPose,
+        public static void Dequantize(QuantizedHumanoidPose QuantizedHumanoidPose,
             BoundedRange[] positionBoundedRange, BoundedRange muscleBoundedRange, ref HumanPose output)
         {
-            if (quantizedHumanPose.Muscles.Size != output.muscles.Length)
+            if (QuantizedHumanoidPose.Muscles.Size != output.muscles.Length)
             {
                 throw new System.ArgumentException("Mismatched joint count");
             }
 
-            BoundedRange.DequantizeTo(ref output.bodyPosition, quantizedHumanPose.RootBonePosition, positionBoundedRange);
-            SmallestThree.DequantizeTo(ref output.bodyRotation, quantizedHumanPose.RootBoneRotation);
-            muscleBoundedRange.Dequantize(quantizedHumanPose.Muscles, output.muscles);
+            BoundedRange.DequantizeTo(ref output.bodyPosition, QuantizedHumanoidPose.RootBonePosition, positionBoundedRange);
+            SmallestThree.DequantizeTo(ref output.bodyRotation, QuantizedHumanoidPose.RootBoneRotation);
+            muscleBoundedRange.Dequantize(QuantizedHumanoidPose.Muscles, output.muscles);
         }
     }
 }
