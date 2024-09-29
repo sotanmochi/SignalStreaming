@@ -9,7 +9,7 @@ namespace SignalStreaming.Serialization
             Register(new QuantizedVectorFormatter());
             Register(new QuantizedVector3Formatter());
             Register(new QuantizedQuaternionFormatter());
-            Register(new QuantizedHumanPoseFormatter());
+            Register(new QuantizedHumanoidPoseFormatter());
         }
     }
 }

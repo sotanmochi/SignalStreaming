@@ -17,8 +17,8 @@ namespace SignalStreaming.Samples
         [SerializeField] Text _musclePrecisionText;
         [SerializeField] Text _requiredBitsText;
 
-        QuantizedHumanPoseHandler _srcPoseHandler;
-        QuantizedHumanPoseHandler _dstPoseHandler;
+        QuantizedHumanoidPoseHandler _srcPoseHandler;
+        QuantizedHumanoidPoseHandler _dstPoseHandler;
         HumanoidActorPose _sourceData;
         HumanoidActorPose _deserializedData;
 
@@ -40,12 +40,12 @@ namespace SignalStreaming.Samples
             _sourceData = new()
             {
                 InstanceId = 0,
-                HumanPose = new QuantizedHumanPose(_srcPoseHandler.MuscleCount, _srcPoseHandler.RequiredBitsPerMuscleElement),
+                HumanPose = new QuantizedHumanoidPose(_srcPoseHandler.MuscleCount, _srcPoseHandler.RequiredBitsPerMuscleElement),
             };
             _deserializedData = new()
             {
                 InstanceId = 0,
-                HumanPose = new QuantizedHumanPose(_srcPoseHandler.MuscleCount, _srcPoseHandler.RequiredBitsPerMuscleElement),
+                HumanPose = new QuantizedHumanoidPose(_srcPoseHandler.MuscleCount, _srcPoseHandler.RequiredBitsPerMuscleElement),
             };
         }
 
