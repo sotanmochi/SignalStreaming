@@ -82,8 +82,8 @@ namespace SignalStreaming.EngineBridge
                 throw new System.ArgumentException("Mismatched muscle count");
             }
 
-            output.BodyPosition = BoundedRange.Quantize(humanPose.bodyPosition, positionBoundedRange);
-            output.BodyRotation = SmallestThree.Quantize(humanPose.bodyRotation);
+            output.RootBonePosition = BoundedRange.Quantize(humanPose.bodyPosition, positionBoundedRange);
+            output.RootBoneRotation = SmallestThree.Quantize(humanPose.bodyRotation);
             muscleBoundedRange.Quantize(humanPose.muscles, output.Muscles);
         }
 
@@ -95,8 +95,8 @@ namespace SignalStreaming.EngineBridge
                 throw new System.ArgumentException("Mismatched joint count");
             }
 
-            BoundedRange.DequantizeTo(ref output.bodyPosition, quantizedHumanPose.BodyPosition, positionBoundedRange);
-            SmallestThree.DequantizeTo(ref output.bodyRotation, quantizedHumanPose.BodyRotation);
+            BoundedRange.DequantizeTo(ref output.bodyPosition, quantizedHumanPose.RootBonePosition, positionBoundedRange);
+            SmallestThree.DequantizeTo(ref output.bodyRotation, quantizedHumanPose.RootBoneRotation);
             muscleBoundedRange.Dequantize(quantizedHumanPose.Muscles, output.muscles);
         }
     }
