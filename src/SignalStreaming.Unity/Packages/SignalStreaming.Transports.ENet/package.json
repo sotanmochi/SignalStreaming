@@ -1,0 +1,6 @@
+{
+    "name": "jp.sotanmochi.signalstreaming.transports.enet",
+    "version": "0.2.0-dev",
+    "displayName": "SignalStreaming.Transports.ENet",
+    "license": "MIT"
+}

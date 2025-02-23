@@ -1,0 +1,6 @@
+{
+    "name": "jp.sotanmochi.signalstreaming.transports.litenetlib",
+    "version": "0.2.0-dev",
+    "displayName": "SignalStreaming.Transports.LiteNetLib",
+    "license": "MIT"
+}
