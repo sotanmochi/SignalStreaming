@@ -10,6 +10,7 @@ namespace SignalStreaming.Transports
         {
         }
 
+        [Preserve]
         public TransportConnectionOptions(string connectionRequestData)
         {
             ConnectionRequestData = System.Text.Encoding.UTF8.GetBytes(connectionRequestData);
